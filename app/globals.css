@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+/*
+  Paleta profesional — inspirada en GitHub Dark / Stripe / Linear
+  Fondo neutro charcoal, sin saturación azul en backgrounds
+  Accent sofisticado, tipografía clara
+*/
+:root {
+  --bg:          #0D1117;   /* fondo principal - charcoal neutro */
+  --surface:     #161B22;   /* paneles / sidebars */
+  --card:        #21262D;   /* cards y contenedores */
+  --card-alt:    #1C2230;   /* cards alternativas */
+  --border:      rgba(240,246,252,0.10);
+  --border-soft: rgba(240,246,252,0.06);
+
+  --accent:      #388BFD;   /* azul profesional (GitHub blue) */
+  --accent-dark: #1F6FEB;   /* botones hover */
+  --accent-muted:#79C0FF;   /* texto azul claro */
+  --accent-faint:#A5D6FF;   /* muy claro */
+
+  --text:        #E6EDF3;   /* texto principal */
+  --text-muted:  #8B949E;   /* texto secundario */
+  --text-subtle: #6E7681;   /* muy secundario */
+
+  /* Semánticos (no tocar) */
+  --success:     #3FB950;
+  --warning:     #D29922;
+  --error:       #F85149;
+}
+
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Scrollbar minimalista */
+::-webkit-scrollbar          { width: 6px; height: 6px; }
+::-webkit-scrollbar-track    { background: #010409; }
+::-webkit-scrollbar-thumb    { background: #30363D; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #388BFD; }
+
+/* Selects en dark */
+select option { background: #161B22; color: #E6EDF3; }

@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Componenta — Plataforma de Repuestos Automotrices</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0D1117;
+      --surface:   #161B22;
+      --card:      #21262D;
+      --border:    rgba(240,246,252,0.10);
+      --accent:    #388BFD;
+      --accent2:   #1F6FEB;
+      --text:      #E6EDF3;
+      --muted:     #8B949E;
+      --subtle:    #6E7681;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: fixed; left: 0; top: 0;
+      width: 64px; height: 100vh;
+      background: #010409;
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      align-items: center;
+      padding: 16px 0 24px;
+      z-index: 50;
+    }
+    .logo-btn {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: linear-gradient(135deg, #388BFD, #1F6FEB);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 900; font-size: 15px;
+      text-decoration: none; margin-bottom: 24px;
+    }
+    .nav-item {
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 8px; cursor: pointer; transition: background 0.15s;
+      color: #8B949E; font-size: 18px;
+    }
+    .nav-item:hover, .nav-item.active { background: rgba(56,139,253,0.15); color: #79C0FF; }
+
+    /* ── Main layout ── */
+    .main { margin-left: 64px; min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* ── Topbar ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 40;
+      background: rgba(1,4,9,0.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px;
+    }
+    .topbar-brand { display: flex; align-items: center; gap: 10px; }
+    .topbar-logo {
+      width: 26px; height: 26px; border-radius: 7px;
+      background: linear-gradient(135deg, #388BFD, #1F6FEB);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 900; font-size: 13px;
+    }
+    .topbar-name { font-weight: 700; font-size: 14px; color: var(--text); }
+    .badge { font-size: 11px; color: var(--muted); padding: 2px 8px; background: var(--card); border-radius: 20px; }
+    .topbar-link { font-size: 13px; color: var(--muted); text-decoration: none; }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg,#388BFD,#1F6FEB); display: flex; align-items: center; justify-content: center; color:#fff; font-weight:700; font-size:13px; }
+
+    /* ── Page content ── */
+    .page { flex: 1; padding: 0 32px 60px; max-width: 960px; width: 100%; margin: 0 auto; }
+
+    /* ── Hero ── */
+    .hero {
+      margin: 32px 0;
+      background: var(--surface);
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 32px rgba(0,0,0,0.4);
+      padding: 44px 52px;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute;
+      top: -80px; right: -80px;
+      width: 280px; height: 280px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(56,139,253,0.16) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(56,139,253,0.1);
+      border: 1px solid rgba(56,139,253,0.3);
+      border-radius: 20px; padding: 4px 12px;
+      font-size: 12px; font-weight: 600; color: #79C0FF;
+      margin-bottom: 18px;
+    }
+    .hero h1 {
+      font-size: 34px; font-weight: 800;
+      color: var(--text); margin-bottom: 14px;
+      line-height: 1.2; letter-spacing: -0.5px;
+    }
+    .hero h1 span {
+      background: linear-gradient(90deg,#388BFD,#58A6FF);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero p { font-size: 15px; color: var(--muted); margin-bottom: 28px; max-width: 440px; line-height: 1.65; }
+    .hero-tags { display: flex; gap: 10px; flex-wrap: wrap; }
+    .hero-tag {
+      display: flex; align-items: center; gap: 7px;
+      background: rgba(240,246,252,0.05);
+      border: 1px solid rgba(240,246,252,0.08);
+      border-radius: 8px; padding: 6px 12px;
+      font-size: 12px; color: var(--muted); font-weight: 500;
+    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #388BFD; }
+
+    /* ── Steps ── */
+    .steps { display: flex; align-items: center; gap: 0; margin-bottom: 28px; }
+    .step-pill {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px; border-radius: 14px; flex: 1;
+      background: var(--card);
+      border: 1.5px solid rgba(240,246,252,0.07);
+      transition: all 0.3s;
+    }
+    .step-pill.done { background: #1A56DB; border-color: rgba(56,139,253,0.5); }
+    .step-pill.current { background: var(--surface); border-color: rgba(56,139,253,0.4); box-shadow: 0 2px 16px rgba(56,139,253,0.18); }
+    .step-icon {
+      width: 30px; height: 30px; border-radius: 10px; flex-shrink: 0;
+      background: rgba(240,246,252,0.05);
+      border: 2px solid rgba(240,246,252,0.1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+    .step-pill.current .step-icon { background: rgba(56,139,253,0.15); border-color: #388BFD; }
+    .step-pill.done .step-icon { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); }
+    .step-label { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .step-desc  { font-size: 11px; color: var(--muted); }
+    .step-connector { flex: 0 0 24px; height: 2px; background: rgba(240,246,252,0.06); margin: 0 4px; }
+    .step-connector.done { background: rgba(56,139,253,0.4); }
+
+    /* ── Content card ── */
+    .card {
+      background: var(--surface);
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 16px rgba(0,0,0,0.25);
+      overflow: hidden;
+    }
+    .card-bar { height: 3px; background: linear-gradient(90deg, #388BFD, #6366F1); }
+    .card-body { padding: 36px 40px; }
+
+    /* ── Form styles ── */
+    label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    input, select, textarea {
+      width: 100%; padding: 11px 14px; border-radius: 10px;
+      background: var(--card); color: var(--text); font-size: 14px;
+      border: 1.5px solid var(--border); outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus, select:focus { border-color: #388BFD; }
+    .form-group { margin-bottom: 20px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 22px; border-radius: 10px; border: none;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-primary { background: linear-gradient(135deg,#388BFD,#1F6FEB); color: #fff; }
+    .btn-secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn:hover { opacity: 0.88; }
+
+    /* ── Stats grid ── */
+    .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin: 24px 0; }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px;
+    }
+    .stat-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+    .stat-value { font-size: 26px; font-weight: 900; color: var(--text); }
+    .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .stat-icon { float: right; width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+
+    /* ── Marketplace header ── */
+    .mkt-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .mkt-topbar {
+      background: #010409; padding: 6px 20px;
+      display: flex; justify-content: space-between;
+      font-size: 12px; color: var(--muted);
+    }
+    .mkt-main { padding: 14px 20px; display: flex; align-items: center; gap: 16px; }
+    .mkt-logo { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg,#388BFD,#1F6FEB); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 18px; }
+    .mkt-search {
+      flex: 1; max-width: 520px; display: flex;
+      border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden;
+      background: #21262D;
+    }
+    .mkt-search input { flex:1; padding: 11px 16px; background: transparent; color: var(--text); border: none; font-size: 14px; outline: none; }
+    .mkt-search button { background: linear-gradient(135deg,#388BFD,#1F6FEB); padding: 0 18px; border: none; cursor: pointer; color:#fff; font-size: 16px; }
+    .mkt-cats {
+      background: #010409;
+      border-top: 1px solid rgba(240,246,252,0.07);
+      padding: 0 20px; display: flex;
+    }
+    .cat-btn {
+      padding: 11px 15px; border: none; background: transparent;
+      color: var(--muted); font-size: 13px; cursor: pointer;
+      border-bottom: 2px solid transparent; white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .cat-btn.active { color: var(--text); border-bottom-color: #388BFD; background: rgba(56,139,253,0.08); }
+    .cat-btn:hover { color: #CDD9E5; }
+
+    /* ── Product grid ── */
+    .products { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 24px; }
+    .product-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .product-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.3); border-color: rgba(56,139,253,0.3); }
+    .product-img { width:100%; height: 140px; background: var(--card); display: flex; align-items: center; justify-content: center; font-size: 40px; }
+    .product-body { padding: 14px; }
+    .product-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .product-sub { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+    .product-price { font-size: 17px; font-weight: 800; color: var(--text); }
+    .product-price span { font-size: 11px; font-weight: 500; color: var(--muted); }
+    .badge-estado {
+      display: inline-block; padding: 2px 8px; border-radius: 6px;
+      font-size: 10px; font-weight: 700; margin-bottom: 8px;
+    }
+    .badge-green { background: rgba(63,185,80,0.15); color: #3FB950; }
+    .badge-blue  { background: rgba(56,139,253,0.15); color: #79C0FF; }
+    .badge-amber { background: rgba(210,153,34,0.15); color: #D29922; }
+    .btn-buy {
+      width: 100%; padding: 9px; border-radius: 8px; border: none;
+      background: linear-gradient(135deg,#388BFD,#1F6FEB);
+      color: #fff; font-size: 13px; font-weight: 600; cursor: pointer;
+      margin-top: 10px;
+    }
+
+    /* ── Section title ── */
+    .section-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .section-sub   { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; gap: 2px; background: rgba(240,246,252,0.06); border-radius: 12px; padding: 4px; width: fit-content; margin-bottom: 20px; }
+    .tab { padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; color: var(--muted); cursor: pointer; border: none; background: transparent; }
+    .tab.active { background: var(--surface); color: var(--text); font-weight: 700; }
+
+    /* ── Timeline ── */
+    .timeline { display: flex; flex-direction: column; gap: 0; }
+    .timeline-item { display: flex; gap: 12px; }
+    .timeline-dot-col { display: flex; flex-direction: column; align-items: center; width: 28px; }
+    .timeline-dot { width: 28px; height: 28px; border-radius: 50%; background: #388BFD; border: 2px solid rgba(56,139,253,0.5); display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+    .timeline-dot.muted { background: var(--card); border-color: var(--border); }
+    .timeline-line { width: 2px; flex: 1; background: var(--border); min-height: 16px; margin: 2px 0; }
+    .timeline-content { padding-bottom: 16px; padding-top: 2px; }
+    .timeline-label { font-size: 13px; font-weight: 700; color: var(--text); }
+    .timeline-msg   { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .timeline-time  { font-size: 11px; color: var(--subtle); margin-top: 3px; }
+
+    /* ── Utilities ── */
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .gap-2 { gap: 8px; }
+    .gap-3 { gap: 12px; }
+    .mt-2 { margin-top: 8px; }
+    .text-accent { color: #388BFD; }
+    .text-muted { color: var(--muted); font-size: 13px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .stats { grid-template-columns: repeat(2,1fr); }
+      .products { grid-template-columns: repeat(2,1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<nav class="sidebar">
+  <a href="#" class="logo-btn">C</a>
+  <div class="nav-item active" title="Nuevo ingreso">＋</div>
+  <div class="nav-item" title="Inventario">▤</div>
+  <div class="nav-item" title="Pedidos">📦</div>
+  <div class="nav-item" title="Dashboard">📊</div>
+  <div class="nav-item" title="Chat">💬</div>
+  <div class="nav-item" title="Planes">💳</div>
+  <div class="nav-item" title="Mi cuenta">👤</div>
+  <div style="flex:1"></div>
+  <div class="nav-item" title="Marketplace">🛍️</div>
+</nav>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-logo">C</div>
+      <span class="topbar-name">Componenta</span>
+      <span class="badge">Nuevo ingreso</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="#" class="topbar-link">Mi inventario</a>
+      <div class="avatar">O</div>
+    </div>
+  </header>
+
+  <!-- PAGE -->
+  <div class="page">
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-badge">✦ Potenciado por Gemini AI</div>
+      <h1>
+        Publica tus repuestos<br>
+        <span>en menos de 30 segundos</span>
+      </h1>
+      <p>Saca una foto, la IA identifica la pieza, marca y compatibilidad automáticamente. Llega al marketplace al instante.</p>
+      <div class="hero-tags">
+        <div class="hero-tag"><div class="dot"></div> 30 seg promedio</div>
+        <div class="hero-tag"><div class="dot"></div> Compatibilidad IA</div>
+        <div class="hero-tag"><div class="dot"></div> Visible en Chile</div>
+      </div>
+    </div>
+
+    <!-- STEPS -->
+    <div class="steps">
+      <div class="step-pill current">
+        <div class="step-icon">🚗</div>
+        <div>
+          <div class="step-label">Vehículo</div>
+          <div class="step-desc">Marca, modelo y año</div>
+        </div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-pill">
+        <div class="step-icon">📷</div>
+        <div class="step-label" style="color:#6E7681">Paso 1</div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-pill">
+        <div class="step-icon">🧠</div>
+        <div class="step-label" style="color:#6E7681">Paso 2</div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-pill">
+        <div class="step-icon">🚀</div>
+        <div class="step-label" style="color:#6E7681">Paso 3</div>
+      </div>
+    </div>
+
+    <!-- CONTENT CARD -->
+    <div class="card">
+      <div class="card-bar"></div>
+      <div class="card-body">
+        <div class="section-title">¿De qué vehículo proviene la pieza?</div>
+        <div class="section-sub">Esto mejora la compatibilidad en el marketplace</div>
+        <div class="form-group">
+          <label>Marca del vehículo</label>
+          <select><option>Toyota</option><option>Chevrolet</option><option>Hyundai</option><option>Nissan</option><option>Kia</option></select>
+        </div>
+        <div class="form-group">
+          <label>Modelo</label>
+          <select><option>Corolla</option><option>Yaris</option><option>Hilux</option></select>
+        </div>
+        <div class="form-group">
+          <label>Año</label>
+          <select><option>2022</option><option>2021</option><option>2020</option><option>2019</option></select>
+        </div>
+        <div class="flex gap-2" style="margin-top:8px">
+          <button class="btn btn-primary">Continuar →</button>
+          <button class="btn btn-secondary">Saltar este paso</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS (vista Dashboard) -->
+    <div style="margin-top:40px">
+      <div class="section-title" style="font-size:18px; margin-bottom:4px">Dashboard</div>
+      <div class="section-sub">Resumen de tu actividad</div>
+      <div class="stats">
+        <div class="stat-card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div class="stat-label">Publicadas</div>
+            <div class="stat-icon" style="background:rgba(56,139,253,0.12);color:#388BFD">📦</div>
+          </div>
+          <div class="stat-value">24</div>
+          <div class="stat-sub">18 disponibles</div>
+        </div>
+        <div class="stat-card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div class="stat-label">Vistas</div>
+            <div class="stat-icon" style="background:rgba(99,102,241,0.12);color:#818CF8">👁️</div>
+          </div>
+          <div class="stat-value">1.247</div>
+          <div class="stat-sub">+12% este mes</div>
+        </div>
+        <div class="stat-card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div class="stat-label">Vendidas</div>
+            <div class="stat-icon" style="background:rgba(63,185,80,0.12);color:#3FB950">✓</div>
+          </div>
+          <div class="stat-value">6</div>
+          <div class="stat-sub">Este mes</div>
+        </div>
+        <div class="stat-card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div class="stat-label">Ingresos</div>
+            <div class="stat-icon" style="background:rgba(210,153,34,0.12);color:#D29922">💰</div>
+          </div>
+          <div class="stat-value">$420k</div>
+          <div class="stat-sub">CLP este mes</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MARKETPLACE PREVIEW -->
+    <div style="margin-top:40px">
+      <div class="section-title" style="font-size:18px; margin-bottom:4px">Marketplace</div>
+      <div class="section-sub">Vista del comprador</div>
+
+      <!-- Marketplace header preview -->
+      <div class="card" style="overflow:visible;margin-bottom:20px">
+        <div class="mkt-topbar">
+          <div>componenta.cl · repuestos usados · Chile</div>
+          <div style="color:#388BFD">Panel vendedor →</div>
+        </div>
+        <div class="mkt-main">
+          <div class="mkt-logo">C</div>
+          <div style="line-height:1">
+            <div style="font-weight:900;font-size:15px;color:#E6EDF3">Componenta</div>
+            <div style="font-size:10px;color:#8B949E">repuestos usados</div>
+          </div>
+          <div class="mkt-search">
+            <input placeholder="Busca por nombre, marca o código OEM…" />
+            <button>🔍</button>
+          </div>
+        </div>
+        <div class="mkt-cats">
+          <button class="cat-btn active">☰ Todas</button>
+          <button class="cat-btn">⚙️ Motor</button>
+          <button class="cat-btn">⚡ Eléctrico</button>
+          <button class="cat-btn">🛑 Frenos</button>
+          <button class="cat-btn">🔩 Suspensión</button>
+          <button class="cat-btn">🔧 Transmisión</button>
+          <button class="cat-btn">🪑 Interior</button>
+        </div>
+      </div>
+
+      <!-- Products -->
+      <div class="products">
+        <div class="product-card">
+          <div class="product-img">🔧</div>
+          <div class="product-body">
+            <span class="badge-estado badge-green">Excelente</span>
+            <div class="product-title">Alternador Toyota Corolla</div>
+            <div class="product-sub">Toyota · Corolla · 2018–2022</div>
+            <div class="product-price">$85.000 <span>CLP</span></div>
+            <button class="btn-buy">Comprar ahora</button>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-img">🛑</div>
+          <div class="product-body">
+            <span class="badge-estado badge-blue">Buen estado</span>
+            <div class="product-title">Discos de freno delanteros</div>
+            <div class="product-sub">Hyundai · Elantra · 2019–2023</div>
+            <div class="product-price">$48.000 <span>CLP</span></div>
+            <button class="btn-buy">Comprar ahora</button>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-img">⚙️</div>
+          <div class="product-body">
+            <span class="badge-estado badge-amber">Con detalles</span>
+            <div class="product-title">Bomba de agua Nissan</div>
+            <div class="product-sub">Nissan · Sentra · 2016–2020</div>
+            <div class="product-price">$32.000 <span>CLP</span></div>
+            <button class="btn-buy">Comprar ahora</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDER TRACKING PREVIEW -->
+    <div style="margin-top:40px; margin-bottom:60px">
+      <div class="section-title" style="font-size:18px; margin-bottom:4px">Seguimiento de pedido</div>
+      <div class="section-sub">Vista del comprador</div>
+      <div class="card">
+        <div class="card-body">
+          <div class="tabs">
+            <div class="tab active">Mis pedidos</div>
+            <div class="tab">Confirmados</div>
+            <div class="tab">Despachados</div>
+          </div>
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-dot-col">
+                <div class="timeline-dot">✓</div>
+                <div class="timeline-line"></div>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-label">Pago confirmado</div>
+                <div class="timeline-msg">El vendedor recibió tu pedido</div>
+                <div class="timeline-time">2 jul 2026 · 10:30</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot-col">
+                <div class="timeline-dot">✓</div>
+                <div class="timeline-line"></div>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-label">Confirmado</div>
+                <div class="timeline-msg">El vendedor confirmó tu pedido y lo está preparando</div>
+                <div class="timeline-time">2 jul 2026 · 11:15</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot-col">
+                <div class="timeline-dot muted">→</div>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-label" style="color:#6E7681">En camino</div>
+                <div class="timeline-msg">Esperando despacho</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
