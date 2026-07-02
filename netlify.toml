@@ -11,6 +11,10 @@
   NEXT_PUBLIC_CLERK_SIGN_UP_URL = "/sign-up"
   NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL = "/"
   NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL = "/"
+  CLERK_SECRET_KEY = "sk_test_HzhetHbtekDJU1tjenkaAXXviX9DBgR0Do33MKFu45"
+  SUPABASE_SERVICE_ROLE_KEY = "sb_secret_xSOC6wQptvenRQl_W-yA8g_UT2IB9Yf"
+  GEMINI_API_KEY = "AQ.Ab8RN6KFlCcDB39JpfH21IaeWfBRynbkgq99tX8mzToeJRJo8w"
+  FLOW_SANDBOX = "true"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
