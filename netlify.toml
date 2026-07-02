@@ -4,6 +4,13 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  NEXT_PUBLIC_SUPABASE_URL = "https://baibggmxuczcyoqslglw.supabase.co"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY = "sb_publishable_vPgTea5_17aYEqS-8MfKFQ_1PQ6Ol4N"
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_dm9jYWwta2l0dGVuLTQ1LmNsZXJrLmFjY291bnRzLmRldiQ"
+  NEXT_PUBLIC_CLERK_SIGN_IN_URL = "/sign-in"
+  NEXT_PUBLIC_CLERK_SIGN_UP_URL = "/sign-up"
+  NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL = "/"
+  NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL = "/"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
