@@ -25,6 +25,7 @@ interface Props {
   topPiezas:        TopPieza[]
   recentItems:      TopPieza[]
   isDemo:           boolean
+  plan:             string
 }
 
 function StatCard({
@@ -62,8 +63,9 @@ const ESTADO_DOT: Record<string, string> = {
 
 export default function DashboardClient({
   totalPublicadas, totalDisponibles, totalVendidas,
-  totalVistas, ingresosMes, topPiezas, recentItems, isDemo,
+  totalVistas, ingresosMes, topPiezas, recentItems, isDemo, plan,
 }: Props) {
+  const isPro = plan === 'pro'
   const tasaVenta = totalPublicadas > 0 ? Math.round((totalVendidas / totalPublicadas) * 100) : 0
 
   return (
@@ -218,16 +220,25 @@ export default function DashboardClient({
           {/* Plan actual */}
           <div style={{ background: '#161B22', borderRadius: 20, border: '1.5px solid rgba(255,255,255,0.1)', padding: '18px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
             <p style={{ fontSize: 11, fontWeight: 700, color: '#B1BAC4', textTransform: 'uppercase', letterSpacing: 0.5, margin: '0 0 10px' }}>Plan actual</p>
-            <p style={{ fontSize: 15, fontWeight: 800, color: '#E6EDF3', margin: '0 0 4px' }}>Plan Gratuito</p>
-            <div style={{ margin: '10px 0', background: '#21262D', borderRadius: 8, height: 6, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${Math.min(100, (totalPublicadas / 5) * 100)}%`, background: totalPublicadas >= 5 ? '#dc2626' : '#1A56DB', borderRadius: 8, transition: 'width 0.5s' }} />
-            </div>
-            <p style={{ fontSize: 12, color: '#B1BAC4', margin: '0 0 14px' }}>
-              {totalPublicadas}/5 piezas usadas
+            <p style={{ fontSize: 15, fontWeight: 800, color: isPro ? '#79C0FF' : '#E6EDF3', margin: '0 0 4px' }}>
+              {isPro ? '⚡ Plan Pro' : 'Plan Gratuito'}
             </p>
-            <Link href="/planes" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '9px', borderRadius: 10, background: '#388BFD', color: '#fff', fontWeight: 700, fontSize: 12, textDecoration: 'none' }}>
-              <Zap size={12} /> Subir a Plan Pro
-            </Link>
+            {!isPro && (
+              <>
+                <div style={{ margin: '10px 0', background: '#21262D', borderRadius: 8, height: 6, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${Math.min(100, (totalPublicadas / 5) * 100)}%`, background: totalPublicadas >= 5 ? '#dc2626' : '#1A56DB', borderRadius: 8, transition: 'width 0.5s' }} />
+                </div>
+                <p style={{ fontSize: 12, color: '#B1BAC4', margin: '0 0 14px' }}>
+                  {totalPublicadas}/5 piezas usadas
+                </p>
+                <Link href="/planes" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '9px', borderRadius: 10, background: '#388BFD', color: '#fff', fontWeight: 700, fontSize: 12, textDecoration: 'none' }}>
+                  <Zap size={12} /> Subir a Plan Pro
+                </Link>
+              </>
+            )}
+            {isPro && (
+              <p style={{ fontSize: 12, color: '#8B949E', margin: '4px 0 0' }}>Piezas ilimitadas · WhatsApp IA</p>
+            )}
           </div>
         </div>
       </div>

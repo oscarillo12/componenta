@@ -1,4 +1,4 @@
-﻿import { auth } from '@clerk/nextjs/server'
+﻿import { auth, currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { supabaseAdmin } from '@/lib/supabase-server'
 import SellerLayout from '@/components/SellerLayout'
@@ -7,6 +7,9 @@ import DashboardClient from './DashboardClient'
 export default async function DashboardPage() {
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')
+
+  const user = await currentUser()
+  const plan = (user?.publicMetadata?.plan as string) ?? 'gratuito'
 
   // MÃ©tricas reales desde Supabase
   const [{ data: products }, { data: allProducts }] = await Promise.all([
@@ -34,6 +37,7 @@ export default async function DashboardPage() {
         topPiezas={topPiezas}
         recentItems={items.slice(0, 6)}
         isDemo={items.length === 0}
+        plan={plan}
       />
     </SellerLayout>
   )
