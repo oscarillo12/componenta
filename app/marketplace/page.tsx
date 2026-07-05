@@ -69,12 +69,13 @@ function productToItem(p: Product) {
 }
 
 export default function MarketplacePage() {
-  const [busqueda,         setBusqueda]         = useState('')
-  const [categoria,        setCategoria]        = useState<string | null>(null)
-  const [orden,            setOrden]            = useState('Relevancia')
-  const [showOrden,        setShowOrden]        = useState(false)
-  const [showVehicleModal, setShowVehicleModal] = useState(false)
-  const [realItems,        setRealItems]        = useState<ReturnType<typeof productToItem>[]>([])
+  const [busqueda,           setBusqueda]           = useState('')
+  const [categoria,          setCategoria]          = useState<string | null>(null)
+  const [orden,              setOrden]              = useState('Relevancia')
+  const [showOrden,          setShowOrden]          = useState(false)
+  const [showVehicleModal,   setShowVehicleModal]   = useState(false)
+  const [showMobileFilters,  setShowMobileFilters]  = useState(false)
+  const [realItems,          setRealItems]          = useState<ReturnType<typeof productToItem>[]>([])
   const [vMake, setVMake] = useState(''); const [vModel, setVModel] = useState(''); const [vYear, setVYear] = useState('')
 
   useEffect(() => {
@@ -137,8 +138,8 @@ export default function MarketplacePage() {
             </div>
           </Link>
 
-          {/* Buscador */}
-          <div style={{ flex: 1, maxWidth: 560, display: 'flex', border: '1.5px solid rgba(255,255,255,0.15)', borderRadius: 10, overflow: 'hidden', background: '#21262D' }}>
+          {/* Buscador — oculto en móvil (se muestra en barra separada) */}
+          <div className="hidden sm:flex" style={{ flex: 1, maxWidth: 560, border: '1.5px solid rgba(255,255,255,0.15)', borderRadius: 10, overflow: 'hidden', background: '#21262D' }}>
             <input type="text" placeholder="Busca por nombre, marca o código OEM…" value={busqueda}
               onChange={e => setBusqueda(e.target.value)}
               style={{ flex: 1, padding: '11px 16px', fontSize: 14, border: 'none', outline: 'none', color: '#E6EDF3', background: 'transparent' }} />
@@ -221,11 +222,82 @@ export default function MarketplacePage() {
         </div>
       )}
 
-      {/* ═══════════ BODY ═══════════ */}
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 20px 60px', display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+      {/* ── Barra de búsqueda móvil (bajo el header en pantallas pequeñas) ── */}
+      <div className="sm:hidden" style={{ background: '#161B22', padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', gap: 8 }}>
+        <div style={{ flex: 1, display: 'flex', border: '1.5px solid rgba(255,255,255,0.15)', borderRadius: 10, overflow: 'hidden', background: '#21262D' }}>
+          <input type="text" placeholder="Buscar pieza, marca, OEM…" value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+            style={{ flex: 1, padding: '9px 12px', fontSize: 13, border: 'none', outline: 'none', color: '#E6EDF3', background: 'transparent' }} />
+          {busqueda && <button onPointerDown={() => setBusqueda('')} style={{ background: 'none', border: 'none', padding: '0 10px', cursor: 'pointer', color: '#8B949E', fontSize: 16 }}>×</button>}
+        </div>
+        <button onPointerDown={() => setShowMobileFilters(true)}
+          style={{ padding: '9px 14px', borderRadius: 10, border: `1.5px solid ${(categoria || vehicleSelected) ? 'rgba(56,139,253,0.5)' : 'rgba(255,255,255,0.15)'}`, background: (categoria || vehicleSelected) ? 'rgba(56,139,253,0.15)' : '#21262D', color: (categoria || vehicleSelected) ? '#79C0FF' : '#8B949E', fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 5 }}>
+          ⚙ Filtros{(categoria || vehicleSelected) ? ' •' : ''}
+        </button>
+      </div>
 
-        {/* ── SIDEBAR ── */}
-        <aside style={{ width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* Panel de filtros móvil (bottom sheet) */}
+      {showMobileFilters && (
+        <div className="filter-sheet-overlay" onClick={() => setShowMobileFilters(false)}>
+          <div className="filter-sheet" onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <span style={{ fontSize: 16, fontWeight: 800, color: '#E6EDF3' }}>Filtros</span>
+              <button onPointerDown={() => setShowMobileFilters(false)} style={{ background: '#21262D', border: 'none', borderRadius: 8, padding: '6px 10px', color: '#8B949E', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>×</button>
+            </div>
+
+            {/* Vehículo */}
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#E6EDF3', margin: '0 0 10px' }}>Mi vehículo</p>
+            {vehicleSelected ? (
+              <div style={{ background: 'rgba(56,139,253,0.15)', border: '1.5px solid rgba(56,139,253,0.4)', borderRadius: 10, padding: '10px 12px', marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontWeight: 700, color: '#A5D6FF', fontSize: 13 }}>{vMake} {vModel} {vYear}</span>
+                <button onPointerDown={() => { clearVehicle() }} style={{ background: 'none', border: 'none', color: '#fca5a5', cursor: 'pointer', fontSize: 12 }}>Quitar</button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+                <select value={vMake} onChange={e => { setVMake(e.target.value); setVModel(''); setVYear('') }}
+                  style={{ padding: '10px 12px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.1)', fontSize: 13, outline: 'none', background: '#21262D', color: '#E6EDF3' }}>
+                  <option value="">Marca</option>
+                  {makes.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+                <select value={vModel} onChange={e => { setVModel(e.target.value); setVYear('') }} disabled={!vMake}
+                  style={{ padding: '10px 12px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.1)', fontSize: 13, outline: 'none', background: '#21262D', color: '#E6EDF3', opacity: vMake ? 1 : 0.5 }}>
+                  <option value="">Modelo</option>
+                  {models.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+                <select value={vYear} onChange={e => setVYear(e.target.value)} disabled={!vModel}
+                  style={{ padding: '10px 12px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.1)', fontSize: 13, outline: 'none', background: '#21262D', color: '#E6EDF3', opacity: vModel ? 1 : 0.5 }}>
+                  <option value="">Año</option>
+                  {years.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+            )}
+
+            {/* Categorías */}
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#E6EDF3', margin: '16px 0 10px' }}>Categoría</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+              {CATEGORIAS.map(cat => (
+                <button key={String(cat.id)} onPointerDown={() => { setCategoria(cat.id); setShowMobileFilters(false) }}
+                  style={{ padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${categoria === cat.id ? 'rgba(56,139,253,0.5)' : 'rgba(255,255,255,0.08)'}`, background: categoria === cat.id ? 'rgba(56,139,253,0.15)' : '#21262D', color: categoria === cat.id ? '#79C0FF' : '#8B949E', fontSize: 12, fontWeight: categoria === cat.id ? 700 : 500, cursor: 'pointer', textAlign: 'left' }}>
+                  {cat.emoji} {cat.label}
+                </button>
+              ))}
+            </div>
+
+            {(categoria || vehicleSelected) && (
+              <button onPointerDown={() => { setCategoria(null); clearVehicle(); setShowMobileFilters(false) }}
+                style={{ marginTop: 16, width: '100%', padding: '12px', borderRadius: 10, border: '1.5px solid rgba(239,68,68,0.4)', background: 'rgba(239,68,68,0.1)', color: '#fca5a5', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                Limpiar filtros
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════ BODY ═══════════ */}
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 12px 80px', display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+
+        {/* ── SIDEBAR (solo desktop) ── */}
+        <aside className="mp-aside" style={{ width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
 
           {/* Selector vehículo */}
           <div style={{ background: '#161B22', borderRadius: 14, border: '1px solid rgba(255,255,255,0.1)', padding: '16px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
@@ -349,7 +421,7 @@ export default function MarketplacePage() {
               </button>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(190px,1fr))', gap: 12 }}>
+            <div className="mp-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(190px,1fr))', gap: 12 }}>
               {allItems.map(item => {
                 const ri = item as { isReal?: boolean; sellerNombre?: string; sellerTel?: string | null }
                 const isReal       = ri.isReal ?? false
@@ -401,11 +473,11 @@ export default function MarketplacePage() {
                       </p>
                       <p style={{ fontSize: 13, fontWeight: 600, color: '#E6EDF3', margin: 0, lineHeight: 1.35, minHeight: 36 }}>{item.pieza}</p>
 
-                      {/* OEM chip */}
+                      {/* Código de parte original (OEM) */}
                       {item.oem && (
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(56,139,253,0.15)', border: '1px solid rgba(56,139,253,0.4)', borderRadius: 6, padding: '2px 7px', width: 'fit-content' }}>
-                          <span style={{ fontSize: 9, fontWeight: 700, color: '#1d4ed8', letterSpacing: 0.3 }}>OEM</span>
-                          <span style={{ fontSize: 10, fontWeight: 600, color: '#1e40af', fontFamily: 'monospace' }}>{item.oem}</span>
+                        <div title="Número de parte original del fabricante (OEM)" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(56,139,253,0.12)', border: '1px solid rgba(56,139,253,0.35)', borderRadius: 6, padding: '2px 7px', width: 'fit-content', cursor: 'help' }}>
+                          <span style={{ fontSize: 9, fontWeight: 700, color: '#79C0FF', letterSpacing: 0.3 }}>N° Parte</span>
+                          <span style={{ fontSize: 10, fontWeight: 600, color: '#A5D6FF', fontFamily: 'monospace' }}>{item.oem}</span>
                         </div>
                       )}
 

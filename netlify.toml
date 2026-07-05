@@ -15,6 +15,9 @@
   SUPABASE_SERVICE_ROLE_KEY = "sb_secret_xSOC6wQptvenRQl_W-yA8g_UT2IB9Yf"
   GEMINI_API_KEY = "AQ.Ab8RN6KFlCcDB39JpfH21IaeWfBRynbkgq99tX8mzToeJRJo8w"
   FLOW_SANDBOX = "true"
+  TWILIO_ACCOUNT_SID = ""
+  TWILIO_AUTH_TOKEN = ""
+  TWILIO_WHATSAPP_FROM = "whatsapp:+14155238886"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"

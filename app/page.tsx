@@ -77,7 +77,8 @@ export default function Home() {
     <div style={{ display: 'flex', minHeight: '100vh', background: '#0D1117', fontFamily: 'system-ui,sans-serif' }}>
       <Sidebar />
 
-      <div style={{ flex: 1, marginLeft: 64, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      {/* sm:ml-16 = sidebar desktop; pb-16 = espacio barra inferior móvil */}
+      <div className="flex-1 sm:ml-16 pb-16 sm:pb-0" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
 
         {/* ── Header ── */}
         <header style={{
