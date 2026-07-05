@@ -198,9 +198,11 @@ export default function DashboardClient({
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                 <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(34,197,94,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Zap size={14} color="#79C0FF" />
+                  <Zap size={14} color={isPro ? '#22c55e' : '#79C0FF'} />
                 </div>
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#79C0FF', textTransform: 'uppercase', letterSpacing: 0.5 }}>Próximamente</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: isPro ? '#22c55e' : '#79C0FF', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  {isPro ? '✓ Activado en tu plan' : 'Próximamente'}
+                </span>
               </div>
               <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: '0 0 8px', lineHeight: 1.4 }}>Agente WhatsApp IA</p>
               <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', margin: '0 0 14px', lineHeight: 1.5 }}>
@@ -211,9 +213,18 @@ export default function DashboardClient({
                 <p style={{ fontSize: 12, color: '#79C0FF', margin: 0, fontStyle: 'italic' }}>"Vendí el amortiguador del Corolla"</p>
                 <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: '4px 0 0' }}>→ Pieza marcada como vendida automáticamente</p>
               </div>
-              <Link href="/planes" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 14px', borderRadius: 10, background: 'rgba(22,163,74,0.25)', border: '1px solid rgba(22,163,74,0.4)', color: '#79C0FF', fontWeight: 700, fontSize: 12, textDecoration: 'none' }}>
-                <Tag size={12} /> Disponible en Plan Pro
-              </Link>
+              {isPro ? (
+                <div style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 10, padding: '10px 12px' }}>
+                  <p style={{ fontSize: 11, color: '#22c55e', fontWeight: 700, margin: '0 0 4px' }}>Para activar tu número:</p>
+                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', margin: 0, lineHeight: 1.5 }}>
+                    Contáctanos en <span style={{ color: '#79C0FF' }}>soporte@componenta.cl</span> con tu número de WhatsApp y lo vinculamos en 24h.
+                  </p>
+                </div>
+              ) : (
+                <Link href="/planes" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 14px', borderRadius: 10, background: 'rgba(22,163,74,0.25)', border: '1px solid rgba(22,163,74,0.4)', color: '#79C0FF', fontWeight: 700, fontSize: 12, textDecoration: 'none' }}>
+                  <Tag size={12} /> Disponible en Plan Pro
+                </Link>
+              )}
             </div>
           </div>
 
