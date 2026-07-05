@@ -45,7 +45,7 @@ export default function SellerLayout({ children, section }: SellerLayoutProps) {
             <UserButton appearance={{ elements: { avatarBox: 'w-8 h-8' } }} />
           </div>
         </header>
-        <main style={{ padding: '24px 24px 60px', maxWidth: 1200 }}>{children}</main>
+        <main style={{ padding: '16px 16px 80px', maxWidth: 1200, width: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>{children}</main>
       </div>
     </div>
   )

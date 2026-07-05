@@ -82,6 +82,16 @@ select option { background: #161B22; color: #E6EDF3; }
   to   { transform: translateY(0); }
 }
 
+/* Dashboard grid: 2 cols en desktop, 1 col en móvil */
+@media (max-width: 768px) {
+  .dash-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
 /* Chat buyer — sin sidebar */
 .chat-buyer-wrap {
   display: flex;

@@ -91,7 +91,7 @@ export default function DashboardClient({
       )}
 
       {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 16, marginBottom: 28 }}>
+      <div className="kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12, marginBottom: 24 }}>
         <StatCard label="Piezas en venta" value={String(totalDisponibles)} sub={`${totalPublicadas} publicadas en total`} icon={Package} color="#1F6FEB" />
         <StatCard label="Total vendidas" value={String(totalVendidas)} sub={`${tasaVenta}% tasa de venta`} icon={ShoppingBag} color="#79C0FF" trend={totalVendidas > 0 ? 'Histórico' : undefined} />
         <StatCard label="Vistas totales" value={totalVistas.toLocaleString('es-CL')} sub="Acumulado todo el tiempo" icon={Eye} color="#7c3aed" />
@@ -104,7 +104,7 @@ export default function DashboardClient({
         />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 20, alignItems: 'start' }}>
+      <div className="dash-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 20, alignItems: 'start' }}>
 
         {/* Columna principal: piezas recientes */}
         <div style={{ background: '#161B22', borderRadius: 20, border: '1.5px solid rgba(255,255,255,0.1)', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
