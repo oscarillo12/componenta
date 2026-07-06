@@ -361,6 +361,38 @@ export default function ProductoPage({ params }: { params: Promise<{ id: string 
                 </div>
               ))}
             </div>
+
+            {/* MAPA */}
+            {mockSeller.direccion && (
+              <div style={{ background:'#fff', borderRadius:16, border:'1px solid #e5e7eb', overflow:'hidden' }}>
+                <div style={{ padding:'14px 16px 10px', display:'flex', alignItems:'center', gap:8 }}>
+                  <div style={{ width:30, height:30, borderRadius:9, background:'#fef3c7', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                    <MapPin size={15} color="#d97706" />
+                  </div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <p style={{ fontSize:12, fontWeight:700, color:'#111827', margin:'0 0 1px' }}>Ubicación del vendedor</p>
+                    <p style={{ fontSize:11, color:'#6b7280', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{mockSeller.direccion}</p>
+                  </div>
+                </div>
+                <div style={{ position:'relative', height:180 }}>
+                  <iframe
+                    title="Mapa vendedor"
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(mockSeller.direccion)}&output=embed&z=15`}
+                    style={{ width:'100%', height:'100%', border:'none', display:'block' }}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                  {/* Overlay link para abrir en Google Maps */}
+                  <a
+                    href={`https://maps.google.com/maps?q=${encodeURIComponent(mockSeller.direccion)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ position:'absolute', bottom:8, right:8, display:'flex', alignItems:'center', gap:5, padding:'6px 10px', borderRadius:8, background:'#fff', border:'1px solid #e5e7eb', fontSize:11, fontWeight:600, color:'#374151', textDecoration:'none', boxShadow:'0 2px 8px rgba(0,0,0,.12)' }}>
+                    <MapPin size={11} color="#1d4ed8" /> Ver en Google Maps
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

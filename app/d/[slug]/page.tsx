@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import type { Product } from '@/lib/supabase'
 import type { EstadoPieza } from '@/lib/types'
+import { mockDesarmaduras, mockInventory } from '@/lib/mock-data'
 
 const ESTADO: Record<EstadoPieza, { label: string; color: string; bg: string; border: string }> = {
   excelente:      { label: 'Excelente',    color: '#15803d', bg: '#f0fdf4', border: '#86efac' },
@@ -86,13 +87,39 @@ export default function DesarmaduriaPage({ params }: { params: Promise<{ slug: s
     fetch(`/api/d/${slug}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (!data || data.notFound) return
-        setProfile(data)
-        fetch('/api/profile').then(r=>r.json()).then(me=>{
-          setIsOwner(me?.userId===data.user_id)
-        }).catch(()=>{})
-        fetch(`/api/marketplace?seller=${data.user_id}&limit=100`)
-          .then(r=>r.json()).then(d=>setProducts(d.products??[])).catch(()=>{})
+        if (data && !data.notFound) {
+          setProfile(data)
+          fetch('/api/profile').then(r=>r.json()).then(me=>{
+            setIsOwner(me?.userId===data.user_id)
+          }).catch(()=>{})
+          fetch(`/api/marketplace?seller=${data.user_id}&limit=100`)
+            .then(r=>r.json()).then(d=>setProducts(d.products??[])).catch(()=>{})
+          return
+        }
+        // Caer a datos mock si no existe en Supabase
+        const mock = mockDesarmaduras.find(d => d.slug === slug)
+        if (mock) {
+          setProfile({
+            slug: mock.slug,
+            nombre: mock.nombre,
+            tagline: mock.tagline,
+            descripcion: mock.descripcion,
+            color: mock.color,
+            whatsapp: mock.telefono,
+            direccion: mock.direccion,
+            horario: mock.horario,
+            especialidades: mock.especialidades,
+          })
+          const mockProds = mockInventory
+            .filter(i => i.vendedorSlug === slug && i.disponible)
+            .map(i => ({
+              id: i.id, pieza: i.pieza, marca: i.marca, modelo: i.modelo,
+              anios: i.anios, oem: i.oem ?? null, estado: i.estado,
+              precio: i.precio, disponible: i.disponible, vistas: i.vistas,
+              imagen_url: null, seller_nombre: mock.nombre, seller_telefono: mock.telefono,
+            } as unknown as Product))
+          setProducts(mockProds)
+        }
       })
       .finally(()=>setLoading(false))
   }, [slug])
