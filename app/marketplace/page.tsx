@@ -309,9 +309,11 @@ export default function MarketplacePage() {
       {/* ══ HERO — solo cuando no hay búsqueda activa ══ */}
       {!inSearch && (
         <>
-          <section style={{ background:'linear-gradient(130deg,#0f172a 0%,#1e3a5f 55%,#1e40af 100%)', padding:'56px 24px 64px', position:'relative', overflow:'hidden' }}>
-            <div style={{ position:'absolute', top:-80, right:-80, width:360, height:360, borderRadius:'50%', background:'rgba(59,130,246,.12)', pointerEvents:'none' }} />
-            <div style={{ position:'absolute', bottom:-40, left:'25%', width:240, height:240, borderRadius:'50%', background:'rgba(255,255,255,.04)', pointerEvents:'none' }} />
+          <section style={{ position:'relative', padding:'56px 24px 64px', overflow:'hidden' }}>
+            {/* foto fondo */}
+            <div style={{ position:'absolute', inset:0, backgroundImage:`url(https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1600&auto=format&q=80)`, backgroundSize:'cover', backgroundPosition:'center 40%' }} />
+            {/* overlay oscuro */}
+            <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg,rgba(8,12,28,.93) 0%,rgba(15,40,90,.90) 55%,rgba(20,55,160,.85) 100%)' }} />
 
             <div style={{ maxWidth:700, margin:'0 auto', textAlign:'center', position:'relative', zIndex:1 }}>
               <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'rgba(255,255,255,.08)', border:'1px solid rgba(255,255,255,.15)', borderRadius:20, padding:'5px 14px', fontSize:12, fontWeight:600, color:'rgba(255,255,255,.75)', marginBottom:20 }}>
@@ -363,9 +365,13 @@ export default function MarketplacePage() {
                     <div style={{ background:'#fff', borderRadius:14, border:'1px solid #e5e7eb', overflow:'hidden', transition:'all .2s' }}
                       onMouseEnter={e=>{const el=e.currentTarget as HTMLElement;el.style.boxShadow='0 6px 20px rgba(0,0,0,.08)';el.style.transform='translateY(-2px)'}}
                       onMouseLeave={e=>{const el=e.currentTarget as HTMLElement;el.style.boxShadow='';el.style.transform=''}}>
-                      <div style={{ height:54, background:`linear-gradient(135deg,${d.color}dd,${d.color}88)`, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                        <div style={{ width:40, height:40, background:'rgba(255,255,255,.25)', border:'2px solid rgba(255,255,255,.5)', borderRadius:11, display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight:900, fontSize:16 }}>
-                          {d.nombre.split(' ').map((w:string)=>w[0]).join('').slice(0,2)}
+                      <div style={{ height:72, position:'relative', overflow:'hidden' }}>
+                        <div style={{ position:'absolute', inset:0, backgroundImage:`url(https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=400&auto=format&q=70)`, backgroundSize:'cover', backgroundPosition:'center' }} />
+                        <div style={{ position:'absolute', inset:0, background:`linear-gradient(135deg,${d.color}cc,${d.color}88)` }} />
+                        <div style={{ position:'relative', zIndex:1, height:'100%', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                          <div style={{ width:42, height:42, background:'rgba(255,255,255,.25)', border:'2px solid rgba(255,255,255,.6)', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight:900, fontSize:17, backdropFilter:'blur(4px)' }}>
+                            {d.nombre.split(' ').map((w:string)=>w[0]).join('').slice(0,2)}
+                          </div>
                         </div>
                       </div>
                       <div style={{ padding:'10px 12px 12px' }}>

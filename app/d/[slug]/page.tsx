@@ -174,12 +174,20 @@ export default function DesarmaduriaPage({ params }: { params: Promise<{ slug: s
       </nav>
 
       {/* ── HERO ── */}
-      <div style={{ background: profile.banner_url
-        ? `linear-gradient(to bottom,rgba(0,0,0,.55),rgba(0,0,0,.75)),url(${profile.banner_url}) center/cover`
-        : 'linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#1e3a5f 100%)',
-        padding:'52px 20px 0', position:'relative' }}>
+      <div style={{ position:'relative', padding:'52px 20px 0', overflow:'hidden' }}>
+        {/* foto fondo */}
+        <div style={{ position:'absolute', inset:0,
+          backgroundImage: profile.banner_url
+            ? `url(${profile.banner_url})`
+            : `url(https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=1400&auto=format&q=75)`,
+          backgroundSize:'cover', backgroundPosition:'center' }} />
+        {/* overlay */}
+        <div style={{ position:'absolute', inset:0,
+          background: profile.banner_url
+            ? 'linear-gradient(to bottom,rgba(0,0,0,.55),rgba(0,0,0,.78))'
+            : 'linear-gradient(135deg,rgba(8,12,28,.92) 0%,rgba(15,40,80,.88) 55%,rgba(20,50,140,.82) 100%)' }} />
 
-        <div style={{ maxWidth:1100, margin:'0 auto' }}>
+        <div style={{ maxWidth:1100, margin:'0 auto', position:'relative', zIndex:1 }}>
           {/* Identity */}
           <div style={{ display:'flex', gap:20, alignItems:'flex-end', marginBottom:32, flexWrap:'wrap' }}>
             <div style={{ width:88, height:88, borderRadius:22, flexShrink:0, background:`${accentColor}25`, border:`3px solid ${accentColor}70`, display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight:900, fontSize:26, letterSpacing:-1, boxShadow:'0 8px 32px rgba(0,0,0,.3)' }}>
