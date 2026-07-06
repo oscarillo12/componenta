@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import SellerLayout from '@/components/SellerLayout'
-import { Check, Copy, ExternalLink, MapPin, Clock, Phone, MessageCircle, Star, Shield, Package, TrendingUp, Award, Truck, AlertCircle, Loader2, ChevronDown, ChevronUp } from 'lucide-react'
+import { Check, Copy, ExternalLink, MapPin, Clock, Phone, MessageCircle, Star, Shield, Package, TrendingUp, Award, Truck, AlertCircle, Loader2, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
 
 const COLOR_PRESETS = [
   { label: 'Verde',   value: '#1A56DB' },
@@ -62,6 +62,7 @@ export default function MiTiendaPage() {
   const [specInput, setSpecInput] = useState('')
   const [copied,   setCopied]   = useState(false)
   const [showCustomColor, setShowCustomColor] = useState(false)
+  const [aiLoading, setAiLoading] = useState(false)
 
   useEffect(() => {
     fetch('/api/mi-tienda').then(r => r.json()).then(d => {
@@ -84,6 +85,20 @@ export default function MiTiendaPage() {
   const removeEspecialidad = (s: string) => {
     if (!form) return
     set('especialidades', form.especialidades.filter(e => e !== s))
+  }
+
+  const mejorarConIA = async () => {
+    if (!form) return
+    setAiLoading(true)
+    try {
+      const r = await fetch('/api/ai-describe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: form.nombre, especialidades: form.especialidades, ciudad: form.ciudad, tipo: 'desarmaduria' }),
+      })
+      const d = await r.json()
+      if (d.descripcion) set('descripcion', d.descripcion)
+    } finally { setAiLoading(false) }
   }
 
   const handleSave = async () => {
@@ -178,11 +193,19 @@ export default function MiTiendaPage() {
               <Field label="Frase de presentación">
                 <input value={form.tagline} onChange={e => set('tagline', e.target.value)} style={inputStyle} maxLength={80} placeholder="Ej: Repuestos usados de calidad desde 2010" />
               </Field>
-              <Field label="Descripción / Sobre nosotros">
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: '#E6EDF3' }}>Descripción / Sobre nosotros</label>
+                  <button onPointerDown={mejorarConIA} disabled={aiLoading}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(56,139,253,0.4)', background: 'rgba(56,139,253,0.1)', fontSize: 11, color: '#79C0FF', fontWeight: 600, cursor: 'pointer', touchAction: 'manipulation', opacity: aiLoading ? 0.6 : 1 }}>
+                    {aiLoading ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
+                    {aiLoading ? 'Generando…' : 'Mejorar con IA'}
+                  </button>
+                </div>
                 <textarea value={form.descripcion} onChange={e => set('descripcion', e.target.value)} rows={4}
                   style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.5 }}
                   placeholder="Cuenta quiénes son, en qué se especializan, qué garantías ofrecen…" />
-              </Field>
+              </div>
               <Field label="Especialidades">
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
                   {form.especialidades.map(s => (
