@@ -81,7 +81,7 @@ export default function Home() {
       <div className="flex-1 sm:ml-16 pb-16 sm:pb-0" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
 
         {/* ── Header ── */}
-        <header style={{
+        <header className="page-header" style={{
           position: 'sticky', top: 0, zIndex: 40,
           background: 'rgba(1,4,9,0.96)', backdropFilter: 'blur(12px)',
           borderBottom: '1px solid rgba(255,255,255,0.08)',
@@ -101,10 +101,10 @@ export default function Home() {
           </div>
         </header>
 
-        <main style={{ flex: 1, padding: '0 32px 48px', maxWidth: 960, width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
+        <main className="page-main" style={{ flex: 1, padding: '0 32px 48px', maxWidth: 960, width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
 
           {/* ── Hero Banner ── */}
-          <div style={{
+          <div className="hero-banner" style={{
             marginTop: 32, marginBottom: 32,
             borderRadius: 20,
             background: '#161B22',
@@ -123,7 +123,7 @@ export default function Home() {
                 <span style={{ fontSize: 12, fontWeight: 600, color: '#79C0FF' }}>Potenciado por Gemini AI</span>
               </div>
 
-              <h1 style={{ fontSize: 34, fontWeight: 800, color: '#E6EDF3', margin: '0 0 12px', lineHeight: 1.2, letterSpacing: -0.5 }}>
+              <h1 className="hero-title" style={{ fontSize: 34, fontWeight: 800, color: '#E6EDF3', margin: '0 0 12px', lineHeight: 1.2, letterSpacing: -0.5 }}>
                 Publica tus repuestos<br />
                 <span style={{ background: 'linear-gradient(90deg,#388BFD,#58A6FF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                   en menos de 30 segundos
@@ -149,7 +149,7 @@ export default function Home() {
           </div>
 
           {/* ── Step progress pills ── */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 28 }}>
+          <div className="step-pills" style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 28 }}>
             {STEPS.map((s, i) => {
               const isDone    = step > s.num
               const isCurrent = step === s.num
@@ -210,7 +210,7 @@ export default function Home() {
               transition: 'background 0.5s',
             }} />
 
-            <div style={{ padding: '36px 40px' }}>
+            <div className="step-content" style={{ padding: '36px 40px' }}>
               {step === 0 && <Step0Vehicle onConfirm={handleVehicle} />}
 
               {step === 1 && <Step1Photo onPhotoSelected={handlePhotoSelected} />}

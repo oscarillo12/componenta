@@ -13,7 +13,7 @@ export default function SellerLayout({ children, section }: SellerLayoutProps) {
       <Sidebar />
       {/* sm:ml-16 = espacio para sidebar desktop; pb-16 = espacio para nav inferior móvil */}
       <div className="flex-1 sm:ml-16 pb-16 sm:pb-0">
-        <header style={{
+        <header className="page-header" style={{
           background: 'rgba(1,4,9,0.95)',
           backdropFilter: 'blur(12px)',
           borderBottom: '1px solid rgba(255,255,255,0.08)',
