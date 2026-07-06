@@ -254,8 +254,9 @@ export default function MarketplacePage() {
   const [showVeh,  setShowVeh]  = useState(false)
   const [showFilt, setShowFilt] = useState(false)
   const [items,    setItems]    = useState<ReturnType<typeof toItem>[]>([])
-  const [mlItems,  setMlItems]  = useState<MlItem[]>([])
-  const [mlLoading,setMlLoading]= useState(false)
+  const [mlItems,      setMlItems]      = useState<MlItem[]>([])
+  const [mlLoading,    setMlLoading]    = useState(false)
+  const [mlConfigured, setMlConfigured] = useState<boolean | null>(null)
   const [make, setMake] = useState(''); const [model, setModel] = useState(''); const [year, setYear] = useState('')
 
   useEffect(() => {
@@ -272,8 +273,8 @@ export default function MarketplacePage() {
     const t = setTimeout(() => {
       fetch(`/api/mercadolibre?q=${encodeURIComponent(query)}`)
         .then(r => r.json())
-        .then(d => setMlItems(d.items ?? []))
-        .catch(() => setMlItems([]))
+        .then(d => { setMlItems(d.items ?? []); setMlConfigured(d.configured ?? false) })
+        .catch(() => { setMlItems([]); setMlConfigured(false) })
         .finally(() => setMlLoading(false))
     }, 500) // debounce
     return () => clearTimeout(t)
@@ -603,7 +604,7 @@ export default function MarketplacePage() {
               </div>}
 
           {/* ── Sección MercadoLibre ── */}
-          {query.length >= 3 && (mlLoading || mlItems.length > 0) && (
+          {query.length >= 3 && (mlLoading || mlItems.length > 0 || mlConfigured === false) && (
             <div style={{ marginTop:32 }}>
               {/* header ML */}
               <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
@@ -617,7 +618,25 @@ export default function MarketplacePage() {
                 </div>
               </div>
 
-              {mlLoading
+              {mlConfigured === false
+                ? /* banner configuración */
+                  <div style={{ background:'#fffbeb', border:'2px dashed #fcd34d', borderRadius:14, padding:'22px 24px', display:'flex', alignItems:'center', gap:18, flexWrap:'wrap' }}>
+                    <div style={{ background:'#ffe600', borderRadius:12, padding:'10px 14px', display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
+                      <svg width="20" height="20" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#FFE600"/><path d="M7 14L11.5 9L14 13L16.5 9L21 14L14 21L7 14Z" fill="#2D3277"/></svg>
+                      <span style={{ fontSize:14, fontWeight:800, color:'#2D3277' }}>MercadoLibre</span>
+                    </div>
+                    <div style={{ flex:1 }}>
+                      <p style={{ fontWeight:700, fontSize:14, color:'#92400e', margin:'0 0 4px' }}>Conecta MercadoLibre para mostrar productos aquí</p>
+                      <p style={{ fontSize:12, color:'#b45309', margin:0 }}>
+                        1. Regístrate gratis en{' '}
+                        <a href="https://developers.mercadolibre.cl" target="_blank" rel="noopener noreferrer" style={{ color:'#1d4ed8', fontWeight:600 }}>developers.mercadolibre.cl</a>
+                        {' '}→ crea una app → copia <strong>APP_ID</strong> y <strong>SECRET_KEY</strong>
+                        <br />2. Agrégalos en Vercel → Settings → Environment Variables: <code style={{ background:'#fef3c7', padding:'1px 5px', borderRadius:4 }}>ML_APP_ID</code> y <code style={{ background:'#fef3c7', padding:'1px 5px', borderRadius:4 }}>ML_SECRET_KEY</code>
+                        <br />3. Redeploy y listo.
+                      </p>
+                    </div>
+                  </div>
+                : mlLoading
                 ? <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(195px,1fr))', gap:14 }}>
                     {[1,2,3,4].map(i=>(
                       <div key={i} style={{ background:'#fff', borderRadius:12, border:'2px solid #fef9c3', overflow:'hidden', height:280 }}>
