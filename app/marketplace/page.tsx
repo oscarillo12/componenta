@@ -71,6 +71,61 @@ function toItem(p: Product) {
 
 /* ─── ProductCard ─────────────────────────────────────────────── */
 
+/* ─── MercadoLibre ───────────────────────────────────────────── */
+
+type MlItem = {
+  id: string; title: string; price: number; currency: string
+  thumbnail: string; permalink: string; condition: string; seller: string
+}
+
+function MlCard({ item }: { item: MlItem }) {
+  return (
+    <a href={item.permalink} target="_blank" rel="noopener noreferrer"
+      style={{ textDecoration:'none', display:'flex', flexDirection:'column', background:'#fff', borderRadius:12, border:'2px solid #ffe600', overflow:'hidden', transition:'transform .15s, box-shadow .15s', cursor:'pointer' }}
+      onMouseEnter={e=>{const el=e.currentTarget as HTMLElement;el.style.transform='translateY(-3px)';el.style.boxShadow='0 8px 24px rgba(255,230,0,.25)'}}
+      onMouseLeave={e=>{const el=e.currentTarget as HTMLElement;el.style.transform='';el.style.boxShadow=''}}>
+
+      {/* badge ML */}
+      <div style={{ background:'#ffe600', padding:'4px 10px', display:'flex', alignItems:'center', gap:6 }}>
+        <svg width="14" height="14" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#FFE600"/><path d="M7 14L11.5 9L14 13L16.5 9L21 14L14 21L7 14Z" fill="#2D3277"/></svg>
+        <span style={{ fontSize:10, fontWeight:800, color:'#2D3277', letterSpacing:.3 }}>MercadoLibre</span>
+        <span style={{ marginLeft:'auto', fontSize:9, fontWeight:600, color:'#2D3277', background:'rgba(45,50,119,.1)', borderRadius:20, padding:'1px 7px' }}>
+          {item.condition === 'new' ? 'Nuevo' : 'Usado'}
+        </span>
+      </div>
+
+      {/* imagen */}
+      <div style={{ paddingTop:'65%', position:'relative', background:'#f9fafb', flexShrink:0 }}>
+        {item.thumbnail
+          ? <img src={item.thumbnail} alt={item.title} style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'contain', padding:6 }} />
+          : <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <Package size={32} color="#d1d5db" />
+            </div>}
+      </div>
+
+      {/* info */}
+      <div style={{ padding:'11px 13px 13px', flex:1, display:'flex', flexDirection:'column' }}>
+        <p style={{ fontSize:12, fontWeight:600, color:'#111827', margin:'0 0 8px', lineHeight:1.35,
+          overflow:'hidden', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' } as React.CSSProperties}>
+          {item.title}
+        </p>
+        <p style={{ fontSize:20, fontWeight:900, color:'#111827', margin:'auto 0 10px', letterSpacing:-.5, lineHeight:1 }}>
+          ${item.price.toLocaleString('es-CL')}
+          <span style={{ fontSize:10, color:'#9ca3af', fontWeight:400, letterSpacing:0, marginLeft:3 }}>CLP</span>
+        </p>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', paddingTop:8, borderTop:'1px solid #fef9c3' }}>
+          <span style={{ fontSize:10, color:'#6b7280', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:'55%' }}>{item.seller}</span>
+          <span style={{ fontSize:11, fontWeight:700, color:'#2D3277', display:'flex', alignItems:'center', gap:3 }}>
+            Ver oferta →
+          </span>
+        </div>
+      </div>
+    </a>
+  )
+}
+
+/* ─── ProductCard ─────────────────────────────────────────────── */
+
 function ProductCard({ item, compat, sellerNombre, sellerTel, sellerColor }: {
   item: ReturnType<typeof toItem>
   compat: string | null
@@ -199,6 +254,8 @@ export default function MarketplacePage() {
   const [showVeh,  setShowVeh]  = useState(false)
   const [showFilt, setShowFilt] = useState(false)
   const [items,    setItems]    = useState<ReturnType<typeof toItem>[]>([])
+  const [mlItems,  setMlItems]  = useState<MlItem[]>([])
+  const [mlLoading,setMlLoading]= useState(false)
   const [make, setMake] = useState(''); const [model, setModel] = useState(''); const [year, setYear] = useState('')
 
   useEffect(() => {
@@ -207,6 +264,20 @@ export default function MarketplacePage() {
       .then(d => setItems((d.products ?? []).map(toItem)))
       .catch(() => {})
   }, [])
+
+  // Fetch ML cuando hay query activo
+  useEffect(() => {
+    if (!query || query.length < 3) { setMlItems([]); return }
+    setMlLoading(true)
+    const t = setTimeout(() => {
+      fetch(`/api/mercadolibre?q=${encodeURIComponent(query)}`)
+        .then(r => r.json())
+        .then(d => setMlItems(d.items ?? []))
+        .catch(() => setMlItems([]))
+        .finally(() => setMlLoading(false))
+    }, 500) // debounce
+    return () => clearTimeout(t)
+  }, [query])
 
   const makes  = getAllMakes()
   const models = make  ? getModels(make)        : []
@@ -514,8 +585,8 @@ export default function MarketplacePage() {
           {all.length===0
             ? <div style={{ background:'#fff', borderRadius:16, padding:'60px 24px', textAlign:'center', border:'1px solid #e5e7eb' }}>
                 <Package size={40} color="#d1d5db" style={{ margin:'0 auto 12px', display:'block' }} />
-                <p style={{ fontSize:16, fontWeight:700, color:'#111827', margin:'0 0 6px' }}>Sin resultados</p>
-                <p style={{ fontSize:14, color:'#9ca3af', margin:'0 0 20px' }}>Prueba con otro término o categoría</p>
+                <p style={{ fontSize:16, fontWeight:700, color:'#111827', margin:'0 0 6px' }}>Sin resultados en Componenta</p>
+                <p style={{ fontSize:14, color:'#9ca3af', margin:'0 0 20px' }}>Prueba con otro término o mira los resultados de MercadoLibre abajo</p>
                 <button onPointerDown={()=>{setQuery('');setCat(null)}} style={{ padding:'10px 22px', borderRadius:10, background:'#1d4ed8', color:'#fff', fontWeight:700, fontSize:14, border:'none', cursor:'pointer' }}>Ver todo</button>
               </div>
             : <div className="mp-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(195px,1fr))', gap:14 }}>
@@ -530,6 +601,40 @@ export default function MarketplacePage() {
                   return <ProductCard key={item.id} item={item} compat={compat} sellerNombre={sNombre} sellerTel={sTel} sellerColor={sColor} />
                 })}
               </div>}
+
+          {/* ── Sección MercadoLibre ── */}
+          {query.length >= 3 && (mlLoading || mlItems.length > 0) && (
+            <div style={{ marginTop:32 }}>
+              {/* header ML */}
+              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:7, background:'#ffe600', borderRadius:10, padding:'7px 14px' }}>
+                  <svg width="16" height="16" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#FFE600"/><path d="M7 14L11.5 9L14 13L16.5 9L21 14L14 21L7 14Z" fill="#2D3277"/></svg>
+                  <span style={{ fontSize:13, fontWeight:800, color:'#2D3277', letterSpacing:.2 }}>MercadoLibre</span>
+                </div>
+                <div>
+                  <span style={{ fontSize:15, fontWeight:700, color:'#111827' }}>También encontramos</span>
+                  <span style={{ fontSize:13, color:'#9ca3af', marginLeft:6 }}>Haz clic para ver en MercadoLibre</span>
+                </div>
+              </div>
+
+              {mlLoading
+                ? <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(195px,1fr))', gap:14 }}>
+                    {[1,2,3,4].map(i=>(
+                      <div key={i} style={{ background:'#fff', borderRadius:12, border:'2px solid #fef9c3', overflow:'hidden', height:280 }}>
+                        <div style={{ background:'#ffe600', height:26 }} />
+                        <div style={{ padding:12 }}>
+                          <div style={{ background:'#f3f4f6', borderRadius:8, height:120, marginBottom:10 }} />
+                          <div style={{ background:'#f3f4f6', borderRadius:6, height:12, marginBottom:6, width:'80%' }} />
+                          <div style={{ background:'#f3f4f6', borderRadius:6, height:12, width:'50%' }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                : <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(195px,1fr))', gap:14 }}>
+                    {mlItems.map(item=><MlCard key={item.id} item={item} />)}
+                  </div>}
+            </div>
+          )}
         </div>
       </div>
 
