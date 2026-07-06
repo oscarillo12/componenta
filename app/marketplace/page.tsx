@@ -289,7 +289,7 @@ export default function MarketplacePage() {
   const all = useMemo(() => {
     const src = [
       ...items,
-      ...mockInventory.map(i => ({ ...i, isReal: false, sellerNombre: undefined as string | undefined, sellerTel: null as string | null })),
+      ...mockInventory.map(i => ({ ...i, imagen_url: i.imagen_url ?? null, isReal: false, sellerNombre: '' as string, sellerTel: null as string | null })),
     ]
     let list = src.filter(i => i.disponible)
       .filter(i => !cat || i.zona === cat)
