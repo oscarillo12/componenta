@@ -5,20 +5,16 @@ import { Product } from '@/lib/supabase'
 import { Plus, Search, Eye, Package, Trash2, CheckCircle, RotateCcw, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 
-const estadoConfig: Record<string, { label: string; className: string }> = {
-  excelente:      { label: 'Excelente',    className: 'text-blue-800 bg-blue-50 border-blue-200' },
-  bueno:          { label: 'Buen estado',  className: 'text-blue-700 bg-blue-50 border-blue-200' },
-  'con-detalles': { label: 'Con detalles', className: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
-  'para-reparar': { label: 'Para reparar', className: 'text-red-700 bg-red-50 border-red-200' },
+const estadoConfig: Record<string, { label: string; color: string; bg: string }> = {
+  excelente:      { label: 'Excelente',    color: '#15803d', bg: '#dcfce7' },
+  bueno:          { label: 'Buen estado',  color: '#1d4ed8', bg: '#dbeafe' },
+  'con-detalles': { label: 'Con detalles', color: '#b45309', bg: '#fef3c7' },
+  'para-reparar': { label: 'Para reparar', color: '#b91c1c', bg: '#fee2e2' },
 }
 
-function PartCard({
-  item,
-  onDelete,
-  onToggleSold,
-}: {
+function PartCard({ item, onDelete, onToggleSold }: {
   item: Product
-  onDelete:    (id: string) => Promise<void>
+  onDelete: (id: string) => Promise<void>
   onToggleSold: (id: string, disponible: boolean) => Promise<void>
 }) {
   const [loadingSold,   setLoadingSold]   = useState(false)
@@ -42,85 +38,47 @@ function PartCard({
   }
 
   return (
-    <div className="bg-[#161B22] rounded-2xl border border-white/10 overflow-hidden hover:shadow-md transition-shadow flex flex-col">
-      {/* Imagen */}
-      <div className="h-36 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center relative flex-shrink-0">
+    <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ height: 148, background: '#f5f6f7', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0, overflow: 'hidden' }}>
         {item.imagen_url ? (
-          <img src={item.imagen_url} alt={item.pieza} className="w-full h-full object-cover" />
+          <img src={item.imagen_url} alt={item.pieza} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
-          <Package size={40} className="text-slate-600" />
+          <Package size={36} color="#d1d5db" />
         )}
         {!item.disponible && (
-          <div className="absolute inset-0 bg-gray-900/50 flex items-center justify-center">
-            <span className="text-white text-xs font-semibold bg-gray-900/70 px-3 py-1 rounded-full">Vendida</span>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 20 }}>Vendida</span>
           </div>
         )}
-        <span className={`absolute top-2 right-2 text-xs font-medium px-2 py-0.5 rounded-full border ${est.className}`}>
-          {est.label}
-        </span>
+        <span style={{ position: 'absolute', top: 8, right: 8, fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20, background: est.bg, color: est.color }}>{est.label}</span>
       </div>
 
-      {/* Info */}
-      <div className="p-4 flex flex-col flex-1">
-        <p className="text-sm font-semibold text-slate-100 leading-tight">{item.pieza}</p>
-        <p className="text-xs text-slate-500 mt-0.5">{item.marca} {item.modelo}</p>
-        <p className="text-xs text-slate-600 mt-0.5">{item.anios}{item.oem ? ` · OEM ${item.oem}` : ''}</p>
+      <div style={{ padding: '12px 13px', flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0, lineHeight: 1.3 }}>{item.pieza}</p>
+        <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{item.marca} {item.modelo}</p>
+        <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{item.anios}{item.oem ? ` · OEM ${item.oem}` : ''}</p>
 
-        <div className="flex items-center justify-between mt-2 mb-3">
-          <span className="text-base font-bold text-slate-100">${item.precio.toLocaleString('es-CL')}</span>
-          <div className="flex items-center gap-1 text-xs text-slate-500">
-            <Eye size={11} />
-            <span>{item.vistas}</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4, marginBottom: 4 }}>
+          <span style={{ fontSize: 17, fontWeight: 900, color: '#111827', letterSpacing: -0.5 }}>${item.precio.toLocaleString('es-CL')}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <Eye size={11} color="#9ca3af" />
+            <span style={{ fontSize: 11, color: '#9ca3af' }}>{item.vistas}</span>
           </div>
         </div>
 
-        {/* Acciones */}
-        <div className="flex gap-1.5 mt-auto border-t border-white/5 pt-3">
-          {/* Marcar como vendida / disponible */}
-          <button
-            onClick={handleToggleSold}
-            disabled={loadingSold}
-            title={item.disponible ? 'Marcar como vendida' : 'Volver a disponible'}
-            className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              item.disponible
-                ? 'bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200'
-                : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
-            }`}
-          >
-            {loadingSold ? (
-              <Loader2 size={12} className="animate-spin" />
-            ) : item.disponible ? (
-              <><CheckCircle size={12} /> Vender</>
-            ) : (
-              <><RotateCcw size={12} /> Reactivar</>
-            )}
+        <div style={{ display: 'flex', gap: 6, paddingTop: 10, borderTop: '1px solid #f3f4f6' }}>
+          <button onClick={handleToggleSold} disabled={loadingSold}
+            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '7px 0', borderRadius: 9, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: '1.5px solid', background: item.disponible ? '#eff6ff' : '#f9fafb', borderColor: item.disponible ? '#1d4ed8' : '#e5e7eb', color: item.disponible ? '#1d4ed8' : '#6b7280' }}>
+            {loadingSold ? <Loader2 size={11} className="animate-spin" /> : item.disponible ? <><CheckCircle size={11} /> Vender</> : <><RotateCcw size={11} /> Reactivar</>}
           </button>
-
-          {/* Eliminar */}
-          <button
-            onClick={handleDelete}
-            disabled={loadingDelete}
-            title={confirmDelete ? 'Confirmar eliminación' : 'Eliminar publicación'}
-            className={`flex items-center justify-center gap-1 py-1.5 px-2.5 rounded-lg text-xs font-medium border transition-colors ${
-              confirmDelete
-                ? 'bg-red-600 text-white border-red-600 hover:bg-red-700'
-                : 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200'
-            }`}
-          >
-            {loadingDelete ? (
-              <Loader2 size={12} className="animate-spin" />
-            ) : (
-              <Trash2 size={12} />
-            )}
-            {confirmDelete ? '¿Eliminar?' : ''}
+          <button onClick={handleDelete} disabled={loadingDelete}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '7px 10px', borderRadius: 9, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: '1.5px solid', background: confirmDelete ? '#b91c1c' : '#fff5f5', borderColor: confirmDelete ? '#b91c1c' : '#fca5a5', color: confirmDelete ? '#fff' : '#b91c1c' }}>
+            {loadingDelete ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
+            {confirmDelete ? '¿Sí?' : ''}
           </button>
         </div>
-
         {confirmDelete && (
-          <button
-            onClick={() => setConfirmDelete(false)}
-            className="mt-1.5 text-xs text-slate-500 hover:text-slate-400 text-center w-full"
-          >
+          <button onClick={() => setConfirmDelete(false)} style={{ fontSize: 11, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center', width: '100%', padding: '2px 0' }}>
             Cancelar
           </button>
         )}
@@ -138,92 +96,63 @@ export default function InventarioClient({ products: initial, isDemo = false }: 
 
   async function handleDelete(id: string) {
     const res = await fetch(`/api/products/${id}`, { method: 'DELETE' })
-    if (res.ok) {
-      setProducts((prev) => prev.filter((p) => p.id !== id))
-    }
+    if (res.ok) setProducts(prev => prev.filter(p => p.id !== id))
   }
 
   async function handleToggleSold(id: string, disponible: boolean) {
-    const res = await fetch(`/api/products/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ disponible }),
-    })
-    if (res.ok) {
-      setProducts((prev) =>
-        prev.map((p) => p.id === id ? { ...p, disponible } : p),
-      )
-    }
+    const res = await fetch(`/api/products/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ disponible }) })
+    if (res.ok) setProducts(prev => prev.map(p => p.id === id ? { ...p, disponible } : p))
   }
 
-  const filtered = products.filter((item) => {
+  const filtered = products.filter(item => {
     const q = search.toLowerCase()
-    const matchSearch = !q
-      || item.pieza.toLowerCase().includes(q)
-      || (item.marca ?? '').toLowerCase().includes(q)
-      || (item.modelo ?? '').toLowerCase().includes(q)
-    const matchFiltro =
-      filtro === 'todos' ||
-      (filtro === 'disponible' ? item.disponible : !item.disponible)
+    const matchSearch = !q || item.pieza.toLowerCase().includes(q) || (item.marca ?? '').toLowerCase().includes(q) || (item.modelo ?? '').toLowerCase().includes(q)
+    const matchFiltro = filtro === 'todos' || (filtro === 'disponible' ? item.disponible : !item.disponible)
     return matchSearch && matchFiltro
   })
 
-  const disponiblesCount = products.filter((i) => i.disponible).length
-  const vendidoCount     = products.filter((i) => !i.disponible).length
+  const disponiblesCount = products.filter(i => i.disponible).length
+  const vendidoCount     = products.filter(i => !i.disponible).length
 
   return (
     <>
       {isDemo && (
-        <div className="mb-4 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-          <span className="text-amber-500 text-lg">⚠️</span>
+        <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10, background: '#fffbeb', border: '1.5px solid #fde68a', borderRadius: 12, padding: '12px 16px' }}>
+          <span style={{ fontSize: 18 }}>⚠️</span>
           <div>
-            <p className="text-sm font-semibold text-amber-800">Modo demostración</p>
-            <p className="text-xs text-amber-700">
+            <p style={{ fontSize: 13, fontWeight: 600, color: '#92400e', margin: 0 }}>Modo demostración</p>
+            <p style={{ fontSize: 12, color: '#b45309', margin: 0 }}>
               Ejecuta el SQL en Supabase para ver tu inventario real.{' '}
-              <a href="/planes" className="underline">Ver instrucciones →</a>
+              <a href="/planes" style={{ textDecoration: 'underline', color: '#d97706' }}>Ver instrucciones →</a>
             </p>
           </div>
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-6">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 className="text-xl font-semibold text-slate-100">Mi inventario</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <h1 style={{ fontSize: 20, fontWeight: 800, color: '#111827', margin: '0 0 4px' }}>Mi inventario</h1>
+          <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>
             {disponiblesCount} disponible{disponiblesCount !== 1 ? 's' : ''}
             {vendidoCount > 0 && ` · ${vendidoCount} vendida${vendidoCount !== 1 ? 's' : ''}`}
             {isDemo ? ' · demo' : ''}
           </p>
         </div>
-        <Link
-          href="/"
-          className="flex items-center gap-2 px-4 py-2 bg-blue-700 text-white rounded-lg text-sm font-medium hover:bg-blue-800 transition-colors"
-        >
-          <Plus size={15} />
-          Nueva pieza
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px', background: '#1d4ed8', color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+          <Plus size={14} /> Nueva pieza
         </Link>
       </div>
 
-      <div className="flex items-center gap-3 mb-6 flex-wrap">
-        <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-          <input
-            type="text"
-            placeholder="Buscar pieza, marca…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 pr-4 py-2 text-sm border border-white/10 rounded-lg bg-[#161B22] focus:outline-none focus:border-blue-500 w-56"
-          />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
+        <div style={{ position: 'relative' }}>
+          <Search size={13} color="#9ca3af" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
+          <input type="text" placeholder="Buscar pieza, marca…" value={search} onChange={e => setSearch(e.target.value)}
+            style={{ paddingLeft: 32, paddingRight: 12, paddingTop: 9, paddingBottom: 9, fontSize: 13, border: '1.5px solid #e5e7eb', borderRadius: 10, background: '#fff', color: '#111827', outline: 'none', width: 220 }} />
         </div>
-        <div className="flex rounded-lg border border-white/10 bg-[#161B22] overflow-hidden">
-          {(['todos', 'disponible', 'vendido'] as Filtro[]).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFiltro(f)}
-              className={`px-3 py-2 text-xs font-medium transition-colors capitalize ${
-                filtro === f ? 'bg-blue-700 text-white' : 'text-slate-400 hover:bg-[#21262D]/50'
-              }`}
-            >
+        <div style={{ display: 'flex', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', overflow: 'hidden' }}>
+          {(['todos', 'disponible', 'vendido'] as Filtro[]).map(f => (
+            <button key={f} onClick={() => setFiltro(f)}
+              style={{ padding: '8px 14px', fontSize: 12, fontWeight: filtro === f ? 700 : 500, border: 'none', cursor: 'pointer', background: filtro === f ? '#1d4ed8' : 'transparent', color: filtro === f ? '#fff' : '#6b7280' }}>
               {f === 'vendido' ? 'Vendidas' : f === 'disponible' ? 'Disponibles' : 'Todos'}
             </button>
           ))}
@@ -231,29 +160,22 @@ export default function InventarioClient({ products: initial, isDemo = false }: 
       </div>
 
       {products.length === 0 ? (
-        <div className="text-center py-20">
-          <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Package size={28} className="text-slate-600" />
+        <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <div style={{ width: 64, height: 64, background: '#f3f4f6', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <Package size={28} color="#9ca3af" />
           </div>
-          <p className="text-sm font-semibold text-slate-100 mb-1">Sin piezas publicadas aún</p>
-          <p className="text-sm text-slate-500 mb-6">Publica tu primera pieza y aparecerá aquí</p>
-          <Link href="/" className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-700 text-white rounded-xl text-sm font-semibold hover:bg-blue-800">
-            <Plus size={15} /> Publicar primera pieza
+          <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Sin piezas publicadas aún</p>
+          <p style={{ fontSize: 13, color: '#9ca3af', margin: '0 0 20px' }}>Publica tu primera pieza y aparecerá aquí</p>
+          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 22px', background: '#1d4ed8', color: '#fff', borderRadius: 12, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+            <Plus size={14} /> Publicar primera pieza
           </Link>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-slate-500">
-          <p className="text-sm">No hay piezas que coincidan</p>
-        </div>
+        <div style={{ textAlign: 'center', padding: '40px 20px', color: '#9ca3af', fontSize: 13 }}>No hay piezas que coincidan</div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {filtered.map((item) => (
-            <PartCard
-              key={item.id}
-              item={item}
-              onDelete={handleDelete}
-              onToggleSold={handleToggleSold}
-            />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 14 }}>
+          {filtered.map(item => (
+            <PartCard key={item.id} item={item} onDelete={handleDelete} onToggleSold={handleToggleSold} />
           ))}
         </div>
       )}

@@ -2,45 +2,41 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
-import { Search, Star, MessageCircle, ChevronDown, X, Check, Truck, Car, Menu, User, ShoppingCart, MapPin, ChevronRight } from 'lucide-react'
+import { Search, Star, MessageCircle, ChevronDown, X, Check, Truck, Car, User, ChevronRight, Package, SlidersHorizontal, ShieldCheck, Phone, Tag } from 'lucide-react'
 import { mockInventory, mockDesarmaduras } from '@/lib/mock-data'
 import { getAllMakes, getModels, getYears, checkCompatibility } from '@/lib/vehicle-db'
 import type { EstadoPieza } from '@/lib/types'
 import type { Product } from '@/lib/supabase'
 
 const CATEGORIAS = [
-  { id: null,           label: 'Todas las categorías', emoji: '🔍' },
-  { id: 'motor',        label: 'Motor',                emoji: '⚙️' },
-  { id: 'electrico',    label: 'Eléctrico',            emoji: '⚡' },
-  { id: 'frenos',       label: 'Frenos',               emoji: '🛑' },
-  { id: 'suspension-d', label: 'Suspensión',           emoji: '🔩' },
-  { id: 'transmision',  label: 'Transmisión',          emoji: '🔧' },
-  { id: 'interior',     label: 'Interior',             emoji: '🪑' },
-  { id: 'escape',       label: 'Escape',               emoji: '💨' },
-  { id: 'carroceria',   label: 'Carrocería',           emoji: '🚘' },
+  { id: null,           label: 'Todas',       emoji: '🔍' },
+  { id: 'motor',        label: 'Motor',       emoji: '⚙️' },
+  { id: 'electrico',    label: 'Eléctrico',   emoji: '⚡' },
+  { id: 'frenos',       label: 'Frenos',      emoji: '🛑' },
+  { id: 'suspension-d', label: 'Suspensión',  emoji: '🔩' },
+  { id: 'transmision',  label: 'Transmisión', emoji: '🔧' },
+  { id: 'interior',     label: 'Interior',    emoji: '🪑' },
+  { id: 'escape',       label: 'Escape',      emoji: '💨' },
+  { id: 'carroceria',   label: 'Carrocería',  emoji: '🚘' },
 ]
 
 const ORDEN_OPS = ['Relevancia', 'Menor precio', 'Mayor precio', 'Más vistas']
 
 const ESTADO_BADGE: Record<EstadoPieza, { label: string; color: string; bg: string }> = {
-  excelente:      { label: 'Excelente',    color: '#A5D6FF', bg: '#dbeafe' },
+  excelente:      { label: 'Excelente',    color: '#15803d', bg: '#dcfce7' },
   bueno:          { label: 'Buen estado',  color: '#1d4ed8', bg: '#dbeafe' },
-  'con-detalles': { label: 'Con detalles', color: '#92400e', bg: '#fef3c7' },
+  'con-detalles': { label: 'Con detalles', color: '#b45309', bg: '#fef3c7' },
   'para-reparar': { label: 'Para reparar', color: '#b91c1c', bg: '#fee2e2' },
 }
 
-// Normaliza cualquier formato de fitment que venga de Supabase al formato canónico
-// {make,model,yearFrom,yearTo} que checkCompatibility espera
 function normalizeFitment(raw: unknown[]): { make: string; model: string; yearFrom: number; yearTo: number }[] {
   return (raw ?? []).flatMap(f => {
     const e = f as Record<string, unknown>
     const make  = ((e.make  as string) || (e.marca  as string) || '').trim()
     const model = ((e.model as string) || (e.modelo as string) || '').trim()
     if (!make || !model) return []
-
     let yearFrom = (e.yearFrom as number) || 0
     let yearTo   = (e.yearTo   as number) || 0
-
     if ((!yearFrom || !yearTo) && e.anios) {
       const anios = (e.anios as string).replace('–', '-').replace(/\s/g, '')
       const range  = anios.match(/^(\d{4})-(\d{4})$/)
@@ -48,7 +44,6 @@ function normalizeFitment(raw: unknown[]): { make: string; model: string; yearFr
       yearFrom = range ? parseInt(range[1]) : single ? parseInt(single[1]) : 0
       yearTo   = range ? parseInt(range[2]) : yearFrom
     }
-
     if (!yearFrom || !yearTo) return []
     return [{ make, model, yearFrom, yearTo }]
   })
@@ -69,13 +64,13 @@ function productToItem(p: Product) {
 }
 
 export default function MarketplacePage() {
-  const [busqueda,           setBusqueda]           = useState('')
-  const [categoria,          setCategoria]          = useState<string | null>(null)
-  const [orden,              setOrden]              = useState('Relevancia')
-  const [showOrden,          setShowOrden]          = useState(false)
-  const [showVehicleModal,   setShowVehicleModal]   = useState(false)
-  const [showMobileFilters,  setShowMobileFilters]  = useState(false)
-  const [realItems,          setRealItems]          = useState<ReturnType<typeof productToItem>[]>([])
+  const [busqueda,          setBusqueda]          = useState('')
+  const [categoria,         setCategoria]         = useState<string | null>(null)
+  const [orden,             setOrden]             = useState('Relevancia')
+  const [showOrden,         setShowOrden]         = useState(false)
+  const [showVehicleModal,  setShowVehicleModal]  = useState(false)
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [realItems,         setRealItems]         = useState<ReturnType<typeof productToItem>[]>([])
   const [vMake, setVMake] = useState(''); const [vModel, setVModel] = useState(''); const [vYear, setVYear] = useState('')
 
   useEffect(() => {
@@ -99,83 +94,56 @@ export default function MarketplacePage() {
     return list
   }, [busqueda, categoria, orden, vehicleSelected, vMake, vModel, yearNum, realItems])
 
-  // Contar por categoría
   const countByCat = useMemo(() => {
     const src = [...realItems, ...mockInventory].filter(i => i.disponible)
     return Object.fromEntries(CATEGORIAS.slice(1).map(c => [c.id, src.filter(i => i.zona === c.id).length]))
   }, [realItems])
 
+  const SEL: React.CSSProperties = { padding: '11px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', background: '#fff', color: '#111827', width: '100%', boxSizing: 'border-box' }
+
   return (
-    <div style={{ minHeight: '100vh', background: '#21262D', fontFamily: 'system-ui,sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#f5f6f7', fontFamily: "'Inter',system-ui,sans-serif" }}>
 
-      {/* ═══════════ BARRA SUPERIOR NEGRA ═══════════ */}
-      <div style={{ background: '#111827', padding: '6px 0' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: 24 }}>
-            {['Cómo funciona', 'Vendedores', 'Seguimiento'].map(l => (
-              <span key={l} style={{ fontSize: 12, color: '#B1BAC4', cursor: 'pointer', transition: 'color 0.15s' }}
-                onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
-                onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#9ca3af'}>{l}</span>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-            <span style={{ fontSize: 12, color: '#B1BAC4' }}>componenta.cl</span>
-            <Link href="/" style={{ fontSize: 12, color: '#79C0FF', fontWeight: 700, textDecoration: 'none' }}>Panel vendedor →</Link>
-          </div>
-        </div>
-      </div>
-
-      {/* ═══════════ HEADER PRINCIPAL ═══════════ */}
-      <header style={{ background: '#161B22', borderBottom: '1px solid rgba(255,255,255,0.1)', position: 'sticky', top: 0, zIndex: 50, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
+      {/* ══ HEADER ══ */}
+      <header style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 50, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+        {/* Top row */}
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 20px', height: 64, display: 'flex', alignItems: 'center', gap: 20 }}>
 
           {/* Logo */}
           <Link href="/marketplace" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-            <div style={{ width: 38, height: 38, background: 'linear-gradient(135deg,#388BFD,#1F6FEB)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 900, fontSize: 18, boxShadow: '0 2px 8px rgba(22,163,74,0.3)' }}>C</div>
-            <div>
-              <p style={{ fontWeight: 900, fontSize: 16, color: '#E6EDF3', margin: 0, lineHeight: 1 }}>Componenta</p>
-              <p style={{ fontSize: 10, color: '#B1BAC4', margin: '2px 0 0' }}>repuestos usados</p>
-            </div>
+            <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg,#1d4ed8,#3b82f6)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 900, fontSize: 17 }}>C</div>
+            <span style={{ fontWeight: 900, fontSize: 17, color: '#111827', letterSpacing: -0.3 }}>Componenta</span>
           </Link>
 
-          {/* Buscador — oculto en móvil (se muestra en barra separada) */}
-          <div className="hidden sm:flex" style={{ flex: 1, maxWidth: 560, border: '1.5px solid rgba(255,255,255,0.15)', borderRadius: 10, overflow: 'hidden', background: '#21262D' }}>
-            <input type="text" placeholder="Busca por nombre, marca o código OEM…" value={busqueda}
-              onChange={e => setBusqueda(e.target.value)}
-              style={{ flex: 1, padding: '11px 16px', fontSize: 14, border: 'none', outline: 'none', color: '#E6EDF3', background: 'transparent' }} />
-            <button style={{ background: 'linear-gradient(135deg,#388BFD,#1F6FEB)', padding: '0 18px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Search size={18} color="#fff" />
+          {/* Buscador principal — como citrolidi */}
+          <div style={{ flex: 1, maxWidth: 600, display: 'flex', border: '2px solid #1d4ed8', borderRadius: 12, overflow: 'hidden', background: '#fff', boxShadow: '0 2px 8px rgba(29,78,216,0.12)' }}>
+            <input type="text" placeholder="¿Qué repuesto buscas? Marca, nombre, código OEM…"
+              value={busqueda} onChange={e => setBusqueda(e.target.value)}
+              style={{ flex: 1, padding: '12px 16px', fontSize: 14, border: 'none', outline: 'none', color: '#111827', background: 'transparent' }} />
+            <button style={{ background: '#1d4ed8', padding: '0 20px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, color: '#fff', fontWeight: 700, fontSize: 13, flexShrink: 0 }}>
+              <Search size={16} /> Buscar
             </button>
           </div>
 
-          {/* Vehículo */}
-          <button onPointerDown={() => setShowVehicleModal(true)}
-            style={{ touchAction: 'manipulation', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, padding: '6px 14px', border: `1.5px solid ${vehicleSelected ? 'rgba(56,139,253,0.5)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 9, background: vehicleSelected ? 'rgba(56,139,253,0.15)' : 'rgba(255,255,255,0.05)', cursor: 'pointer', flexShrink: 0 }}>
-            <Car size={18} color={vehicleSelected ? '#79C0FF' : '#8B949E'} />
-            <span style={{ fontSize: 10, color: vehicleSelected ? '#A5D6FF' : '#8B949E', fontWeight: 600, whiteSpace: 'nowrap' }}>
+          {/* Vehículo + usuario (desktop) */}
+          <div className="hidden sm:flex" style={{ alignItems: 'center', gap: 12 }}>
+            <button onPointerDown={() => setShowVehicleModal(true)}
+              style={{ touchAction: 'manipulation', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', border: `1.5px solid ${vehicleSelected ? '#1d4ed8' : '#e5e7eb'}`, borderRadius: 10, background: vehicleSelected ? '#eff6ff' : '#f9fafb', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: vehicleSelected ? '#1d4ed8' : '#374151' }}>
+              <Car size={15} color={vehicleSelected ? '#1d4ed8' : '#6b7280'} />
               {vehicleSelected ? `${vMake} ${vYear}` : 'Mi vehículo'}
-            </span>
-          </button>
-
-          {/* Usuario */}
-          <Link href="/" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, padding: '4px 12px', textDecoration: 'none', flexShrink: 0 }}>
-            <User size={18} color="#8B949E" />
-            <span style={{ fontSize: 10, color: '#B1BAC4', fontWeight: 600 }}>Ingresar</span>
-          </Link>
+            </button>
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: 13, fontWeight: 600, color: '#374151', textDecoration: 'none', background: '#f9fafb' }}>
+              <User size={15} color="#6b7280" /> Panel
+            </Link>
+          </div>
         </div>
 
         {/* Barra de categorías */}
-        <div style={{ background: '#010409', borderTop: '1px solid rgba(255,255,255,0.07)', overflowX: 'auto', scrollbarWidth: 'none' } as React.CSSProperties}>
-          <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'stretch' }}>
-            <button onPointerDown={() => setCategoria(null)}
-              style={{ touchAction: 'manipulation', display: 'flex', alignItems: 'center', gap: 8, padding: '11px 16px', border: 'none', background: !categoria ? 'rgba(56,139,253,0.15)' : 'transparent', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', flexShrink: 0, borderBottom: !categoria ? '2px solid #388BFD' : '2px solid transparent', transition: 'all 0.15s' }}>
-              <Menu size={15} /> Todas
-            </button>
-            {CATEGORIAS.slice(1).map(cat => (
+        <div style={{ background: '#fff', borderTop: '1px solid #f1f2f4', overflowX: 'auto', scrollbarWidth: 'none' } as React.CSSProperties}>
+          <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center', gap: 2 }}>
+            {CATEGORIAS.map(cat => (
               <button key={String(cat.id)} onPointerDown={() => setCategoria(cat.id)}
-                style={{ touchAction: 'manipulation', border: 'none', background: categoria === cat.id ? 'rgba(56,139,253,0.12)' : 'transparent', color: categoria === cat.id ? '#E6EDF3' : '#8B949E', padding: '11px 15px', cursor: 'pointer', fontSize: 13, fontWeight: categoria === cat.id ? 700 : 500, whiteSpace: 'nowrap', flexShrink: 0, borderBottom: `2px solid ${categoria === cat.id ? '#388BFD' : 'transparent'}`, transition: 'all 0.15s', letterSpacing: 0.1 }}
-                onMouseEnter={e => { if (categoria !== cat.id) (e.currentTarget as HTMLElement).style.color = '#CDD9E5' }}
-                onMouseLeave={e => { if (categoria !== cat.id) (e.currentTarget as HTMLElement).style.color = '#8B949E' }}>
+                style={{ touchAction: 'manipulation', border: 'none', background: 'transparent', color: categoria === cat.id ? '#1d4ed8' : '#6b7280', padding: '10px 14px', cursor: 'pointer', fontSize: 13, fontWeight: categoria === cat.id ? 700 : 500, whiteSpace: 'nowrap', flexShrink: 0, borderBottom: `2px solid ${categoria === cat.id ? '#1d4ed8' : 'transparent'}`, transition: 'all 0.15s' }}>
                 {cat.emoji} {cat.label}
               </button>
             ))}
@@ -183,38 +151,47 @@ export default function MarketplacePage() {
         </div>
       </header>
 
+      {/* Búsqueda + filtro móvil */}
+      <div className="sm:hidden" style={{ background: '#fff', padding: '10px 12px', borderBottom: '1px solid #e5e7eb', display: 'flex', gap: 8 }}>
+        <div style={{ flex: 1, display: 'flex', border: '1.5px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
+          <input type="text" placeholder="¿Qué repuesto buscas?" value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+            style={{ flex: 1, padding: '9px 12px', fontSize: 13, border: 'none', outline: 'none', color: '#111827' }} />
+          {busqueda && <button onPointerDown={() => setBusqueda('')} style={{ background: 'none', border: 'none', padding: '0 10px', cursor: 'pointer', color: '#9ca3af', fontSize: 18 }}>×</button>}
+        </div>
+        <button onPointerDown={() => setShowMobileFilters(true)}
+          style={{ padding: '9px 14px', borderRadius: 10, border: `1.5px solid ${(categoria || vehicleSelected) ? '#1d4ed8' : '#e5e7eb'}`, background: (categoria || vehicleSelected) ? '#eff6ff' : '#fff', color: (categoria || vehicleSelected) ? '#1d4ed8' : '#374151', fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
+          <SlidersHorizontal size={14} /> Filtrar
+        </button>
+      </div>
+
       {/* Modal vehículo */}
       {showVehicleModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
           onClick={() => setShowVehicleModal(false)}>
-          <div style={{ background: '#161B22', borderRadius: 20, padding: 28, maxWidth: 420, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: '#fff', borderRadius: 20, padding: 28, maxWidth: 420, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <div>
-                <p style={{ fontWeight: 800, fontSize: 16, color: '#E6EDF3', margin: 0 }}>Busca por tu vehículo</p>
-                <p style={{ fontSize: 13, color: '#B1BAC4', margin: '4px 0 0' }}>Ver compatibilidad en cada pieza</p>
+                <p style={{ fontWeight: 800, fontSize: 16, color: '#111827', margin: 0 }}>Busca por tu vehículo</p>
+                <p style={{ fontSize: 13, color: '#6b7280', margin: '4px 0 0' }}>Filtra piezas compatibles con tu auto</p>
               </div>
-              <button onPointerDown={() => setShowVehicleModal(false)} style={{ background: '#21262D', border: 'none', borderRadius: 8, padding: 8, cursor: 'pointer', touchAction: 'manipulation' }}><X size={16} color="#8B949E" /></button>
+              <button onPointerDown={() => setShowVehicleModal(false)} style={{ background: '#f3f4f6', border: 'none', borderRadius: 8, padding: 8, cursor: 'pointer' }}><X size={16} color="#6b7280" /></button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <select value={vMake} onChange={e => { setVMake(e.target.value); setVModel(''); setVYear('') }}
-                style={{ padding: '12px 14px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.1)', fontSize: 14, outline: 'none', background: '#161B22' }}>
-                <option value="">Selecciona la marca</option>
-                {makes.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
-              <select value={vModel} onChange={e => { setVModel(e.target.value); setVYear('') }} disabled={!vMake}
-                style={{ padding: '12px 14px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.1)', fontSize: 14, outline: 'none', background: '#161B22', opacity: vMake ? 1 : 0.5 }}>
-                <option value="">Selecciona el modelo</option>
-                {models.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
-              <select value={vYear} onChange={e => { setVYear(e.target.value); setShowVehicleModal(false) }} disabled={!vModel}
-                style={{ padding: '12px 14px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.1)', fontSize: 14, outline: 'none', background: '#161B22', opacity: vModel ? 1 : 0.5 }}>
-                <option value="">Selecciona el año</option>
-                {years.map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
+              {[
+                { value: vMake, set: (v: string) => { setVMake(v); setVModel(''); setVYear('') }, opts: makes, label: 'Selecciona la marca', dis: false },
+                { value: vModel, set: (v: string) => { setVModel(v); setVYear('') }, opts: models, label: 'Selecciona el modelo', dis: !vMake },
+                { value: vYear, set: (v: string) => { setVYear(v); setShowVehicleModal(false) }, opts: years, label: 'Selecciona el año', dis: !vModel },
+              ].map(({ value, set, opts, label, dis }) => (
+                <select key={label} value={value} onChange={e => set(e.target.value)} disabled={dis} style={{ ...SEL, opacity: dis ? 0.5 : 1 }}>
+                  <option value="">{label}</option>
+                  {opts.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+              ))}
             </div>
             {vehicleSelected && (
               <button onPointerDown={() => { clearVehicle(); setShowVehicleModal(false) }}
-                style={{ marginTop: 12, width: '100%', padding: '10px', borderRadius: 10, border: '1.5px solid #fca5a5', background: '#161B22', color: '#b91c1c', fontSize: 13, fontWeight: 600, cursor: 'pointer', touchAction: 'manipulation' }}>
+                style={{ marginTop: 12, width: '100%', padding: 10, borderRadius: 10, border: '1.5px solid #fca5a5', background: '#fff5f5', color: '#b91c1c', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                 Quitar filtro de vehículo
               </button>
             )}
@@ -222,70 +199,48 @@ export default function MarketplacePage() {
         </div>
       )}
 
-      {/* ── Barra de búsqueda móvil (bajo el header en pantallas pequeñas) ── */}
-      <div className="sm:hidden" style={{ background: '#161B22', padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', gap: 8 }}>
-        <div style={{ flex: 1, display: 'flex', border: '1.5px solid rgba(255,255,255,0.15)', borderRadius: 10, overflow: 'hidden', background: '#21262D' }}>
-          <input type="text" placeholder="Buscar pieza, marca, OEM…" value={busqueda}
-            onChange={e => setBusqueda(e.target.value)}
-            style={{ flex: 1, padding: '9px 12px', fontSize: 13, border: 'none', outline: 'none', color: '#E6EDF3', background: 'transparent' }} />
-          {busqueda && <button onPointerDown={() => setBusqueda('')} style={{ background: 'none', border: 'none', padding: '0 10px', cursor: 'pointer', color: '#8B949E', fontSize: 16 }}>×</button>}
-        </div>
-        <button onPointerDown={() => setShowMobileFilters(true)}
-          style={{ padding: '9px 14px', borderRadius: 10, border: `1.5px solid ${(categoria || vehicleSelected) ? 'rgba(56,139,253,0.5)' : 'rgba(255,255,255,0.15)'}`, background: (categoria || vehicleSelected) ? 'rgba(56,139,253,0.15)' : '#21262D', color: (categoria || vehicleSelected) ? '#79C0FF' : '#8B949E', fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 5 }}>
-          ⚙ Filtros{(categoria || vehicleSelected) ? ' •' : ''}
-        </button>
-      </div>
-
-      {/* Panel de filtros móvil (bottom sheet) */}
+      {/* Panel filtros móvil (bottom sheet) */}
       {showMobileFilters && (
-        <div className="filter-sheet-overlay" onClick={() => setShowMobileFilters(false)}>
-          <div className="filter-sheet" onClick={e => e.stopPropagation()}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'flex-end' }}
+          onClick={() => setShowMobileFilters(false)}>
+          <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', width: '100%', maxHeight: '85vh', overflowY: 'auto' }}
+            onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <span style={{ fontSize: 16, fontWeight: 800, color: '#E6EDF3' }}>Filtros</span>
-              <button onPointerDown={() => setShowMobileFilters(false)} style={{ background: '#21262D', border: 'none', borderRadius: 8, padding: '6px 10px', color: '#8B949E', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>×</button>
+              <span style={{ fontSize: 16, fontWeight: 800, color: '#111827' }}>Filtros</span>
+              <button onPointerDown={() => setShowMobileFilters(false)} style={{ background: '#f3f4f6', border: 'none', borderRadius: 8, padding: '6px 10px', color: '#6b7280', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>×</button>
             </div>
-
-            {/* Vehículo */}
-            <p style={{ fontSize: 13, fontWeight: 700, color: '#E6EDF3', margin: '0 0 10px' }}>Mi vehículo</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 10px' }}>Mi vehículo</p>
             {vehicleSelected ? (
-              <div style={{ background: 'rgba(56,139,253,0.15)', border: '1.5px solid rgba(56,139,253,0.4)', borderRadius: 10, padding: '10px 12px', marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontWeight: 700, color: '#A5D6FF', fontSize: 13 }}>{vMake} {vModel} {vYear}</span>
-                <button onPointerDown={() => { clearVehicle() }} style={{ background: 'none', border: 'none', color: '#fca5a5', cursor: 'pointer', fontSize: 12 }}>Quitar</button>
+              <div style={{ background: '#eff6ff', border: '1.5px solid #1d4ed8', borderRadius: 10, padding: '10px 12px', marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontWeight: 700, color: '#1d4ed8', fontSize: 13 }}>{vMake} {vModel} {vYear}</span>
+                <button onPointerDown={clearVehicle} style={{ background: 'none', border: 'none', color: '#b91c1c', cursor: 'pointer', fontSize: 12 }}>Quitar</button>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-                <select value={vMake} onChange={e => { setVMake(e.target.value); setVModel(''); setVYear('') }}
-                  style={{ padding: '10px 12px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.1)', fontSize: 13, outline: 'none', background: '#21262D', color: '#E6EDF3' }}>
-                  <option value="">Marca</option>
-                  {makes.map(m => <option key={m} value={m}>{m}</option>)}
-                </select>
-                <select value={vModel} onChange={e => { setVModel(e.target.value); setVYear('') }} disabled={!vMake}
-                  style={{ padding: '10px 12px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.1)', fontSize: 13, outline: 'none', background: '#21262D', color: '#E6EDF3', opacity: vMake ? 1 : 0.5 }}>
-                  <option value="">Modelo</option>
-                  {models.map(m => <option key={m} value={m}>{m}</option>)}
-                </select>
-                <select value={vYear} onChange={e => setVYear(e.target.value)} disabled={!vModel}
-                  style={{ padding: '10px 12px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.1)', fontSize: 13, outline: 'none', background: '#21262D', color: '#E6EDF3', opacity: vModel ? 1 : 0.5 }}>
-                  <option value="">Año</option>
-                  {years.map(y => <option key={y} value={y}>{y}</option>)}
-                </select>
+                {[
+                  { value: vMake, set: (v: string) => { setVMake(v); setVModel(''); setVYear('') }, opts: makes, label: 'Marca', dis: false },
+                  { value: vModel, set: (v: string) => { setVModel(v); setVYear('') }, opts: models, label: 'Modelo', dis: !vMake },
+                  { value: vYear, set: (v: string) => setVYear(v), opts: years, label: 'Año', dis: !vModel },
+                ].map(({ value, set, opts, label, dis }) => (
+                  <select key={label} value={value} onChange={e => set(e.target.value)} disabled={dis} style={{ ...SEL, opacity: dis ? 0.5 : 1 }}>
+                    <option value="">{label}</option>
+                    {opts.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                ))}
               </div>
             )}
-
-            {/* Categorías */}
-            <p style={{ fontSize: 13, fontWeight: 700, color: '#E6EDF3', margin: '16px 0 10px' }}>Categoría</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 10px' }}>Categoría</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 8 }}>
               {CATEGORIAS.map(cat => (
                 <button key={String(cat.id)} onPointerDown={() => { setCategoria(cat.id); setShowMobileFilters(false) }}
-                  style={{ padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${categoria === cat.id ? 'rgba(56,139,253,0.5)' : 'rgba(255,255,255,0.08)'}`, background: categoria === cat.id ? 'rgba(56,139,253,0.15)' : '#21262D', color: categoria === cat.id ? '#79C0FF' : '#8B949E', fontSize: 12, fontWeight: categoria === cat.id ? 700 : 500, cursor: 'pointer', textAlign: 'left' }}>
+                  style={{ padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${categoria === cat.id ? '#1d4ed8' : '#e5e7eb'}`, background: categoria === cat.id ? '#eff6ff' : '#fff', color: categoria === cat.id ? '#1d4ed8' : '#374151', fontSize: 12, fontWeight: categoria === cat.id ? 700 : 500, cursor: 'pointer', textAlign: 'left' }}>
                   {cat.emoji} {cat.label}
                 </button>
               ))}
             </div>
-
             {(categoria || vehicleSelected) && (
               <button onPointerDown={() => { setCategoria(null); clearVehicle(); setShowMobileFilters(false) }}
-                style={{ marginTop: 16, width: '100%', padding: '12px', borderRadius: 10, border: '1.5px solid rgba(239,68,68,0.4)', background: 'rgba(239,68,68,0.1)', color: '#fca5a5', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                style={{ marginTop: 16, width: '100%', padding: 12, borderRadius: 10, border: '1.5px solid #fca5a5', background: '#fff5f5', color: '#b91c1c', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 Limpiar filtros
               </button>
             )}
@@ -293,115 +248,124 @@ export default function MarketplacePage() {
         </div>
       )}
 
-      {/* ═══════════ BODY ═══════════ */}
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 12px 80px', display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+      {/* ══ BODY ══ */}
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '24px 16px 80px', display: 'flex', gap: 24, alignItems: 'flex-start' }}>
 
-        {/* ── SIDEBAR (solo desktop) ── */}
-        <aside className="mp-aside" style={{ width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {/* SIDEBAR */}
+        <aside className="mp-aside" style={{ width: 230, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-          {/* Selector vehículo */}
-          <div style={{ background: '#161B22', borderRadius: 14, border: '1px solid rgba(255,255,255,0.1)', padding: '16px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-              <Car size={16} color="#79C0FF" />
-              <span style={{ fontWeight: 700, fontSize: 13, color: '#E6EDF3' }}>Busque por su vehículo</span>
+          {/* Filtro vehículo */}
+          <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e5e7eb', padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+              <Car size={15} color="#1d4ed8" />
+              <span style={{ fontWeight: 700, fontSize: 13, color: '#111827' }}>Filtra por tu auto</span>
             </div>
-            <p style={{ fontSize: 11, color: '#B1BAC4', margin: '0 0 12px', lineHeight: 1.4 }}>para ver compatibilidad de cada pieza</p>
+            <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 12px' }}>Ver piezas compatibles</p>
             {vehicleSelected ? (
               <div>
-                <div style={{ background: 'rgba(56,139,253,0.15)', border: '1.5px solid rgba(56,139,253,0.4)', borderRadius: 10, padding: '10px 12px', marginBottom: 10 }}>
-                  <p style={{ fontWeight: 700, color: '#A5D6FF', fontSize: 13, margin: 0 }}>{vMake} {vModel}</p>
-                  <p style={{ color: '#79C0FF', fontSize: 12, margin: '2px 0 0' }}>{vYear}</p>
+                <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 10, padding: '10px 12px', marginBottom: 8 }}>
+                  <p style={{ fontWeight: 700, color: '#1d4ed8', fontSize: 13, margin: 0 }}>{vMake} {vModel}</p>
+                  <p style={{ color: '#3b82f6', fontSize: 12, margin: '2px 0 0' }}>Año {vYear}</p>
                 </div>
                 <button onPointerDown={clearVehicle}
-                  style={{ width: '100%', padding: '8px', borderRadius: 8, border: '1.5px solid rgba(255,255,255,0.1)', background: '#161B22', color: '#B1BAC4', fontSize: 12, fontWeight: 600, cursor: 'pointer', touchAction: 'manipulation' }}>
+                  style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', color: '#6b7280', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                   Cambiar vehículo
                 </button>
               </div>
             ) : (
               <button onPointerDown={() => setShowVehicleModal(true)}
-                style={{ touchAction: 'manipulation', width: '100%', padding: '11px', borderRadius: 10, border: 'none', background: '#388BFD', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                <Car size={15} /> Seleccionar vehículo
+                style={{ width: '100%', padding: 11, borderRadius: 10, border: 'none', background: '#1d4ed8', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <Car size={14} /> Seleccionar vehículo
               </button>
             )}
           </div>
 
           {/* Categorías */}
-          <div style={{ background: '#161B22', borderRadius: 14, border: '1px solid rgba(255,255,255,0.1)', padding: '16px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-            <p style={{ fontWeight: 700, fontSize: 13, color: '#E6EDF3', margin: '0 0 10px' }}>Categorías</p>
+          <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e5e7eb', padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <p style={{ fontWeight: 700, fontSize: 13, color: '#111827', margin: '0 0 10px' }}>Categorías</p>
             {CATEGORIAS.map(cat => (
               <button key={String(cat.id)} onPointerDown={() => setCategoria(cat.id)}
-                style={{ touchAction: 'manipulation', width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, marginBottom: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  background: categoria === cat.id ? '#eff6ff' : 'transparent',
-                  color: categoria === cat.id ? '#1A56DB' : '#374151',
-                  fontWeight: categoria === cat.id ? 700 : 400 }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                  <span>{cat.emoji}</span> {cat.label}
-                </span>
+                style={{ width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, marginBottom: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: categoria === cat.id ? '#eff6ff' : 'transparent', color: categoria === cat.id ? '#1d4ed8' : '#374151', fontWeight: categoria === cat.id ? 700 : 400 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}><span>{cat.emoji}</span> {cat.label}</span>
                 {cat.id !== null && (
-                  <span style={{ fontSize: 11, color: '#B1BAC4', background: '#21262D', padding: '1px 6px', borderRadius: 20 }}>
-                    {countByCat[cat.id as string] ?? 0}
-                  </span>
+                  <span style={{ fontSize: 11, color: '#9ca3af', background: '#f3f4f6', padding: '1px 6px', borderRadius: 20 }}>{countByCat[cat.id as string] ?? 0}</span>
                 )}
               </button>
             ))}
           </div>
 
           {/* Vendedores */}
-          <div style={{ background: '#161B22', borderRadius: 14, border: '1px solid rgba(255,255,255,0.1)', padding: '16px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-            <p style={{ fontWeight: 700, fontSize: 13, color: '#E6EDF3', margin: '0 0 10px' }}>Vendedores</p>
+          <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e5e7eb', padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <p style={{ fontWeight: 700, fontSize: 13, color: '#111827', margin: '0 0 10px' }}>Desarmadurías</p>
             {mockDesarmaduras.map(d => (
               <Link key={d.id} href={`/d/${d.slug}`}
-                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 6px', borderRadius: 8, textDecoration: 'none', marginBottom: 2 }}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 8px', borderRadius: 8, textDecoration: 'none', marginBottom: 2, background: 'transparent', transition: 'background 0.15s' }}
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f9fafb'}
                 onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-                <div style={{ width: 28, height: 28, borderRadius: 7, background: `linear-gradient(135deg,${d.color}cc,${d.color})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: `linear-gradient(135deg,${d.color}bb,${d.color})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <span style={{ fontSize: 11, fontWeight: 900, color: '#fff' }}>{d.nombre.split(' ').map((w: string) => w[0]).join('').slice(0, 2)}</span>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 12, fontWeight: 600, color: '#E6EDF3', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.nombre}</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 1 }}>
-                    <Star size={9} fill="#facc15" color="#facc15" />
-                    <span style={{ fontSize: 10, color: '#B1BAC4' }}>{d.rating}</span>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.nombre}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    {[1,2,3,4,5].map(s => <Star key={s} size={8} fill={s <= Math.round(d.rating) ? '#facc15' : '#e5e7eb'} color={s <= Math.round(d.rating) ? '#facc15' : '#e5e7eb'} />)}
+                    <span style={{ fontSize: 10, color: '#9ca3af', marginLeft: 2 }}>{d.rating}</span>
                   </div>
                 </div>
-                <ChevronRight size={12} color="#3b5280" />
+                <ChevronRight size={12} color="#d1d5db" />
               </Link>
+            ))}
+          </div>
+
+          {/* Trust badges */}
+          <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e5e7eb', padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            {[
+              { icon: ShieldCheck, color: '#15803d', text: 'Vendedores verificados' },
+              { icon: Truck,       color: '#1d4ed8', text: 'Envío a todo Chile' },
+              { icon: Phone,       color: '#7c3aed', text: 'Contacto directo' },
+            ].map(({ icon: Icon, color, text }) => (
+              <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid #f9fafb' }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Icon size={13} color={color} />
+                </div>
+                <span style={{ fontSize: 12, color: '#374151', fontWeight: 500 }}>{text}</span>
+              </div>
             ))}
           </div>
         </aside>
 
-        {/* ── MAIN CONTENT ── */}
+        {/* MAIN */}
         <div style={{ flex: 1, minWidth: 0 }}>
 
-          {/* Breadcrumb / toolbar */}
+          {/* Toolbar */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#B1BAC4' }}>
-              <span style={{ cursor: 'pointer', color: '#79C0FF', fontWeight: 600 }} onPointerDown={() => { setBusqueda(''); setCategoria(null) }}>Repuestos</span>
-              {categoria && <><ChevronRight size={12} /><span style={{ color: '#E6EDF3', fontWeight: 600 }}>{CATEGORIAS.find(c => c.id === categoria)?.label}</span></>}
-              {busqueda && <><ChevronRight size={12} /><span style={{ color: '#E6EDF3' }}>&ldquo;{busqueda}&rdquo;</span></>}
-              <span style={{ color: '#B1BAC4' }}>({allItems.length})</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#9ca3af' }}>
+              <span style={{ cursor: 'pointer', color: '#1d4ed8', fontWeight: 600 }} onPointerDown={() => { setBusqueda(''); setCategoria(null) }}>Repuestos</span>
+              {categoria && <><ChevronRight size={12} /><span style={{ color: '#111827', fontWeight: 600 }}>{CATEGORIAS.find(c => c.id === categoria)?.label}</span></>}
+              {busqueda && <><ChevronRight size={12} /><span style={{ color: '#111827' }}>&ldquo;{busqueda}&rdquo;</span></>}
+              <span>({allItems.length} resultados)</span>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {vehicleSelected && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(56,139,253,0.15)', border: '1px solid rgba(56,139,253,0.4)', borderRadius: 8, padding: '5px 10px' }}>
-                  <Check size={12} color="#79C0FF" />
-                  <span style={{ fontSize: 12, color: '#A5D6FF', fontWeight: 600 }}>{vMake} {vModel} {vYear}</span>
-                  <button onPointerDown={clearVehicle} style={{ background: 'none', border: 'none', cursor: 'pointer', touchAction: 'manipulation', padding: 0, display: 'flex' }}><X size={11} color="#79C0FF" /></button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, padding: '5px 10px' }}>
+                  <Check size={12} color="#1d4ed8" />
+                  <span style={{ fontSize: 12, color: '#1d4ed8', fontWeight: 600 }}>{vMake} {vModel} {vYear}</span>
+                  <button onPointerDown={clearVehicle} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><X size={11} color="#1d4ed8" /></button>
                 </div>
               )}
-              <span style={{ fontSize: 13, color: '#E6EDF3' }}>Ordenar por:</span>
+              <span style={{ fontSize: 13, color: '#6b7280' }}>Ordenar:</span>
               <div style={{ position: 'relative' }}>
                 <button onPointerDown={() => setShowOrden(v => !v)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#161B22', fontSize: 13, color: '#E6EDF3', cursor: 'pointer', touchAction: 'manipulation' }}>
-                  {orden} <ChevronDown size={13} color="#6E7681" />
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', fontSize: 13, color: '#374151', cursor: 'pointer' }}>
+                  {orden} <ChevronDown size={13} color="#9ca3af" />
                 </button>
                 {showOrden && (
-                  <div style={{ position: 'absolute', top: '110%', right: 0, background: '#161B22', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 30, minWidth: 160, overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', top: '110%', right: 0, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.10)', zIndex: 30, minWidth: 160, overflow: 'hidden' }}>
                     {ORDEN_OPS.map(op => (
                       <button key={op} onPointerDown={() => { setOrden(op); setShowOrden(false) }}
-                        style={{ width: '100%', textAlign: 'left', padding: '10px 14px', border: 'none', background: orden === op ? '#eff6ff' : '#fff', color: orden === op ? '#1A56DB' : '#374151', fontSize: 13, fontWeight: orden === op ? 700 : 400, cursor: 'pointer', touchAction: 'manipulation', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        {op} {orden === op && <Check size={12} color="#79C0FF" />}
+                        style={{ width: '100%', textAlign: 'left', padding: '10px 14px', border: 'none', background: orden === op ? '#eff6ff' : '#fff', color: orden === op ? '#1d4ed8' : '#374151', fontSize: 13, fontWeight: orden === op ? 700 : 400, cursor: 'pointer' }}>
+                        {op} {orden === op && <Check size={12} color="#1d4ed8" style={{ display: 'inline', marginLeft: 6 }} />}
                       </button>
                     ))}
                   </div>
@@ -410,18 +374,19 @@ export default function MarketplacePage() {
             </div>
           </div>
 
-          {/* ── GRID DE PRODUCTOS ── */}
+          {/* GRID */}
           {allItems.length === 0 ? (
-            <div style={{ background: '#161B22', borderRadius: 16, padding: '60px 24px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <p style={{ fontSize: 16, fontWeight: 700, color: '#E6EDF3', margin: '0 0 8px' }}>Sin resultados</p>
-              <p style={{ fontSize: 14, color: '#B1BAC4', margin: '0 0 20px' }}>Prueba con otro término o categoría</p>
+            <div style={{ background: '#fff', borderRadius: 16, padding: '60px 24px', textAlign: 'center', border: '1px solid #e5e7eb' }}>
+              <Package size={40} color="#d1d5db" style={{ margin: '0 auto 12px', display: 'block' }} />
+              <p style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Sin resultados</p>
+              <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 20px' }}>Prueba con otro término o categoría</p>
               <button onPointerDown={() => { setBusqueda(''); setCategoria(null) }}
-                style={{ padding: '10px 22px', borderRadius: 10, background: '#388BFD', color: '#fff', fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer', touchAction: 'manipulation' }}>
+                style={{ padding: '10px 22px', borderRadius: 10, background: '#1d4ed8', color: '#fff', fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer' }}>
                 Ver todo
               </button>
             </div>
           ) : (
-            <div className="mp-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(190px,1fr))', gap: 12 }}>
+            <div className="mp-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(195px,1fr))', gap: 14 }}>
               {allItems.map(item => {
                 const ri = item as { isReal?: boolean; sellerNombre?: string; sellerTel?: string | null }
                 const isReal       = ri.isReal ?? false
@@ -436,29 +401,27 @@ export default function MarketplacePage() {
                 return (
                   <div key={item.id}
                     onClick={() => window.location.href = `/marketplace/${item.id}`}
-                    style={{ background: '#161B22', borderRadius: 14, border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column', transition: 'box-shadow 0.2s, transform 0.2s' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)' }}
+                    style={{ background: '#fff', borderRadius: 14, border: '1px solid #e8eaed', overflow: 'hidden', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column', transition: 'box-shadow 0.2s,transform 0.15s' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 20px rgba(0,0,0,0.10)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)' }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 4px rgba(0,0,0,0.06)'; (e.currentTarget as HTMLElement).style.transform = 'none' }}>
 
                     {/* Imagen */}
-                    <div style={{ height: 170, background: '#f8f9fa', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ paddingTop: '72%', position: 'relative', background: '#f8f9fa', overflow: 'hidden' }}>
                       {imgUrl ? (
-                        <img src={imgUrl} alt={item.pieza} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={imgUrl} alt={item.pieza} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
-                        <span style={{ fontSize: 54, opacity: 0.25 }}>
-                          {{ motor: '⚙️', electrico: '⚡', frenos: '🛑', 'suspension-d': '🔩', transmision: '🔧', interior: '🪑', escape: '💨' }[item.zona ?? ''] ?? '🔧'}
-                        </span>
+                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Package size={36} color="#d1d5db" />
+                        </div>
                       )}
                       {/* Compat badge */}
                       {compat === 'compatible' && (
-                        <div style={{ position: 'absolute', top: 8, left: 8, background: '#388BFD', color: '#fff', fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 3 }}>
+                        <div style={{ position: 'absolute', top: 8, left: 8, background: '#1d4ed8', color: '#fff', fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 3 }}>
                           <Check size={9} /> Compatible
                         </div>
                       )}
                       {compat === 'incompatible' && (
-                        <div style={{ position: 'absolute', top: 8, left: 8, background: '#b91c1c', color: '#fff', fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 20 }}>
-                          No compatible
-                        </div>
+                        <div style={{ position: 'absolute', top: 8, left: 8, background: '#b91c1c', color: '#fff', fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 20 }}>No compatible</div>
                       )}
                       {/* Estado */}
                       <span style={{ position: 'absolute', top: 8, right: 8, fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20, background: e.bg, color: e.color }}>
@@ -467,57 +430,51 @@ export default function MarketplacePage() {
                     </div>
 
                     {/* Info */}
-                    <div style={{ padding: '12px 14px', flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <p style={{ fontSize: 10, color: '#B1BAC4', margin: 0, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    <div style={{ padding: '12px 13px', flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <p style={{ fontSize: 10, color: '#9ca3af', margin: 0, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.4 }}>
                         {item.marca}{item.modelo ? ` · ${item.modelo}` : ''}
                       </p>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: '#E6EDF3', margin: 0, lineHeight: 1.35, minHeight: 36 }}>{item.pieza}</p>
-
-                      {/* Código de parte original (OEM) */}
+                      <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0, lineHeight: 1.3, minHeight: 34, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' } as React.CSSProperties}>
+                        {item.pieza}
+                      </p>
                       {item.oem && (
-                        <div title="Número de parte original del fabricante (OEM)" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(56,139,253,0.12)', border: '1px solid rgba(56,139,253,0.35)', borderRadius: 6, padding: '2px 7px', width: 'fit-content', cursor: 'help' }}>
-                          <span style={{ fontSize: 9, fontWeight: 700, color: '#79C0FF', letterSpacing: 0.3 }}>N° Parte</span>
-                          <span style={{ fontSize: 10, fontWeight: 600, color: '#A5D6FF', fontFamily: 'monospace' }}>{item.oem}</span>
-                        </div>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 5, padding: '2px 6px', fontSize: 9, fontWeight: 700, color: '#0369a1', width: 'fit-content' }}>
+                          OEM {item.oem}
+                        </span>
                       )}
-
-                      {/* Precio */}
-                      <p style={{ fontSize: 22, fontWeight: 900, color: '#E6EDF3', margin: '4px 0 0', letterSpacing: -0.5, lineHeight: 1 }}>
+                      <p style={{ fontSize: 20, fontWeight: 900, color: '#111827', margin: '4px 0 0', letterSpacing: -0.5 }}>
                         ${item.precio.toLocaleString('es-CL')}
                       </p>
-
-                      {/* Envío */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                        <Truck size={11} color="#79C0FF" />
-                        <span style={{ fontSize: 11, color: '#79C0FF', fontWeight: 600 }}>Envío disponible</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Truck size={10} color="#1d4ed8" />
+                        <span style={{ fontSize: 10, color: '#1d4ed8', fontWeight: 600 }}>Envío disponible</span>
                       </div>
 
-                      {/* Vendedor + rating */}
+                      {/* Vendedor */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 5, paddingTop: 8, borderTop: '1px solid #f3f4f6', marginTop: 4 }}>
-                        <div style={{ width: 16, height: 16, borderRadius: 4, background: isReal ? '#1A56DB' : (mockSeller?.color ?? '#6b7280'), display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 8, fontWeight: 900, flexShrink: 0 }}>
+                        <div style={{ width: 16, height: 16, borderRadius: 4, background: isReal ? '#1d4ed8' : (mockSeller?.color ?? '#6b7280'), display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 8, fontWeight: 900, flexShrink: 0 }}>
                           {sellerNombre[0].toUpperCase()}
                         </div>
-                        <span style={{ fontSize: 11, color: '#B1BAC4', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sellerNombre}</span>
+                        <span style={{ fontSize: 11, color: '#6b7280', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sellerNombre}</span>
                         {!isReal && mockSeller && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Star size={9} fill="#facc15" color="#facc15" />
-                            <span style={{ fontSize: 10, color: '#E6EDF3', fontWeight: 700 }}>{mockSeller.rating}</span>
+                            <span style={{ fontSize: 10, color: '#374151', fontWeight: 700 }}>{mockSeller.rating}</span>
                           </div>
                         )}
                       </div>
 
-                      {/* Botones de contacto */}
+                      {/* CTAs */}
                       <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
                         <a href={waLink} target="_blank" rel="noopener noreferrer"
                           onClick={ev => ev.stopPropagation()}
-                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px', borderRadius: 9, background: '#25d366', color: '#fff', fontWeight: 700, fontSize: 12, textDecoration: 'none', touchAction: 'manipulation' }}>
-                          <MessageCircle size={13} /> WhatsApp
+                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: 8, borderRadius: 9, background: '#22c55e', color: '#fff', fontWeight: 700, fontSize: 12, textDecoration: 'none' }}>
+                          <MessageCircle size={13} /> Consultar por WhatsApp
                         </a>
-                        <a
-                          href={`/chat/directo?room=pieza-${item.id}&pieza=${encodeURIComponent(item.pieza)}&vendedor=${encodeURIComponent(sellerNombre)}&wa=${encodeURIComponent(waLink)}`}
+                        <a href={`/chat/directo?room=pieza-${item.id}&pieza=${encodeURIComponent(item.pieza)}&vendedor=${encodeURIComponent(sellerNombre)}&wa=${encodeURIComponent(waLink)}`}
                           onClick={ev => ev.stopPropagation()}
-                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px', borderRadius: 9, background: 'rgba(56,139,253,0.15)', border: '1.5px solid rgba(56,139,253,0.4)', color: '#1d4ed8', fontWeight: 700, fontSize: 12, textDecoration: 'none', touchAction: 'manipulation' }}>
-                          <MessageCircle size={13} /> Chat directo
+                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: 8, borderRadius: 9, background: '#f0f9ff', border: '1.5px solid #bae6fd', color: '#1d4ed8', fontWeight: 700, fontSize: 12, textDecoration: 'none' }}>
+                          <Tag size={12} /> Chat directo
                         </a>
                       </div>
                     </div>

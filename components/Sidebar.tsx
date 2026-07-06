@@ -23,7 +23,6 @@ const bottomItems = [
   { icon: Wrench,      href: '/talleres',    label: 'Talleres' },
 ]
 
-// Ítems mostrados en la barra inferior del móvil (los 5 más importantes)
 const mobileItems = [
   { icon: Plus,          href: '/',            label: 'Nuevo' },
   { icon: LayoutGrid,    href: '/inventario',  label: 'Inventario' },
@@ -55,29 +54,29 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* ── Sidebar desktop (oculto en móvil) ── */}
+      {/* ── Sidebar desktop ── */}
       <aside
-        style={{ background: '#010409', borderRight: '1px solid rgba(255,255,255,0.08)' }}
+        style={{ background: '#fff', borderRight: '1px solid #e5e7eb' }}
         className="hidden sm:flex w-16 min-h-screen flex-col items-center pt-4 pb-6 fixed left-0 top-0 z-50"
       >
         <Link
           href="/"
-          style={{ background: 'linear-gradient(135deg,#388BFD,#1F6FEB)' }}
-          className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-sm select-none transition-opacity hover:opacity-90"
+          style={{ background: 'linear-gradient(135deg,#1d4ed8,#3b82f6)' }}
+          className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-sm select-none"
         >
           C
         </Link>
 
-        <nav className="flex flex-col items-center gap-2 mt-6 flex-1">
+        <nav className="flex flex-col items-center gap-1 mt-6 flex-1">
           {navItems.map(({ icon: Icon, href, label }) => (
             <Link
               key={href}
               href={href}
               title={label}
               style={isActive(href)
-                ? { background: 'rgba(56,139,253,0.2)', color: '#79C0FF' }
-                : { color: '#B1BAC4' }}
-              className="w-9 h-9 rounded-lg flex items-center justify-center transition-all relative hover:bg-[#161B22]/10 hover:text-slate-200"
+                ? { background: '#eff6ff', color: '#1d4ed8' }
+                : { color: '#9ca3af' }}
+              className="w-9 h-9 rounded-lg flex items-center justify-center transition-all relative hover:bg-gray-100 hover:text-gray-600"
             >
               <Icon size={18} />
               {href === '/pedidos' && unread > 0 && (
@@ -89,16 +88,16 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-1">
           {bottomItems.map(({ icon: Icon, href, label }) => (
             <Link
               key={href}
               href={href}
               title={label}
               style={isActive(href)
-                ? { background: 'rgba(56,139,253,0.2)', color: '#79C0FF' }
-                : { color: '#B1BAC4' }}
-              className="w-9 h-9 rounded-lg flex items-center justify-center transition-all hover:bg-[#161B22]/10 hover:text-slate-200"
+                ? { background: '#eff6ff', color: '#1d4ed8' }
+                : { color: '#9ca3af' }}
+              className="w-9 h-9 rounded-lg flex items-center justify-center transition-all hover:bg-gray-100"
             >
               <Icon size={18} />
             </Link>
@@ -106,17 +105,17 @@ export default function Sidebar() {
         </div>
       </aside>
 
-      {/* ── Barra inferior móvil (oculta en desktop) ── */}
+      {/* ── Barra inferior móvil ── */}
       <nav
         className="sm:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center"
-        style={{ background: '#010409', borderTop: '1px solid rgba(255,255,255,0.10)', height: 64 }}
+        style={{ background: '#fff', borderTop: '1px solid #e5e7eb', height: 64 }}
       >
         {mobileItems.map(({ icon: Icon, href, label }) => (
           <Link
             key={href}
             href={href}
             className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full relative"
-            style={{ color: isActive(href) ? '#79C0FF' : '#6E7681', textDecoration: 'none' }}
+            style={{ color: isActive(href) ? '#1d4ed8' : '#9ca3af', textDecoration: 'none' }}
           >
             <Icon size={22} />
             <span style={{ fontSize: 9, fontWeight: 600 }}>{label}</span>
