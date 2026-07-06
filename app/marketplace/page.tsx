@@ -352,33 +352,6 @@ export default function MarketplacePage() {
             </div>
           </section>
 
-          {/* ── categorías visuales ── */}
-          <section style={{ background:'#fff', padding:'40px 24px', borderBottom:'1px solid #e5e7eb' }}>
-            <div style={{ maxWidth:1280, margin:'0 auto' }}>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:24 }}>
-                <div>
-                  <h2 style={{ fontSize:20, fontWeight:800, color:'#111827', margin:0, letterSpacing:-.3 }}>Explorar por categoría</h2>
-                  <p style={{ fontSize:13, color:'#9ca3af', margin:'3px 0 0' }}>Encuentra rápido lo que buscas</p>
-                </div>
-                <button onPointerDown={()=>document.getElementById('results')?.scrollIntoView({behavior:'smooth'})}
-                  style={{ display:'flex', alignItems:'center', gap:5, fontSize:13, fontWeight:600, color:'#1d4ed8', background:'none', border:'none', cursor:'pointer' }}>
-                  Ver todo <ArrowRight size={14} />
-                </button>
-              </div>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(110px,1fr))', gap:12 }}>
-                {CATS.slice(1).map(c=>(
-                  <button key={String(c.id)} onPointerDown={()=>{setCat(c.id);document.getElementById('results')?.scrollIntoView({behavior:'smooth'})}}
-                    style={{ background:'#f8f9fa', border:'1.5px solid #e5e7eb', borderRadius:14, padding:'20px 8px 16px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:8, transition:'all .2s' }}
-                    onMouseEnter={e=>{const el=e.currentTarget as HTMLElement;el.style.background='#eff6ff';el.style.borderColor='#1d4ed8';el.style.transform='translateY(-2px)'}}
-                    onMouseLeave={e=>{const el=e.currentTarget as HTMLElement;el.style.background='#f8f9fa';el.style.borderColor='#e5e7eb';el.style.transform=''}}>
-                    <span style={{ fontSize:32 }}>{c.icon}</span>
-                    <span style={{ fontSize:12, fontWeight:700, color:'#374151', textAlign:'center', lineHeight:1.2 }}>{c.label}</span>
-                    <span style={{ fontSize:10, color:'#9ca3af', fontWeight:500 }}>{catCount[c.id as string]??0} piezas</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </section>
 
           {/* ── desarmadurías ── */}
           <section style={{ background:'#f8f9fa', padding:'40px 24px', borderBottom:'1px solid #e5e7eb' }}>
