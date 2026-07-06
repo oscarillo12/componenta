@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+.taller-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important; }
+
 /*
   Paleta profesional — inspirada en GitHub Dark / Stripe / Linear
   Fondo neutro charcoal, sin saturación azul en backgrounds

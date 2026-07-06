@@ -93,9 +93,7 @@ export default async function TalleresPage() {
               const TipoIcon = TIPO_ICON[t.tipo ?? 'taller'] ?? Wrench
               const waLink = t.whatsapp ? `https://wa.me/${t.whatsapp.replace(/\D/g, '')}` : '#'
               return (
-                <div key={t.slug} style={{ background: '#fff', borderRadius: 18, border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', transition: 'box-shadow 0.2s' }}
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)'}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'}>
+                <div key={t.slug} className="taller-card" style={{ background: '#fff', borderRadius: 18, border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', transition: 'box-shadow 0.2s' }}>
                   {/* Color bar */}
                   <div style={{ height: 4, background: `linear-gradient(90deg, ${t.color}, ${t.color}60)` }} />
                   <div style={{ padding: '18px 20px' }}>
