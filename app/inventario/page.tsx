@@ -28,6 +28,8 @@ function mockToProduct(item: typeof mockInventory[0], userId: string): Product {
     seller_nombre:   null,
     seller_telefono: null,
     image_hash:      null,
+    ml_item_id:      null,
+    ml_permalink:    null,
   }
 }
 
@@ -47,9 +49,22 @@ export default async function InventarioPage() {
     ? realProducts
     : mockInventory.slice(0, 8).map(i => mockToProduct(i, userId))
 
+  // Verificar si el usuario tiene ML conectado
+  let mlConnected = false
+  try {
+    const { data: mlToken } = await supabaseAdmin
+      .from('ml_tokens')
+      .select('expires_at')
+      .eq('user_id', userId)
+      .single()
+    mlConnected = !!mlToken
+  } catch {
+    mlConnected = false
+  }
+
   return (
     <SellerLayout section="inventario">
-      <InventarioClient products={products} isDemo={!hasRealData} />
+      <InventarioClient products={products} isDemo={!hasRealData} mlConnected={mlConnected} />
     </SellerLayout>
   )
 }

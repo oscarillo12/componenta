@@ -123,3 +123,29 @@ CREATE OR REPLACE TRIGGER orders_updated_at
 ALTER PUBLICATION supabase_realtime ADD TABLE orders;
 ALTER PUBLICATION supabase_realtime ADD TABLE order_events;
 ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+
+-- ── MercadoLibre ─────────────────────────────────────────────────────
+
+-- Columnas ML en la tabla products (si no existen)
+ALTER TABLE products ADD COLUMN IF NOT EXISTS ml_item_id   TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS ml_permalink TEXT;
+
+-- Tokens OAuth de MercadoLibre por usuario
+CREATE TABLE IF NOT EXISTS ml_tokens (
+  user_id       TEXT PRIMARY KEY,
+  access_token  TEXT        NOT NULL,
+  refresh_token TEXT        NOT NULL,
+  expires_at    TIMESTAMPTZ NOT NULL,
+  ml_user_id    TEXT,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE ml_tokens ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "service_role_ml_tokens" ON ml_tokens;
+CREATE POLICY "service_role_ml_tokens"
+  ON ml_tokens FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+CREATE OR REPLACE TRIGGER ml_tokens_updated_at
+  BEFORE UPDATE ON ml_tokens
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();

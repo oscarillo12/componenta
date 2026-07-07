@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Product } from '@/lib/supabase'
-import { Plus, Search, Eye, Package, Trash2, CheckCircle, RotateCcw, Loader2 } from 'lucide-react'
+import { Plus, Search, Eye, Package, Trash2, CheckCircle, RotateCcw, Loader2, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 
 const estadoConfig: Record<string, { label: string; color: string; bg: string }> = {
@@ -12,14 +12,30 @@ const estadoConfig: Record<string, { label: string; color: string; bg: string }>
   'para-reparar': { label: 'Para reparar', color: '#b91c1c', bg: '#fee2e2' },
 }
 
-function PartCard({ item, onDelete, onToggleSold }: {
+function MlIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 28 28" fill="none" style={{ flexShrink: 0 }}>
+      <circle cx="14" cy="14" r="14" fill="#FFE600" />
+      <path d="M7 14L11.5 9L14 13L16.5 9L21 14L14 21L7 14Z" fill="#2D3277" />
+    </svg>
+  )
+}
+
+function PartCard({ item, mlConnected, onDelete, onToggleSold, onPublishML }: {
   item: Product
+  mlConnected: boolean
   onDelete: (id: string) => Promise<void>
   onToggleSold: (id: string, disponible: boolean) => Promise<void>
+  onPublishML: (id: string) => Promise<{ ml_item_id: string; permalink: string } | null>
 }) {
   const [loadingSold,   setLoadingSold]   = useState(false)
   const [loadingDelete, setLoadingDelete] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [loadingML,     setLoadingML]     = useState(false)
+  const [mlError,       setMlError]       = useState<string | null>(null)
+  const [mlResult,      setMlResult]      = useState<{ ml_item_id: string; permalink: string } | null>(
+    item.ml_item_id && item.ml_permalink ? { ml_item_id: item.ml_item_id, permalink: item.ml_permalink } : null
+  )
 
   const est = estadoConfig[item.estado] ?? estadoConfig.bueno
 
@@ -37,6 +53,20 @@ function PartCard({ item, onDelete, onToggleSold }: {
     setConfirmDelete(false)
   }
 
+  async function handlePublishML() {
+    setLoadingML(true)
+    setMlError(null)
+    const result = await onPublishML(item.id)
+    if (result) {
+      setMlResult(result)
+    } else {
+      setMlError('Error al publicar. Intenta de nuevo.')
+    }
+    setLoadingML(false)
+  }
+
+  const isPublishedOnML = !!mlResult
+
   return (
     <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
       <div style={{ height: 148, background: '#f5f6f7', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0, overflow: 'hidden' }}>
@@ -48,6 +78,13 @@ function PartCard({ item, onDelete, onToggleSold }: {
         {!item.disponible && (
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 20 }}>Vendida</span>
+          </div>
+        )}
+        {/* Badge ML si ya está publicado */}
+        {isPublishedOnML && (
+          <div style={{ position: 'absolute', top: 8, left: 8, background: '#FFE600', borderRadius: 20, padding: '2px 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <MlIcon size={10} />
+            <span style={{ fontSize: 9, fontWeight: 800, color: '#2D3277' }}>En ML</span>
           </div>
         )}
         <span style={{ position: 'absolute', top: 8, right: 8, fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20, background: est.bg, color: est.color }}>{est.label}</span>
@@ -82,6 +119,27 @@ function PartCard({ item, onDelete, onToggleSold }: {
             Cancelar
           </button>
         )}
+
+        {/* Sección MercadoLibre */}
+        {mlConnected && item.disponible && (
+          <div style={{ paddingTop: 8, borderTop: '1px solid #f3f4f6', marginTop: 2 }}>
+            {isPublishedOnML ? (
+              <a href={mlResult!.permalink} target="_blank" rel="noopener noreferrer"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '7px 0', borderRadius: 9, fontSize: 11, fontWeight: 700, textDecoration: 'none', background: '#fffbdb', border: '1.5px solid #FFE600', color: '#2D3277' }}>
+                <MlIcon size={11} /> Ver en ML <ExternalLink size={9} />
+              </a>
+            ) : (
+              <>
+                <button onClick={handlePublishML} disabled={loadingML}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '7px 0', borderRadius: 9, fontSize: 11, fontWeight: 700, cursor: loadingML ? 'default' : 'pointer', border: '1.5px solid #FFE600', background: loadingML ? '#fffde7' : '#fffbdb', color: '#2D3277' }}>
+                  {loadingML ? <Loader2 size={11} className="animate-spin" /> : <MlIcon size={11} />}
+                  {loadingML ? 'Publicando…' : 'Publicar en ML'}
+                </button>
+                {mlError && <p style={{ fontSize: 10, color: '#b91c1c', margin: '4px 0 0', textAlign: 'center' }}>{mlError}</p>}
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -89,10 +147,21 @@ function PartCard({ item, onDelete, onToggleSold }: {
 
 type Filtro = 'todos' | 'disponible' | 'vendido'
 
-export default function InventarioClient({ products: initial, isDemo = false }: { products: Product[]; isDemo?: boolean }) {
+export default function InventarioClient({
+  products: initial,
+  isDemo = false,
+  mlConnected = false,
+}: {
+  products: Product[]
+  isDemo?: boolean
+  mlConnected?: boolean
+}) {
   const [products, setProducts] = useState<Product[]>(initial)
   const [search,   setSearch]   = useState('')
   const [filtro,   setFiltro]   = useState<Filtro>('todos')
+  const [mlToast,  setMlToast]  = useState(
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('ml_connected') === '1'
+  )
 
   async function handleDelete(id: string) {
     const res = await fetch(`/api/products/${id}`, { method: 'DELETE' })
@@ -104,6 +173,21 @@ export default function InventarioClient({ products: initial, isDemo = false }: 
     if (res.ok) setProducts(prev => prev.map(p => p.id === id ? { ...p, disponible } : p))
   }
 
+  async function handlePublishML(id: string) {
+    const res = await fetch('/api/mercadolibre/publish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product_id: id }),
+    })
+    const data = await res.json()
+    if (!res.ok) return null
+    // Actualizar estado local
+    setProducts(prev => prev.map(p =>
+      p.id === id ? { ...p, ml_item_id: data.ml_item_id, ml_permalink: data.permalink } : p
+    ))
+    return { ml_item_id: data.ml_item_id, permalink: data.permalink }
+  }
+
   const filtered = products.filter(item => {
     const q = search.toLowerCase()
     const matchSearch = !q || item.pieza.toLowerCase().includes(q) || (item.marca ?? '').toLowerCase().includes(q) || (item.modelo ?? '').toLowerCase().includes(q)
@@ -113,9 +197,22 @@ export default function InventarioClient({ products: initial, isDemo = false }: 
 
   const disponiblesCount = products.filter(i => i.disponible).length
   const vendidoCount     = products.filter(i => !i.disponible).length
+  const mlCount          = products.filter(i => i.ml_item_id).length
 
   return (
     <>
+      {/* Toast ML conectado */}
+      {mlToast && (
+        <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10, background: '#fffde7', border: '1.5px solid #FFE600', borderRadius: 12, padding: '12px 16px' }}>
+          <MlIcon size={20} />
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#2D3277', margin: 0 }}>¡MercadoLibre conectado!</p>
+            <p style={{ fontSize: 12, color: '#555', margin: 0 }}>Ya puedes publicar piezas directamente en ML desde cada tarjeta.</p>
+          </div>
+          <button onClick={() => setMlToast(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#9ca3af', lineHeight: 1 }}>×</button>
+        </div>
+      )}
+
       {isDemo && (
         <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10, background: '#fffbeb', border: '1.5px solid #fde68a', borderRadius: 12, padding: '12px 16px' }}>
           <span style={{ fontSize: 18 }}>⚠️</span>
@@ -129,12 +226,31 @@ export default function InventarioClient({ products: initial, isDemo = false }: 
         </div>
       )}
 
+      {/* Banner ML — solo si no está conectado */}
+      {!mlConnected && (
+        <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 14, background: '#fffde7', border: '1.5px dashed #FFE600', borderRadius: 12, padding: '14px 16px', flexWrap: 'wrap' }}>
+          <div style={{ background: '#FFE600', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
+            <MlIcon size={18} />
+            <span style={{ fontSize: 13, fontWeight: 800, color: '#2D3277' }}>MercadoLibre</span>
+          </div>
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#2D3277', margin: '0 0 2px' }}>Publica en ML con un clic</p>
+            <p style={{ fontSize: 11, color: '#555', margin: 0 }}>Conecta tu cuenta de MercadoLibre y publica cualquier pieza directamente desde aquí.</p>
+          </div>
+          <a href="/api/mercadolibre/connect"
+            style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 16px', background: '#2D3277', color: '#FFE600', borderRadius: 9, fontSize: 12, fontWeight: 800, textDecoration: 'none', flexShrink: 0 }}>
+            Conectar cuenta →
+          </a>
+        </div>
+      )}
+
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 20, fontWeight: 800, color: '#111827', margin: '0 0 4px' }}>Mi inventario</h1>
           <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>
             {disponiblesCount} disponible{disponiblesCount !== 1 ? 's' : ''}
             {vendidoCount > 0 && ` · ${vendidoCount} vendida${vendidoCount !== 1 ? 's' : ''}`}
+            {mlCount > 0 && ` · ${mlCount} en ML`}
             {isDemo ? ' · demo' : ''}
           </p>
         </div>
@@ -175,7 +291,14 @@ export default function InventarioClient({ products: initial, isDemo = false }: 
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 14 }}>
           {filtered.map(item => (
-            <PartCard key={item.id} item={item} onDelete={handleDelete} onToggleSold={handleToggleSold} />
+            <PartCard
+              key={item.id}
+              item={item}
+              mlConnected={mlConnected}
+              onDelete={handleDelete}
+              onToggleSold={handleToggleSold}
+              onPublishML={handlePublishML}
+            />
           ))}
         </div>
       )}

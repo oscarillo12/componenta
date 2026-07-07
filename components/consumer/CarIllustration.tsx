@@ -18,21 +18,25 @@ export const CAR_ZONES: CarZone[] = [
 interface Props {
   selectedZone: string | null
   onZoneSelect: (id: string) => void
+  /** 'dark' = paneles oscuros (panel vendedor). 'light' = fondos claros (marketplace, tiendas). */
+  theme?: 'dark' | 'light'
+  accentColor?: string
 }
 
-export default function CarIllustration({ selectedZone, onZoneSelect }: Props) {
+export default function CarIllustration({ selectedZone, onZoneSelect, theme = 'dark', accentColor = '#1A56DB' }: Props) {
   const [hovered, setHovered] = useState<string | null>(null)
+  const isLight = theme === 'light'
 
   const fill = (id: string) => {
-    if (selectedZone === id) return 'rgba(22,163,74,0.32)'
-    if (hovered === id) return 'rgba(22,163,74,0.14)'
-    return 'rgba(255,255,255,0.03)'
+    if (selectedZone === id) return `${accentColor}28`
+    if (hovered === id) return `${accentColor}14`
+    return isLight ? 'rgba(17,24,39,0.025)' : 'rgba(255,255,255,0.03)'
   }
 
   const stroke = (id: string) => {
-    if (selectedZone === id) return '#1A56DB'
-    if (hovered === id) return 'rgba(22,163,74,0.5)'
-    return 'rgba(255,255,255,0.08)'
+    if (selectedZone === id) return accentColor
+    if (hovered === id) return `${accentColor}80`
+    return isLight ? 'rgba(17,24,39,0.08)' : 'rgba(255,255,255,0.08)'
   }
 
   const sw = (id: string) => (selectedZone === id ? 2.5 : 1.5)
@@ -143,26 +147,26 @@ export default function CarIllustration({ selectedZone, onZoneSelect }: Props) {
       <circle cx="424" cy="189" r="23" {...zp('frenos')} />
 
       {/* Selected zone glow overlay */}
-      {selectedZone === 'motor'        && <path d="M 36,95 L 36,162 L 166,162 L 166,77 L 96,77 Z" fill="none" stroke="#1A56DB" strokeWidth="2.5" opacity="0.6" filter="url(#glow)" />}
-      {selectedZone === 'electrico'    && <rect x="166" y="33" width="235" height="52" rx="4" fill="none" stroke="#1A56DB" strokeWidth="2.5" opacity="0.6" filter="url(#glow)" />}
-      {selectedZone === 'interior'     && <rect x="166" y="85" width="235" height="73" rx="3" fill="none" stroke="#1A56DB" strokeWidth="2.5" opacity="0.6" filter="url(#glow)" />}
-      {selectedZone === 'maletero'     && <path d="M 401,85 L 401,162 L 520,162 L 520,118 L 450,85 Z" fill="none" stroke="#1A56DB" strokeWidth="2.5" opacity="0.6" filter="url(#glow)" />}
-      {selectedZone === 'suspension-d' && <ellipse cx="146" cy="179" rx="58" ry="30" fill="none" stroke="#1A56DB" strokeWidth="2.5" opacity="0.6" filter="url(#glow)" />}
-      {selectedZone === 'suspension-t' && <ellipse cx="424" cy="179" rx="58" ry="30" fill="none" stroke="#1A56DB" strokeWidth="2.5" opacity="0.6" filter="url(#glow)" />}
-      {selectedZone === 'transmision'  && <rect x="166" y="154" width="235" height="18" rx="2" fill="none" stroke="#1A56DB" strokeWidth="2.5" opacity="0.6" filter="url(#glow)" />}
-      {selectedZone === 'escape'       && <rect x="362" y="154" width="158" height="18" rx="2" fill="none" stroke="#1A56DB" strokeWidth="2.5" opacity="0.6" filter="url(#glow)" />}
-      {selectedZone === 'frenos'       && <><circle cx="146" cy="189" r="23" fill="none" stroke="#1A56DB" strokeWidth="2.5" opacity="0.6" filter="url(#glow)" /><circle cx="424" cy="189" r="23" fill="none" stroke="#1A56DB" strokeWidth="2.5" opacity="0.6" filter="url(#glow)" /></>}
+      {selectedZone === 'motor'        && <path d="M 36,95 L 36,162 L 166,162 L 166,77 L 96,77 Z" fill="none" stroke={accentColor} strokeWidth="2.5" opacity="0.6" filter="url(#glow)" />}
+      {selectedZone === 'electrico'    && <rect x="166" y="33" width="235" height="52" rx="4" fill="none" stroke={accentColor} strokeWidth="2.5" opacity="0.6" filter="url(#glow)" />}
+      {selectedZone === 'interior'     && <rect x="166" y="85" width="235" height="73" rx="3" fill="none" stroke={accentColor} strokeWidth="2.5" opacity="0.6" filter="url(#glow)" />}
+      {selectedZone === 'maletero'     && <path d="M 401,85 L 401,162 L 520,162 L 520,118 L 450,85 Z" fill="none" stroke={accentColor} strokeWidth="2.5" opacity="0.6" filter="url(#glow)" />}
+      {selectedZone === 'suspension-d' && <ellipse cx="146" cy="179" rx="58" ry="30" fill="none" stroke={accentColor} strokeWidth="2.5" opacity="0.6" filter="url(#glow)" />}
+      {selectedZone === 'suspension-t' && <ellipse cx="424" cy="179" rx="58" ry="30" fill="none" stroke={accentColor} strokeWidth="2.5" opacity="0.6" filter="url(#glow)" />}
+      {selectedZone === 'transmision'  && <rect x="166" y="154" width="235" height="18" rx="2" fill="none" stroke={accentColor} strokeWidth="2.5" opacity="0.6" filter="url(#glow)" />}
+      {selectedZone === 'escape'       && <rect x="362" y="154" width="158" height="18" rx="2" fill="none" stroke={accentColor} strokeWidth="2.5" opacity="0.6" filter="url(#glow)" />}
+      {selectedZone === 'frenos'       && <><circle cx="146" cy="189" r="23" fill="none" stroke={accentColor} strokeWidth="2.5" opacity="0.6" filter="url(#glow)" /><circle cx="424" cy="189" r="23" fill="none" stroke={accentColor} strokeWidth="2.5" opacity="0.6" filter="url(#glow)" /></>}
 
       {/* Zone labels */}
-      {selectedZone === 'motor'        && <text x="96"  y="126" textAnchor="middle" fill="#79C0FF" fontSize="10" fontWeight="700">Motor</text>}
-      {selectedZone === 'electrico'    && <text x="283" y="64"  textAnchor="middle" fill="#79C0FF" fontSize="10" fontWeight="700">Eléctrico</text>}
-      {selectedZone === 'interior'     && <text x="283" y="125" textAnchor="middle" fill="#79C0FF" fontSize="10" fontWeight="700">Interior</text>}
-      {selectedZone === 'maletero'     && <text x="460" y="130" textAnchor="middle" fill="#79C0FF" fontSize="10" fontWeight="700">Maletero</text>}
-      {selectedZone === 'suspension-d' && <text x="146" y="177" textAnchor="middle" fill="#79C0FF" fontSize="9"  fontWeight="700">Susp. D</text>}
-      {selectedZone === 'suspension-t' && <text x="424" y="177" textAnchor="middle" fill="#79C0FF" fontSize="9"  fontWeight="700">Susp. T</text>}
-      {selectedZone === 'transmision'  && <text x="283" y="167" textAnchor="middle" fill="#79C0FF" fontSize="9"  fontWeight="700">Transmisión</text>}
-      {selectedZone === 'escape'       && <text x="441" y="167" textAnchor="middle" fill="#79C0FF" fontSize="9"  fontWeight="700">Escape</text>}
-      {selectedZone === 'frenos'       && <text x="146" y="187" textAnchor="middle" fill="#79C0FF" fontSize="8"  fontWeight="700">Frenos</text>}
+      {selectedZone === 'motor'        && <text x="96"  y="126" textAnchor="middle" fill={isLight ? '#16181d' : '#79C0FF'} fontSize="10" fontWeight="700">Motor</text>}
+      {selectedZone === 'electrico'    && <text x="283" y="64"  textAnchor="middle" fill={isLight ? '#16181d' : '#79C0FF'} fontSize="10" fontWeight="700">Eléctrico</text>}
+      {selectedZone === 'interior'     && <text x="283" y="125" textAnchor="middle" fill={isLight ? '#16181d' : '#79C0FF'} fontSize="10" fontWeight="700">Interior</text>}
+      {selectedZone === 'maletero'     && <text x="460" y="130" textAnchor="middle" fill={isLight ? '#16181d' : '#79C0FF'} fontSize="10" fontWeight="700">Maletero</text>}
+      {selectedZone === 'suspension-d' && <text x="146" y="177" textAnchor="middle" fill={isLight ? '#16181d' : '#79C0FF'} fontSize="9"  fontWeight="700">Susp. D</text>}
+      {selectedZone === 'suspension-t' && <text x="424" y="177" textAnchor="middle" fill={isLight ? '#16181d' : '#79C0FF'} fontSize="9"  fontWeight="700">Susp. T</text>}
+      {selectedZone === 'transmision'  && <text x="283" y="167" textAnchor="middle" fill={isLight ? '#16181d' : '#79C0FF'} fontSize="9"  fontWeight="700">Transmisión</text>}
+      {selectedZone === 'escape'       && <text x="441" y="167" textAnchor="middle" fill={isLight ? '#16181d' : '#79C0FF'} fontSize="9"  fontWeight="700">Escape</text>}
+      {selectedZone === 'frenos'       && <text x="146" y="187" textAnchor="middle" fill={isLight ? '#16181d' : '#79C0FF'} fontSize="8"  fontWeight="700">Frenos</text>}
     </svg>
   )
 }

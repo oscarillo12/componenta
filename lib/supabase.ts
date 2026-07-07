@@ -27,5 +27,7 @@ export type Product = {
   created_at: string
   seller_nombre: string | null
   seller_telefono: string | null
-  image_hash: string | null
+  image_hash:   string | null
+  ml_item_id:   string | null
+  ml_permalink: string | null
 }
