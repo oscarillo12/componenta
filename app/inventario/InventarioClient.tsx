@@ -181,7 +181,8 @@ export default function InventarioClient({
     })
     const data = await res.json()
     if (!res.ok) {
-      const msg = data?.details?.message ?? data?.error ?? JSON.stringify(data)
+      const cause = data?.details?.cause?.map((c: {message?: string}) => c.message).join(', ')
+      const msg = cause || data?.details?.message || data?.error || JSON.stringify(data)
       throw new Error(msg)
     }
     // Actualizar estado local
