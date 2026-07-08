@@ -43,17 +43,23 @@ export async function GET(_req: Request, { params }: RouteContext) {
   })
 }
 
-// PATCH — marcar como vendida o volver a disponible
+// PATCH — actualizar campos del producto
 export async function PATCH(req: Request, { params }: RouteContext) {
   const { userId } = await auth()
   if (!userId) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
 
   const { id } = await params
-  const { disponible } = await req.json() as { disponible: boolean }
+  const body = await req.json()
+
+  const allowed = ['disponible', 'pieza', 'marca', 'modelo', 'anios', 'oem', 'estado', 'precio', 'envio', 'descripcion']
+  const update: Record<string, unknown> = {}
+  for (const key of allowed) {
+    if (key in body) update[key] = body[key]
+  }
 
   const { error } = await supabaseAdmin
     .from('products')
-    .update({ disponible })
+    .update(update)
     .eq('id', id)
     .eq('user_id', userId)
 

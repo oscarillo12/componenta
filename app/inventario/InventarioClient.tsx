@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Product } from '@/lib/supabase'
-import { Plus, Search, Package, Trash2, CheckCircle, RotateCcw, Loader2, ExternalLink, Eye } from 'lucide-react'
+import { Plus, Search, Package, Trash2, CheckCircle, RotateCcw, Loader2, ExternalLink, Eye, Pencil, X } from 'lucide-react'
 import Link from 'next/link'
 
 const estadoConfig: Record<string, { label: string; color: string; bg: string }> = {
@@ -54,12 +54,99 @@ function QualityRing({ score, color, size = 46 }: { score: number; color: string
   )
 }
 
-function InventoryRow({ item, mlConnected, onDelete, onToggleSold, onPublishML }: {
+function EditModal({ item, onClose, onSave }: {
+  item: Product
+  onClose: () => void
+  onSave: (id: string, data: Partial<Product>) => Promise<void>
+}) {
+  const [form, setForm] = useState({
+    pieza:       item.pieza,
+    marca:       item.marca ?? '',
+    modelo:      item.modelo ?? '',
+    anios:       item.anios ?? '',
+    oem:         item.oem ?? '',
+    estado:      item.estado,
+    precio:      item.precio,
+    envio:       item.envio ?? '',
+    descripcion: item.descripcion ?? '',
+  })
+  const [saving, setSaving] = useState(false)
+
+  const field = (label: string, key: keyof typeof form, type: 'text' | 'number' | 'textarea' = 'text') => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</label>
+      {type === 'textarea' ? (
+        <textarea rows={3} value={form[key] as string}
+          onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))}
+          style={{ fontSize: 13, border: '1.5px solid #e5e7eb', borderRadius: 9, padding: '8px 10px', color: '#16181d', resize: 'vertical', outline: 'none', fontFamily: 'inherit' }} />
+      ) : (
+        <input type={type} value={form[key] as string | number}
+          onChange={e => setForm(p => ({ ...p, [key]: type === 'number' ? Number(e.target.value) : e.target.value }))}
+          style={{ fontSize: 13, border: '1.5px solid #e5e7eb', borderRadius: 9, padding: '8px 10px', color: '#16181d', outline: 'none' }} />
+      )}
+    </div>
+  )
+
+  async function handleSave() {
+    setSaving(true)
+    await onSave(item.id, { ...form, precio: Number(form.precio) })
+    setSaving(false)
+    onClose()
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} onClick={onClose} />
+      <div style={{ position: 'relative', background: '#fff', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 560, maxHeight: '90vh', overflowY: 'auto', padding: '24px 24px 32px', boxShadow: '0 -8px 40px rgba(0,0,0,0.15)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 800, color: '#16181d', margin: 0 }}>Editar pieza</h2>
+          <button onClick={onClose} style={{ background: '#f5f5f4', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', display: 'flex' }}><X size={16} color="#6b7280" /></button>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {field('Nombre de la pieza', 'pieza')}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {field('Marca', 'marca')}
+            {field('Modelo', 'modelo')}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {field('Año(s)', 'anios')}
+            {field('Código OEM', 'oem')}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>Estado</label>
+              <select value={form.estado} onChange={e => setForm(p => ({ ...p, estado: e.target.value as Product['estado'] }))}
+                style={{ fontSize: 13, border: '1.5px solid #e5e7eb', borderRadius: 9, padding: '8px 10px', color: '#16181d', outline: 'none', background: '#fff' }}>
+                <option value="excelente">Excelente</option>
+                <option value="bueno">Buen estado</option>
+                <option value="con-detalles">Con detalles</option>
+                <option value="para-reparar">Para reparar</option>
+              </select>
+            </div>
+            {field('Precio (CLP)', 'precio', 'number')}
+          </div>
+          {field('Envío', 'envio')}
+          {field('Descripción', 'descripcion', 'textarea')}
+        </div>
+
+        <button onClick={handleSave} disabled={saving}
+          style={{ marginTop: 20, width: '100%', padding: '12px 0', background: '#2f5fdb', color: '#fff', border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: saving ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          {saving ? <><Loader2 size={14} className="animate-spin" /> Guardando…</> : 'Guardar cambios'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function InventoryRow({ item, mlConnected, onDelete, onToggleSold, onPublishML, onEdit }: {
   item: Product
   mlConnected: boolean
   onDelete: (id: string) => Promise<void>
   onToggleSold: (id: string, disponible: boolean) => Promise<void>
   onPublishML: (id: string) => Promise<{ ml_item_id: string; permalink: string } | null>
+  onEdit: (item: Product) => void
 }) {
   const [loadingSold,   setLoadingSold]   = useState(false)
   const [loadingDelete, setLoadingDelete] = useState(false)
@@ -148,6 +235,10 @@ function InventoryRow({ item, mlConnected, onDelete, onToggleSold, onPublishML }
             <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#fff', position: 'absolute', top: 3, left: item.disponible ? 19 : 3, transition: 'left .15s' }} />
           </button>
           <div style={{ display: 'flex', gap: 5 }}>
+            <button onClick={() => onEdit(item)} title="Editar"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, borderRadius: 8, border: '1.5px solid #e5e7eb', background: '#fff', cursor: 'pointer', color: '#6b7280' }}>
+              <Pencil size={12} />
+            </button>
             <button onClick={handleToggleSold} disabled={loadingSold} title={item.disponible ? 'Vender' : 'Reactivar'}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, borderRadius: 8, border: '1.5px solid #e5e7eb', background: '#fff', cursor: 'pointer', color: '#6b7280' }}>
               {loadingSold ? <Loader2 size={12} className="animate-spin" /> : item.disponible ? <CheckCircle size={12} /> : <RotateCcw size={12} />}
@@ -199,12 +290,22 @@ export default function InventarioClient({
   isDemo?: boolean
   mlConnected?: boolean
 }) {
-  const [products, setProducts] = useState<Product[]>(initial)
-  const [search,   setSearch]   = useState('')
-  const [filtro,   setFiltro]   = useState<Filtro>('todos')
-  const [mlToast,  setMlToast]  = useState(
+  const [products,     setProducts]     = useState<Product[]>(initial)
+  const [search,       setSearch]       = useState('')
+  const [filtro,       setFiltro]       = useState<Filtro>('todos')
+  const [editingItem,  setEditingItem]  = useState<Product | null>(null)
+  const [mlToast,      setMlToast]      = useState(
     typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('ml_connected') === '1'
   )
+
+  async function handleEdit(id: string, data: Partial<Product>) {
+    const res = await fetch(`/api/products/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    if (res.ok) setProducts(prev => prev.map(p => p.id === id ? { ...p, ...data } : p))
+  }
 
   async function handleDelete(id: string) {
     const res = await fetch(`/api/products/${id}`, { method: 'DELETE' })
@@ -344,9 +445,18 @@ export default function InventarioClient({
               onDelete={handleDelete}
               onToggleSold={handleToggleSold}
               onPublishML={handlePublishML}
+              onEdit={setEditingItem}
             />
           ))}
         </div>
+      )}
+
+      {editingItem && (
+        <EditModal
+          item={editingItem}
+          onClose={() => setEditingItem(null)}
+          onSave={handleEdit}
+        />
       )}
 
       <style>{`
