@@ -289,7 +289,7 @@ export default function PedidosPage() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: '#f5f5f4', padding: 4, borderRadius: 12, width: 'fit-content', overflowX: 'auto', maxWidth: '100%' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: '#f5f5f4', padding: 4, borderRadius: 12, overflowX: 'auto', scrollbarWidth: 'none' } as React.CSSProperties}>
         {TABS.map(t => {
           const count = t.id === 'publicadas'
             ? activeListings.length

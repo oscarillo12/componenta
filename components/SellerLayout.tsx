@@ -9,9 +9,9 @@ interface SellerLayoutProps {
 
 export default function SellerLayout({ children, section }: SellerLayoutProps) {
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f5f6f7' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#f5f6f7', overflowX: 'hidden' }}>
       <Sidebar />
-      <div className="flex-1 sm:ml-16 pb-16 sm:pb-0">
+      <div className="flex-1 sm:ml-16 pb-16 sm:pb-0" style={{ minWidth: 0, overflowX: 'hidden' }}>
         <header className="page-header" style={{
           background: '#fff',
           borderBottom: '1px solid #e5e7eb',
