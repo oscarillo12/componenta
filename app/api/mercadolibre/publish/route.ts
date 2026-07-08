@@ -98,12 +98,13 @@ export async function POST(req: Request) {
 
   const payload: Record<string, unknown> = {
     title,
-    category_id:     'MLC1747',    // Accesorios para Vehículos — Chile
-    price:           product.precio,
-    currency_id:     'CLP',
-    condition:       'used',
-    listing_type_id: 'gold_special',
-    description:     { plain_text: descLines.join('\n') },
+    category_id:        'MLC1747',
+    price:              product.precio,
+    currency_id:        'CLP',
+    available_quantity: 1,
+    condition:          'used',
+    listing_type_id:    'gold_special',
+    description:        { plain_text: descLines.join('\n') },
     ...(pictures.length > 0 && { pictures }),
   }
 
