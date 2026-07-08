@@ -46,10 +46,10 @@ export default function Home() {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f5f5f4', fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#f5f5f4', fontFamily: "'Inter', system-ui, sans-serif", overflowX: 'hidden' }}>
       <Sidebar />
 
-      <div className="flex-1 sm:ml-16 pb-16 sm:pb-0" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div className="flex-1 sm:ml-16 pb-16 sm:pb-0" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', overflowX: 'hidden', minWidth: 0 }}>
 
         {/* ── Header ── */}
         <header className="page-header" style={{
@@ -110,35 +110,35 @@ export default function Home() {
           </div>
 
           {/* ── Step pills ── */}
-          <div className="step-pills" style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 22, overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+          <div className="step-pills" style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 22 }}>
             {STEPS.map((s, i) => {
               const isDone    = step > s.num
               const isCurrent = step === s.num
               const Icon = s.icon
               return (
-                <div key={s.num} style={{ display: 'flex', alignItems: 'center', flex: i < STEPS.length - 1 ? 1 : 'none' }}>
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px',
-                    borderRadius: 12, transition: 'all 0.3s',
+                <div key={s.num} style={{ display: 'flex', alignItems: 'center', flex: i < STEPS.length - 1 ? 1 : 'none', minWidth: 0 }}>
+                  <div className="step-pill-card" style={{
+                    display: 'flex', alignItems: 'center', gap: 8, padding: '9px 10px',
+                    borderRadius: 12, transition: 'all 0.3s', flexShrink: 0,
                     background: isCurrent ? '#eef3fc' : '#fafafa',
                     border: `1.5px solid ${isCurrent ? '#d7e3f7' : '#ececea'}`,
                   }}>
                     <div style={{
-                      width: 30, height: 30, borderRadius: 9, flexShrink: 0,
+                      width: 28, height: 28, borderRadius: 8, flexShrink: 0,
                       background: isDone || isCurrent ? '#2f5fdb' : '#ececea',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
                       {isDone
-                        ? <span style={{ fontSize: 13, color: '#fff', fontWeight: 800 }}>✓</span>
-                        : <Icon size={14} color={isCurrent ? '#fff' : '#9aa0aa'} />}
+                        ? <span style={{ fontSize: 12, color: '#fff', fontWeight: 800 }}>✓</span>
+                        : <Icon size={13} color={isCurrent ? '#fff' : '#9aa0aa'} />}
                     </div>
-                    <div>
-                      <p style={{ fontSize: 11.5, fontWeight: 700, color: '#16181d', margin: 0 }}>{s.label}</p>
-                      <p style={{ fontSize: 10, color: '#9aa0aa', margin: 0 }}>{s.desc}</p>
+                    <div className="step-pill-label">
+                      <p style={{ fontSize: 11, fontWeight: 700, color: '#16181d', margin: 0, whiteSpace: 'nowrap' }}>{s.label}</p>
+                      <p style={{ fontSize: 9.5, color: '#9aa0aa', margin: 0, whiteSpace: 'nowrap' }}>{s.desc}</p>
                     </div>
                   </div>
                   {i < STEPS.length - 1 && (
-                    <div style={{ flex: 1, height: 2, margin: '0 6px', background: isDone ? '#2f5fdb' : '#ececea', transition: 'background 0.3s' }} />
+                    <div style={{ flex: 1, minWidth: 6, height: 2, margin: '0 4px', background: isDone ? '#2f5fdb' : '#ececea', transition: 'background 0.3s' }} />
                   )}
                 </div>
               )
@@ -208,6 +208,15 @@ export default function Home() {
             </div>
           )}
         </main>
+
+        <style dangerouslySetInnerHTML={{ __html: `
+          @media (max-width: 560px) {
+            .step-pill-label { display: none !important; }
+            .hero-banner { padding: 22px 20px !important; }
+            .page-header { padding: 0 14px !important; }
+            .step-content { padding: 20px 16px !important; }
+          }
+        ` }} />
       </div>
     </div>
   )

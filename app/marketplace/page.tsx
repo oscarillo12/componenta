@@ -186,7 +186,7 @@ export default function MarketplacePage() {
 
   /* ── render ── */
   return (
-    <div style={{ minHeight:'100vh', background:'#f7f7f5', fontFamily:'var(--font-geist-sans), system-ui, sans-serif', color:'#16181d' }}>
+    <div style={{ minHeight:'100vh', background:'#f7f7f5', fontFamily:'var(--font-geist-sans), system-ui, sans-serif', color:'#16181d', overflowX:'hidden' }}>
 
       {/* ══ TOPBAR ══ */}
       <div style={{ background:'#16181d', padding:'6px 24px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
@@ -379,7 +379,7 @@ export default function MarketplacePage() {
       )}
 
       {/* ══ RESULTADOS ══ */}
-      <div id="results" style={{ maxWidth:1280, margin:'0 auto', padding:'28px 24px 80px', display:'flex', gap:24, alignItems:'flex-start' }}>
+      <div id="results" className="mp-results-row" style={{ maxWidth:1280, margin:'0 auto', padding:'28px 24px 80px', display:'flex', gap:24, alignItems:'flex-start' }}>
 
         {/* sidebar */}
         <aside className="mp-aside" style={{ width:220, flexShrink:0, display:'flex', flexDirection:'column', gap:12, position:'sticky', top:80 }}>
@@ -596,7 +596,14 @@ export default function MarketplacePage() {
           </div>
         </div>}
 
-      <style dangerouslySetInnerHTML={{ __html: '@media (max-width:700px){.hero-grid{grid-template-columns:1fr !important;padding:28px 16px 0 !important;gap:20px !important}}' }} />
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media (max-width:700px){
+          .hero-grid{grid-template-columns:1fr !important;padding:28px 16px 0 !important;gap:20px !important}
+          .mp-aside{display:none !important}
+          .mp-results-row{flex-direction:column !important;padding:16px 14px 80px !important}
+          .mp-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr)) !important}
+        }
+      ` }} />
     </div>
   )
 }
