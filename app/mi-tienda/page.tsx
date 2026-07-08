@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import SellerLayout from '@/components/SellerLayout'
-import { Check, Copy, ExternalLink, MapPin, Clock, Phone, MessageCircle, Star, Shield, Package, TrendingUp, Award, Truck, AlertCircle, Loader2, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
+import { Check, Copy, ExternalLink, MapPin, Clock, Phone, MessageCircle, AlertCircle, Loader2, Sparkles, ArrowRight, ArrowLeft, Upload } from 'lucide-react'
 
 const COLOR_PRESETS = [
   { label: 'Verde',   value: '#1A56DB' },
   { label: 'Esmeralda', value: '#059669' },
-  { label: 'Azul',   value: '#1d4ed8' },
+  { label: 'Azul',   value: '#2f5fdb' },
   { label: 'Celeste', value: '#0284c7' },
   { label: 'Morado', value: '#7c3aed' },
   { label: 'Rojo',   value: '#dc2626' },
@@ -16,7 +16,7 @@ const COLOR_PRESETS = [
   { label: 'Rosa',   value: '#db2777' },
   { label: 'Teal',   value: '#0f766e' },
   { label: 'Gris',   value: '#374151' },
-  { label: 'Negro',  value: '#111827' },
+  { label: 'Negro',  value: '#16181d' },
 ]
 
 type Profile = {
@@ -25,31 +25,38 @@ type Profile = {
   horario: string; ciudad: string; especialidades: string[]
 }
 
-function Section({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
-  const [open, setOpen] = useState(defaultOpen)
-  return (
-    <div style={{ background: '#161B22', borderRadius: 14, border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-      <button onPointerDown={() => setOpen(v => !v)} style={{ width: '100%', padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', touchAction: 'manipulation' }}>
-        <span style={{ fontWeight: 700, fontSize: 14, color: '#E6EDF3' }}>{title}</span>
-        {open ? <ChevronUp size={16} color="#6E7681" /> : <ChevronDown size={16} color="#6E7681" />}
-      </button>
-      {open && <div style={{ padding: '0 18px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>{children}</div>}
-    </div>
-  )
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '11px 12px', borderRadius: 9, border: '1.5px solid #ececea',
+  fontSize: 13.5, color: '#16181d', outline: 'none', boxSizing: 'border-box', background: '#fafafa', fontFamily: 'inherit',
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#E6EDF3', marginBottom: 6 }}>{label}</label>
+      <label style={{ display: 'block', fontSize: 11.5, fontWeight: 700, color: '#374151', marginBottom: 6 }}>{label}</label>
       {children}
     </div>
   )
 }
 
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', borderRadius: 9, border: '1.5px solid rgba(255,255,255,0.1)',
-  fontSize: 14, color: '#E6EDF3', outline: 'none', boxSizing: 'border-box', background: '#161B22',
+const STEPS = ['Marca', 'Estilo', 'Contacto'] as const
+
+// Sube una imagen (banner o logo) a /api/upload-image y devuelve la URL pública.
+async function uploadImage(file: File): Promise<string> {
+  const dataUrl: string = await new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+  const res = await fetch('/api/upload-image', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imageData: dataUrl }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Error al subir imagen')
+  return data.url as string
 }
 
 export default function MiTiendaPage() {
@@ -61,8 +68,10 @@ export default function MiTiendaPage() {
   const [error,    setError]    = useState('')
   const [specInput, setSpecInput] = useState('')
   const [copied,   setCopied]   = useState(false)
-  const [showCustomColor, setShowCustomColor] = useState(false)
   const [aiLoading, setAiLoading] = useState(false)
+  const [step, setStep] = useState(0)
+  const [uploadingBanner, setUploadingBanner] = useState(false)
+  const bannerInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     fetch('/api/mi-tienda').then(r => r.json()).then(d => {
@@ -101,6 +110,21 @@ export default function MiTiendaPage() {
     } finally { setAiLoading(false) }
   }
 
+  const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !form) return
+    setUploadingBanner(true)
+    setError('')
+    try {
+      const url = await uploadImage(file)
+      set('banner_url', url)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al subir la imagen')
+    } finally {
+      setUploadingBanner(false)
+    }
+  }
+
   const handleSave = async () => {
     if (!form) return
     setSaving(true); setError(''); setSaved(false)
@@ -120,7 +144,7 @@ export default function MiTiendaPage() {
   if (loading) return (
     <SellerLayout section="mi-tienda">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
-        <Loader2 size={28} color="#79C0FF" className="animate-spin" />
+        <Loader2 size={28} color="#2f5fdb" className="animate-spin" />
       </div>
     </SellerLayout>
   )
@@ -131,87 +155,95 @@ export default function MiTiendaPage() {
     </SellerLayout>
   )
 
-  const previewWhatsapp = `https://wa.me/${(form.whatsapp || '56912345678').replace(/\D/g, '')}`
-
   return (
     <SellerLayout section="mi-tienda">
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 20px 60px' }}>
+      <div style={{ maxWidth: 640, margin: '0 auto', padding: '24px 20px 60px' }}>
 
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
           <div>
-            <h1 style={{ fontWeight: 900, fontSize: 22, color: '#E6EDF3', margin: 0 }}>Mi página de tienda</h1>
-            <p style={{ color: '#B1BAC4', fontSize: 14, margin: '4px 0 0' }}>Personaliza cómo te ven los compradores en el marketplace</p>
+            <h1 style={{ fontWeight: 900, fontSize: 20, color: '#16181d', margin: 0 }}>Personaliza tu tienda</h1>
+            <p style={{ color: '#9aa0aa', fontSize: 13, margin: '4px 0 0' }}>Así te ven los compradores en el marketplace</p>
           </div>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 8 }}>
             <button onPointerDown={copyUrl}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 14px', borderRadius: 9, border: '1.5px solid rgba(255,255,255,0.1)', background: '#161B22', fontSize: 13, fontWeight: 600, color: '#E6EDF3', cursor: 'pointer', touchAction: 'manipulation' }}>
-              {copied ? <Check size={14} color="#79C0FF" /> : <Copy size={14} color="#8B949E" />}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 9, border: '1.5px solid #ececea', background: '#fff', fontSize: 12, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
+              {copied ? <Check size={13} color="#2f5fdb" /> : <Copy size={13} color="#9aa0aa" />}
               {copied ? 'Copiado' : 'Copiar URL'}
             </button>
             <a href={`/d/${form.slug}`} target="_blank" rel="noopener noreferrer"
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 14px', borderRadius: 9, border: '1.5px solid rgba(255,255,255,0.1)', background: '#161B22', fontSize: 13, fontWeight: 600, color: '#E6EDF3', textDecoration: 'none' }}>
-              <ExternalLink size={14} color="#8B949E" /> Ver publicada
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 9, border: '1.5px solid #ececea', background: '#fff', fontSize: 12, fontWeight: 600, color: '#374151', textDecoration: 'none' }}>
+              <ExternalLink size={13} color="#9aa0aa" /> Ver publicada
             </a>
-            <button onPointerDown={handleSave} disabled={saving}
-              style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 20px', borderRadius: 9, border: 'none', background: saved ? '#1A56DB' : '#1A56DB', color: '#fff', fontWeight: 700, fontSize: 14, cursor: saving ? 'default' : 'pointer', touchAction: 'manipulation', opacity: saving ? 0.8 : 1 }}>
-              {saving ? <Loader2 size={15} className="animate-spin" /> : saved ? <Check size={15} /> : null}
-              {saving ? 'Guardando…' : saved ? 'Guardado' : 'Guardar cambios'}
-            </button>
           </div>
         </div>
 
         {error && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: 10, padding: '12px 16px', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fff5f5', border: '1px solid #fca5a5', borderRadius: 10, padding: '12px 16px', marginBottom: 16 }}>
             <AlertCircle size={15} color="#b91c1c" />
-            <span style={{ color: '#b91c1c', fontSize: 14 }}>{error}</span>
+            <span style={{ color: '#b91c1c', fontSize: 13 }}>{error}</span>
           </div>
         )}
 
-        {/* URL banner */}
-        <div style={{ background: 'rgba(56,139,253,0.15)', border: '1px solid rgba(56,139,253,0.4)', borderRadius: 12, padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Check size={14} color="#79C0FF" />
-          <span style={{ fontSize: 13, color: '#166534' }}>Tu tienda: <strong>componenta.cl/d/{form.slug}</strong></span>
+        {/* Progreso de pasos */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+          {STEPS.map((label, i) => (
+            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, flex: i < STEPS.length - 1 ? 1 : undefined }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 24, height: 24, borderRadius: '50%', background: i <= step ? '#2f5fdb' : '#ececea', color: i <= step ? '#fff' : '#9aa0aa', fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {i < step ? <Check size={12} /> : i + 1}
+                </span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: i <= step ? '#16181d' : '#9aa0aa', whiteSpace: 'nowrap' }}>{label}</span>
+              </div>
+              {i < STEPS.length - 1 && <div style={{ flex: 1, height: 2, background: i < step ? '#2f5fdb' : '#ececea' }} />}
+            </div>
+          ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20, alignItems: 'start' }}>
+        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #ececea', padding: 24 }}>
 
-          {/* ── FORMULARIO ── */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {/* PASO 1 — Marca */}
+          {step === 0 && (
+            <>
+              <h2 style={{ fontSize: 16, fontWeight: 800, color: '#16181d', margin: '0 0 4px' }}>Cuéntanos de tu tienda</h2>
+              <p style={{ fontSize: 12, color: '#9aa0aa', margin: '0 0 20px' }}>Esto es lo primero que ven tus compradores</p>
 
-            <Section title="Identidad de la tienda">
-              <Field label="Nombre de la tienda *">
-                <input value={form.nombre} onChange={e => set('nombre', e.target.value)} style={inputStyle} placeholder="Ej: Desarmaduria El Rey" />
-              </Field>
-              <Field label="URL de tu página">
-                <div style={{ display: 'flex', border: '1.5px solid rgba(255,255,255,0.1)', borderRadius: 9, overflow: 'hidden', background: '#161B22' }}>
-                  <span style={{ padding: '10px 12px', background: '#0D1117', borderRight: '1px solid rgba(255,255,255,0.1)', fontSize: 13, color: '#B1BAC4', whiteSpace: 'nowrap' }}>componenta.cl/d/</span>
-                  <input value={form.slug} onChange={e => set('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 40))}
-                    style={{ ...inputStyle, border: 'none', borderRadius: 0, flex: 1 }} placeholder="mi-tienda" />
+              <div style={{ display: 'flex', gap: 16, marginBottom: 18, alignItems: 'center' }}>
+                <div style={{ width: 72, height: 72, borderRadius: 18, background: '#f5f5f4', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 20, color: form.color }}>
+                  {form.nombre.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'MT'}
                 </div>
-              </Field>
-              <Field label="Frase de presentación">
-                <input value={form.tagline} onChange={e => set('tagline', e.target.value)} style={inputStyle} maxLength={80} placeholder="Ej: Repuestos usados de calidad desde 2010" />
-              </Field>
-              <div>
+                <div style={{ flex: 1 }}>
+                  <Field label="Nombre de la tienda *">
+                    <input value={form.nombre} onChange={e => set('nombre', e.target.value)} style={inputStyle} placeholder="Ej: Desarmaduria El Rey" />
+                  </Field>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: 18 }}>
+                <Field label="Frase de presentación">
+                  <input value={form.tagline} onChange={e => set('tagline', e.target.value)} style={inputStyle} maxLength={80} placeholder="Ej: Repuestos usados de calidad desde 2010" />
+                </Field>
+              </div>
+
+              <div style={{ marginBottom: 18 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#E6EDF3' }}>Descripción / Sobre nosotros</label>
+                  <label style={{ fontSize: 11.5, fontWeight: 700, color: '#374151' }}>Descripción / Sobre nosotros</label>
                   <button onPointerDown={mejorarConIA} disabled={aiLoading}
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(56,139,253,0.4)', background: 'rgba(56,139,253,0.1)', fontSize: 11, color: '#79C0FF', fontWeight: 600, cursor: 'pointer', touchAction: 'manipulation', opacity: aiLoading ? 0.6 : 1 }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 7, border: '1px solid #d7e3f7', background: '#eef3fc', fontSize: 11, color: '#2f5fdb', fontWeight: 600, cursor: 'pointer', opacity: aiLoading ? 0.6 : 1 }}>
                     {aiLoading ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
                     {aiLoading ? 'Generando…' : 'Mejorar con IA'}
                   </button>
                 </div>
                 <textarea value={form.descripcion} onChange={e => set('descripcion', e.target.value)} rows={4}
-                  style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.5 }}
+                  style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.5 }}
                   placeholder="Cuenta quiénes son, en qué se especializan, qué garantías ofrecen…" />
               </div>
+
               <Field label="Especialidades">
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
                   {form.especialidades.map(s => (
-                    <span key={s} style={{ display: 'flex', alignItems: 'center', gap: 4, background: form.color + '20', color: form.color, borderRadius: 20, padding: '4px 10px', fontSize: 12, fontWeight: 600 }}>
+                    <span key={s} style={{ display: 'flex', alignItems: 'center', gap: 4, background: form.color + '18', color: form.color, borderRadius: 20, padding: '4px 10px', fontSize: 12, fontWeight: 600 }}>
                       {s}
-                      <button onPointerDown={() => removeEspecialidad(s)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, touchAction: 'manipulation', color: form.color, lineHeight: 1 }}>×</button>
+                      <button onPointerDown={() => removeEspecialidad(s)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: form.color, lineHeight: 1 }}>×</button>
                     </span>
                   ))}
                 </div>
@@ -220,142 +252,116 @@ export default function MiTiendaPage() {
                     onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addEspecialidad())}
                     style={{ ...inputStyle, flex: 1 }} placeholder="Ej: Toyota, Motor, Frenos…" />
                   <button onPointerDown={addEspecialidad}
-                    style={{ padding: '0 16px', borderRadius: 9, border: 'none', background: form.color, color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', touchAction: 'manipulation', whiteSpace: 'nowrap' }}>
+                    style={{ padding: '0 16px', borderRadius: 9, border: 'none', background: form.color, color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                     + Añadir
                   </button>
                 </div>
               </Field>
-            </Section>
+            </>
+          )}
 
-            <Section title="Color y apariencia">
+          {/* PASO 2 — Estilo */}
+          {step === 1 && (
+            <>
+              <h2 style={{ fontSize: 16, fontWeight: 800, color: '#16181d', margin: '0 0 4px' }}>Dale estilo a tu tienda</h2>
+              <p style={{ fontSize: 12, color: '#9aa0aa', margin: '0 0 20px' }}>Color y foto de portada</p>
+
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'block', fontSize: 11.5, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Foto de portada</label>
+                <input ref={bannerInputRef} type="file" accept="image/*" onChange={handleBannerChange} style={{ display: 'none' }} />
+                <div onClick={() => bannerInputRef.current?.click()}
+                  style={{ position: 'relative', height: 110, borderRadius: 12, border: '2px dashed #d7dae0', background: form.banner_url ? undefined : '#fafafa', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', overflow: 'hidden' }}>
+                  {form.banner_url && <img src={form.banner_url} alt="Banner" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+                  {uploadingBanner
+                    ? <Loader2 size={20} className="animate-spin" color="#9aa0aa" style={{ position: 'relative' }} />
+                    : !form.banner_url && (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, color: '#9aa0aa' }}>
+                        <Upload size={18} />
+                        <span style={{ fontSize: 11.5, fontWeight: 600 }}>Sube una foto (1600×400 recomendado)</span>
+                      </div>
+                    )}
+                </div>
+              </div>
+
               <Field label="Color principal">
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
                   {COLOR_PRESETS.map(c => (
                     <button key={c.value} onPointerDown={() => set('color', c.value)} title={c.label}
-                      style={{ width: 34, height: 34, borderRadius: 9, background: c.value, border: form.color === c.value ? `3px solid #111827` : '2px solid transparent', cursor: 'pointer', touchAction: 'manipulation', position: 'relative', boxShadow: form.color === c.value ? '0 0 0 2px #fff inset' : 'none' }}>
+                      style={{ width: 34, height: 34, borderRadius: 9, background: c.value, border: form.color === c.value ? '3px solid #16181d' : '2px solid transparent', cursor: 'pointer', position: 'relative' }}>
                       {form.color === c.value && <Check size={14} color="#fff" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }} />}
                     </button>
                   ))}
                 </div>
-                <button onPointerDown={() => setShowCustomColor(v => !v)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 9, border: '1.5px solid rgba(255,255,255,0.1)', background: '#161B22', fontSize: 13, color: '#E6EDF3', cursor: 'pointer', touchAction: 'manipulation' }}>
-                  <div style={{ width: 18, height: 18, borderRadius: 5, background: form.color, border: '1px solid rgba(0,0,0,0.1)' }} />
-                  Color personalizado: {form.color}
-                </button>
-                {showCustomColor && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
-                    <input type="color" value={form.color} onChange={e => set('color', e.target.value)}
-                      style={{ width: 44, height: 44, borderRadius: 9, border: '1.5px solid rgba(255,255,255,0.1)', cursor: 'pointer', padding: 2, background: '#161B22' }} />
-                    <input value={form.color} onChange={e => { if (/^#[0-9a-fA-F]{0,6}$/.test(e.target.value)) set('color', e.target.value) }}
-                      style={{ ...inputStyle, width: 120 }} placeholder="#1A56DB" />
-                  </div>
-                )}
-              </Field>
-            </Section>
-
-            <Section title="Contacto y ubicación">
-              <Field label="WhatsApp (con código de país)">
-                <input value={form.whatsapp} onChange={e => set('whatsapp', e.target.value)} style={inputStyle} placeholder="+56 9 1234 5678" />
-              </Field>
-              <Field label="Dirección">
-                <input value={form.direccion} onChange={e => set('direccion', e.target.value)} style={inputStyle} placeholder="Av. Ejemplo 1234, Ciudad" />
-              </Field>
-              <Field label="Ciudad / Región">
-                <input value={form.ciudad} onChange={e => set('ciudad', e.target.value)} style={inputStyle} placeholder="Temuco, La Araucanía" />
-              </Field>
-              <Field label="Horario de atención">
-                <input value={form.horario} onChange={e => set('horario', e.target.value)} style={inputStyle} placeholder="Lun–Vie 9:00–18:00 · Sáb 9:00–13:00" />
-              </Field>
-            </Section>
-          </div>
-
-          {/* ── PREVIEW ── */}
-          <div style={{ position: 'sticky', top: 20 }}>
-            <p style={{ fontWeight: 700, fontSize: 13, color: '#E6EDF3', marginBottom: 10, textAlign: 'center' }}>Vista previa</p>
-            <div style={{ borderRadius: 20, overflow: 'hidden', border: '1.5px solid rgba(255,255,255,0.1)', boxShadow: '0 4px 24px rgba(0,0,0,0.1)', background: '#21262D' }}>
-
-              {/* Hero preview */}
-              <div style={{ background: `linear-gradient(160deg, ${form.color} 0%, ${form.color}cc 60%, #111827 100%)`, padding: '20px 16px 24px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                  <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(255,255,255,0.18)', border: '2px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 900, fontSize: 14, flexShrink: 0 }}>
-                    {form.nombre.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'MT'}
-                  </div>
-                  <div>
-                    <p style={{ fontSize: 8, color: 'rgba(255,255,255,0.6)', margin: '0 0 2px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Vendedor verificado</p>
-                    <p style={{ fontWeight: 900, fontSize: 14, color: '#fff', margin: 0, lineHeight: 1.2 }}>{form.nombre || 'Mi Tienda'}</p>
-                    {form.tagline && <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.7)', margin: '3px 0 0', lineHeight: 1.3 }}>{form.tagline}</p>}
-                  </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <input type="color" value={form.color} onChange={e => set('color', e.target.value)}
+                    style={{ width: 40, height: 40, borderRadius: 9, border: '1.5px solid #ececea', cursor: 'pointer', padding: 2 }} />
+                  <input value={form.color} onChange={e => { if (/^#[0-9a-fA-F]{0,6}$/.test(e.target.value)) set('color', e.target.value) }}
+                    style={{ ...inputStyle, width: 110 }} placeholder="#2f5fdb" />
                 </div>
+              </Field>
+            </>
+          )}
 
-                {/* Stats mini */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6, background: 'rgba(0,0,0,0.2)', borderRadius: 12, padding: 10 }}>
-                  {[{ v: '4.8', l: 'Rating' }, { v: '0', l: 'Reseñas' }, { v: '0', l: 'Stock' }, { v: '0', l: 'Ventas' }].map(s => (
-                    <div key={s.l} style={{ textAlign: 'center' }}>
-                      <p style={{ fontWeight: 900, fontSize: 13, color: '#fff', margin: 0 }}>{s.v}</p>
-                      <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)', margin: '2px 0 0' }}>{s.l}</p>
-                    </div>
-                  ))}
-                </div>
+          {/* PASO 3 — Contacto */}
+          {step === 2 && (
+            <>
+              <h2 style={{ fontSize: 16, fontWeight: 800, color: '#16181d', margin: '0 0 4px' }}>¿Cómo te contactan?</h2>
+              <p style={{ fontSize: 12, color: '#9aa0aa', margin: '0 0 20px' }}>Últimos datos antes de guardar</p>
 
-                {/* Info */}
-                <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {form.direccion && <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.7)', margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={9} />{form.direccion}</p>}
-                  {form.horario   && <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.7)', margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={9} />{form.horario}</p>}
-                  {form.whatsapp  && <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.7)', margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}><Phone size={9} />{form.whatsapp}</p>}
-                </div>
-
-                {/* CTA buttons */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 14 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: '#161B22', borderRadius: 9, padding: '8px', fontSize: 11, fontWeight: 700, color: form.color }}>
-                    <MessageCircle size={12} /> WhatsApp
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 9, padding: '8px', fontSize: 11, fontWeight: 700, color: '#fff' }}>
-                    <Phone size={12} /> Llamar
-                  </div>
-                </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <Field label="WhatsApp (con código de país)">
+                  <input value={form.whatsapp} onChange={e => set('whatsapp', e.target.value)} style={inputStyle} placeholder="+56 9 1234 5678" />
+                </Field>
+                <Field label="Dirección">
+                  <input value={form.direccion} onChange={e => set('direccion', e.target.value)} style={inputStyle} placeholder="Av. Ejemplo 1234, Ciudad" />
+                </Field>
+                <Field label="Ciudad / Región">
+                  <input value={form.ciudad} onChange={e => set('ciudad', e.target.value)} style={inputStyle} placeholder="Temuco, La Araucanía" />
+                </Field>
+                <Field label="Horario de atención">
+                  <input value={form.horario} onChange={e => set('horario', e.target.value)} style={inputStyle} placeholder="Lun–Vie 9:00–18:00 · Sáb 9:00–13:00" />
+                </Field>
               </div>
 
-              {/* Body preview */}
-              <div style={{ padding: '12px 14px 14px', background: '#0D1117', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {/* Especialidades */}
-                {form.especialidades.length > 0 && (
-                  <div style={{ background: '#161B22', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                    <p style={{ fontSize: 9, fontWeight: 700, color: '#B1BAC4', textTransform: 'uppercase', letterSpacing: 0.5, margin: '0 0 6px' }}>Especialidades</p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                      {form.especialidades.map(s => (
-                        <span key={s} style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20, color: '#fff', background: form.color }}>{s}</span>
-                      ))}
+              {/* Preview compacto de las tarjetas de contacto */}
+              <div style={{ marginTop: 20, borderRadius: 12, overflow: 'hidden', border: '1px solid #ececea' }}>
+                <div style={{ background: `linear-gradient(140deg, ${form.color}, ${form.color}cc)`, padding: 14 }}>
+                  <p style={{ fontSize: 12, fontWeight: 800, color: '#fff', margin: '0 0 8px' }}>{form.nombre || 'Mi Tienda'}</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: '#fff', borderRadius: 8, padding: 8, fontSize: 11, fontWeight: 700, color: form.color }}>
+                      <MessageCircle size={12} /> WhatsApp
                     </div>
-                  </div>
-                )}
-                {/* Descripción */}
-                {form.descripcion && (
-                  <div style={{ background: '#161B22', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                    <p style={{ fontSize: 9, fontWeight: 700, color: '#B1BAC4', textTransform: 'uppercase', letterSpacing: 0.5, margin: '0 0 4px' }}>Sobre nosotros</p>
-                    <p style={{ fontSize: 11, color: '#E6EDF3', margin: 0, lineHeight: 1.5, WebkitLineClamp: 3, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties}>{form.descripcion}</p>
-                  </div>
-                )}
-                {/* Ejemplo pieza */}
-                <div style={{ background: '#161B22', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-                  <div style={{ padding: '8px 12px', borderBottom: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <p style={{ fontSize: 10, fontWeight: 700, color: '#E6EDF3', margin: 0 }}>Catálogo de repuestos</p>
-                    <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 20, color: '#fff', background: form.color }}>0 piezas</span>
-                  </div>
-                  <div style={{ padding: '10px 12px', display: 'flex', gap: 10, alignItems: 'center' }}>
-                    <div style={{ width: 52, height: 44, borderRadius: 8, background: form.color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🔧</div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: 11, fontWeight: 700, color: '#E6EDF3', margin: 0 }}>Bomba de agua completa</p>
-                      <p style={{ fontSize: 9, color: '#B1BAC4', margin: '2px 0 0' }}>Chevrolet Spark · 2010–2018</p>
-                      <p style={{ fontSize: 14, fontWeight: 900, color: form.color, margin: '3px 0 0' }}>$35.000</p>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: 'rgba(255,255,255,.15)', border: '1px solid rgba(255,255,255,.3)', borderRadius: 8, padding: 8, fontSize: 11, fontWeight: 700, color: '#fff' }}>
+                      <Phone size={12} /> Llamar
                     </div>
                   </div>
                 </div>
+                <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 5, background: '#fafafa' }}>
+                  {form.direccion && <p style={{ fontSize: 11, color: '#6b7280', margin: 0, display: 'flex', alignItems: 'center', gap: 5 }}><MapPin size={11} color="#9aa0aa" />{form.direccion}</p>}
+                  {form.horario && <p style={{ fontSize: 11, color: '#6b7280', margin: 0, display: 'flex', alignItems: 'center', gap: 5 }}><Clock size={11} color="#9aa0aa" />{form.horario}</p>}
+                </div>
               </div>
-            </div>
+            </>
+          )}
 
-            <p style={{ textAlign: 'center', fontSize: 11, color: '#B1BAC4', marginTop: 10 }}>
-              Vista previa aproximada — la página real tiene más contenido
-            </p>
+          {/* Navegación entre pasos */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 26, paddingTop: 20, borderTop: '1px solid #f1f2f4' }}>
+            <button onPointerDown={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '11px 18px', borderRadius: 10, border: '1.5px solid #ececea', background: '#fff', color: '#374151', fontWeight: 700, fontSize: 13, cursor: step === 0 ? 'default' : 'pointer', opacity: step === 0 ? 0.4 : 1 }}>
+              <ArrowLeft size={14} /> Atrás
+            </button>
+            {step < STEPS.length - 1 ? (
+              <button onPointerDown={() => setStep(s => Math.min(STEPS.length - 1, s + 1))}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '11px 22px', borderRadius: 10, border: 'none', background: '#16181d', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                Siguiente <ArrowRight size={14} />
+              </button>
+            ) : (
+              <button onPointerDown={handleSave} disabled={saving}
+                style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '11px 22px', borderRadius: 10, border: 'none', background: '#2f5fdb', color: '#fff', fontWeight: 700, fontSize: 13, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.8 : 1 }}>
+                {saving ? <Loader2 size={15} className="animate-spin" /> : saved ? <Check size={15} /> : null}
+                {saving ? 'Guardando…' : saved ? 'Guardado' : 'Guardar cambios'}
+              </button>
+            )}
           </div>
         </div>
       </div>

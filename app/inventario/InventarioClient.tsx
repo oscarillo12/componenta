@@ -2,14 +2,14 @@
 
 import { useState } from 'react'
 import { Product } from '@/lib/supabase'
-import { Plus, Search, Eye, Package, Trash2, CheckCircle, RotateCcw, Loader2, ExternalLink } from 'lucide-react'
+import { Plus, Search, Package, Trash2, CheckCircle, RotateCcw, Loader2, ExternalLink, Eye } from 'lucide-react'
 import Link from 'next/link'
 
 const estadoConfig: Record<string, { label: string; color: string; bg: string }> = {
-  excelente:      { label: 'Excelente',    color: '#15803d', bg: '#dcfce7' },
-  bueno:          { label: 'Buen estado',  color: '#1d4ed8', bg: '#dbeafe' },
-  'con-detalles': { label: 'Con detalles', color: '#b45309', bg: '#fef3c7' },
-  'para-reparar': { label: 'Para reparar', color: '#b91c1c', bg: '#fee2e2' },
+  excelente:      { label: 'Excelente',    color: '#1a7a42', bg: '#eefbf2' },
+  bueno:          { label: 'Buen estado',  color: '#2f5fdb', bg: '#eef3fc' },
+  'con-detalles': { label: 'Con detalles', color: '#b45309', bg: '#fffbeb' },
+  'para-reparar': { label: 'Para reparar', color: '#b91c1c', bg: '#fff5f5' },
 }
 
 function MlIcon({ size = 14 }: { size?: number }) {
@@ -21,7 +21,40 @@ function MlIcon({ size = 14 }: { size?: number }) {
   )
 }
 
-function PartCard({ item, mlConnected, onDelete, onToggleSold, onPublishML }: {
+// ── Calidad de la publicación ────────────────────────────────────────────
+// Heurística simple client-side. Si más adelante se calcula en el backend
+// (p.ej. junto con el guardado del producto), reemplazar por el valor real.
+function computeQuality(item: Product): { score: number; label: string; color: string; tip: string } {
+  let score = 20 // base por tener precio y estado
+  const missing: string[] = []
+
+  if (item.imagen_url) score += 35; else missing.push('Agrega fotos')
+  if (item.descripcion && item.descripcion.trim().length > 20) score += 20; else missing.push('Agrega descripción')
+  if (item.oem) score += 15; else missing.push('Agrega código OEM')
+  if (item.fitment && item.fitment.length > 0) score += 10; else missing.push('Agrega compatibilidad')
+
+  score = Math.min(100, score)
+  const label = score >= 80 ? 'Completa' : score >= 50 ? 'Buena' : 'Básica'
+  const color = score >= 80 ? '#16a34a' : score >= 50 ? '#d97706' : '#b91c1c'
+  const tip = missing.length > 0 ? missing[0] : 'Publicación completa'
+  return { score, label, color, tip }
+}
+
+function QualityRing({ score, color, size = 46 }: { score: number; color: string; size?: number }) {
+  const r = (size - 6) / 2
+  const circ = 2 * Math.PI * r
+  const offset = circ - (circ * score) / 100
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#f1f2f4" strokeWidth={5} />
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={5} strokeLinecap="round"
+        strokeDasharray={circ} strokeDashoffset={offset} transform={`rotate(-90 ${size/2} ${size/2})`} />
+      <text x={size/2} y={size/2 + 4} textAnchor="middle" fontSize={13} fontWeight={800} fontFamily="Inter,sans-serif" fill={color}>{score}</text>
+    </svg>
+  )
+}
+
+function InventoryRow({ item, mlConnected, onDelete, onToggleSold, onPublishML }: {
   item: Product
   mlConnected: boolean
   onDelete: (id: string) => Promise<void>
@@ -38,6 +71,8 @@ function PartCard({ item, mlConnected, onDelete, onToggleSold, onPublishML }: {
   )
 
   const est = estadoConfig[item.estado] ?? estadoConfig.bueno
+  const quality = computeQuality(item)
+  const isPublishedOnML = !!mlResult
 
   async function handleToggleSold() {
     setLoadingSold(true)
@@ -65,82 +100,90 @@ function PartCard({ item, mlConnected, onDelete, onToggleSold, onPublishML }: {
     setLoadingML(false)
   }
 
-  const isPublishedOnML = !!mlResult
-
   return (
-    <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ height: 148, background: '#f5f6f7', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0, overflow: 'hidden' }}>
-        {item.imagen_url ? (
-          <img src={item.imagen_url} alt={item.pieza} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        ) : (
-          <Package size={36} color="#d1d5db" />
-        )}
-        {!item.disponible && (
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 20 }}>Vendida</span>
-          </div>
-        )}
-        {/* Badge ML si ya está publicado */}
-        {isPublishedOnML && (
-          <div style={{ position: 'absolute', top: 8, left: 8, background: '#FFE600', borderRadius: 20, padding: '2px 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
-            <MlIcon size={10} />
-            <span style={{ fontSize: 9, fontWeight: 800, color: '#2D3277' }}>En ML</span>
-          </div>
-        )}
-        <span style={{ position: 'absolute', top: 8, right: 8, fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20, background: est.bg, color: est.color }}>{est.label}</span>
-      </div>
+    <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e5e7eb', overflow: 'hidden', opacity: item.disponible ? 1 : 0.6 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr 210px 150px', alignItems: 'center' }} className="inv-row">
 
-      <div style={{ padding: '12px 13px', flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
-        <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0, lineHeight: 1.3 }}>{item.pieza}</p>
-        <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{item.marca} {item.modelo}</p>
-        <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>{item.anios}{item.oem ? ` · OEM ${item.oem}` : ''}</p>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4, marginBottom: 4 }}>
-          <span style={{ fontSize: 17, fontWeight: 900, color: '#111827', letterSpacing: -0.5 }}>${item.precio.toLocaleString('es-CL')}</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-            <Eye size={11} color="#9ca3af" />
-            <span style={{ fontSize: 11, color: '#9ca3af' }}>{item.vistas}</span>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: 6, paddingTop: 10, borderTop: '1px solid #f3f4f6' }}>
-          <button onClick={handleToggleSold} disabled={loadingSold}
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '7px 0', borderRadius: 9, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: '1.5px solid', background: item.disponible ? '#eff6ff' : '#f9fafb', borderColor: item.disponible ? '#1d4ed8' : '#e5e7eb', color: item.disponible ? '#1d4ed8' : '#6b7280' }}>
-            {loadingSold ? <Loader2 size={11} className="animate-spin" /> : item.disponible ? <><CheckCircle size={11} /> Vender</> : <><RotateCcw size={11} /> Reactivar</>}
-          </button>
-          <button onClick={handleDelete} disabled={loadingDelete}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '7px 10px', borderRadius: 9, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: '1.5px solid', background: confirmDelete ? '#b91c1c' : '#fff5f5', borderColor: confirmDelete ? '#b91c1c' : '#fca5a5', color: confirmDelete ? '#fff' : '#b91c1c' }}>
-            {loadingDelete ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
-            {confirmDelete ? '¿Sí?' : ''}
-          </button>
-        </div>
-        {confirmDelete && (
-          <button onClick={() => setConfirmDelete(false)} style={{ fontSize: 11, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center', width: '100%', padding: '2px 0' }}>
-            Cancelar
-          </button>
-        )}
-
-        {/* Sección MercadoLibre */}
-        {mlConnected && item.disponible && (
-          <div style={{ paddingTop: 8, borderTop: '1px solid #f3f4f6', marginTop: 2 }}>
-            {isPublishedOnML ? (
-              <a href={mlResult!.permalink} target="_blank" rel="noopener noreferrer"
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '7px 0', borderRadius: 9, fontSize: 11, fontWeight: 700, textDecoration: 'none', background: '#fffbdb', border: '1.5px solid #FFE600', color: '#2D3277' }}>
-                <MlIcon size={11} /> Ver en ML <ExternalLink size={9} />
-              </a>
-            ) : (
-              <>
-                <button onClick={handlePublishML} disabled={loadingML}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '7px 0', borderRadius: 9, fontSize: 11, fontWeight: 700, cursor: loadingML ? 'default' : 'pointer', border: '1.5px solid #FFE600', background: loadingML ? '#fffde7' : '#fffbdb', color: '#2D3277' }}>
-                  {loadingML ? <Loader2 size={11} className="animate-spin" /> : <MlIcon size={11} />}
-                  {loadingML ? 'Publicando…' : 'Publicar en ML'}
-                </button>
-                {mlError && <p style={{ fontSize: 10, color: '#b91c1c', margin: '4px 0 0', textAlign: 'center' }}>{mlError}</p>}
-              </>
+        {/* Foto + título */}
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: 16, minWidth: 0 }}>
+          <div style={{ width: 56, height: 48, borderRadius: 9, background: '#f5f6f7', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+            {item.imagen_url ? <img src={item.imagen_url} alt={item.pieza} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Package size={20} color="#d1d5db" />}
+            {isPublishedOnML && (
+              <div style={{ position: 'absolute', top: 2, left: 2, background: '#FFE600', borderRadius: 6, padding: '1px 4px' }}><MlIcon size={9} /></div>
             )}
           </div>
-        )}
+          <div style={{ minWidth: 0 }}>
+            <p style={{ fontSize: 10, color: '#9aa0aa', margin: '0 0 3px', fontFamily: 'ui-monospace,Menlo,monospace' }}>#{item.id.slice(0, 8)}</p>
+            <p style={{ fontSize: 12.5, fontWeight: 700, color: '#16181d', margin: 0, lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties}>{item.pieza}</p>
+            <span style={{ display: 'inline-block', marginTop: 4, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: est.bg, color: est.color }}>{est.label}</span>
+          </div>
+        </div>
+
+        {/* Precio / envío / vistas */}
+        <div style={{ display: 'flex', gap: 28, alignItems: 'center', padding: 16, borderLeft: '1px solid #f1f2f4', flexWrap: 'wrap' }}>
+          <div>
+            <p style={{ fontSize: 15, fontWeight: 900, color: '#16181d', margin: 0, letterSpacing: -0.3 }}>${item.precio.toLocaleString('es-CL')}</p>
+            <p style={{ fontSize: 11, fontWeight: 600, color: '#2f5fdb', margin: '2px 0 0' }}>{item.envio || 'Coordina envío'}</p>
+          </div>
+          <div>
+            <p style={{ fontSize: 11, color: '#6b7280', margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}><Eye size={11} color="#9aa0aa" /> {item.vistas} vistas</p>
+            <p style={{ fontSize: 11, fontWeight: 600, color: '#2f5fdb', margin: '2px 0 0' }}>Aumentar exposición</p>
+          </div>
+        </div>
+
+        {/* Calidad de la publicación */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 16, borderLeft: '1px solid #f1f2f4' }}>
+          <QualityRing score={quality.score} color={quality.color} />
+          <div style={{ minWidth: 0 }}>
+            <p style={{ fontSize: 11.5, fontWeight: 800, color: quality.color, margin: '0 0 2px' }}>{quality.label}</p>
+            <p style={{ fontSize: 10, color: '#9aa0aa', margin: 0, lineHeight: 1.4 }}>{quality.tip}</p>
+          </div>
+        </div>
+
+        {/* Estado + acciones */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, padding: 16 }}>
+          <button onClick={handleToggleSold} disabled={loadingSold}
+            title={item.disponible ? 'Marcar como vendida' : 'Reactivar'}
+            style={{ width: 38, height: 22, borderRadius: 20, border: 'none', cursor: 'pointer', background: item.disponible ? '#2f5fdb' : '#e5e7eb', position: 'relative', padding: 0 }}>
+            <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#fff', position: 'absolute', top: 3, left: item.disponible ? 19 : 3, transition: 'left .15s' }} />
+          </button>
+          <div style={{ display: 'flex', gap: 5 }}>
+            <button onClick={handleToggleSold} disabled={loadingSold} title={item.disponible ? 'Vender' : 'Reactivar'}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, borderRadius: 8, border: '1.5px solid #e5e7eb', background: '#fff', cursor: 'pointer', color: '#6b7280' }}>
+              {loadingSold ? <Loader2 size={12} className="animate-spin" /> : item.disponible ? <CheckCircle size={12} /> : <RotateCcw size={12} />}
+            </button>
+            <button onClick={handleDelete} disabled={loadingDelete}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '6px 8px', borderRadius: 8, border: '1.5px solid', cursor: 'pointer', background: confirmDelete ? '#b91c1c' : '#fff5f5', borderColor: confirmDelete ? '#b91c1c' : '#fca5a5', color: confirmDelete ? '#fff' : '#b91c1c', fontSize: 10, fontWeight: 700 }}>
+              {loadingDelete ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+              {confirmDelete ? '¿Sí?' : ''}
+            </button>
+          </div>
+          {confirmDelete && (
+            <button onClick={() => setConfirmDelete(false)} style={{ fontSize: 10, color: '#9aa0aa', background: 'none', border: 'none', cursor: 'pointer' }}>Cancelar</button>
+          )}
+        </div>
       </div>
+
+      {/* Fila MercadoLibre — solo si conectado y disponible */}
+      {mlConnected && item.disponible && (
+        <div style={{ padding: '10px 16px', borderTop: '1px solid #f1f2f4', background: '#fafafa' }}>
+          {isPublishedOnML ? (
+            <a href={mlResult!.permalink} target="_blank" rel="noopener noreferrer"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, textDecoration: 'none', color: '#2D3277' }}>
+              <MlIcon size={12} /> Publicado en MercadoLibre <ExternalLink size={10} />
+            </a>
+          ) : (
+            <>
+              <button onClick={handlePublishML} disabled={loadingML}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: loadingML ? 'default' : 'pointer', border: '1.5px solid #FFE600', background: loadingML ? '#fffde7' : '#fffbdb', color: '#2D3277' }}>
+                {loadingML ? <Loader2 size={11} className="animate-spin" /> : <MlIcon size={11} />}
+                {loadingML ? 'Publicando…' : 'Publicar en MercadoLibre'}
+              </button>
+              {mlError && <p style={{ fontSize: 10, color: '#b91c1c', margin: '4px 0 0' }}>{mlError}</p>}
+            </>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -185,7 +228,6 @@ export default function InventarioClient({
       const msg = cause || data?.details?.message || data?.error || JSON.stringify(data)
       throw new Error(msg)
     }
-    // Actualizar estado local
     setProducts(prev => prev.map(p =>
       p.id === id ? { ...p, ml_item_id: data.ml_item_id, ml_permalink: data.permalink } : p
     ))
@@ -202,18 +244,18 @@ export default function InventarioClient({
   const disponiblesCount = products.filter(i => i.disponible).length
   const vendidoCount     = products.filter(i => !i.disponible).length
   const mlCount          = products.filter(i => i.ml_item_id).length
+  const bajaCalidadCount = products.filter(i => computeQuality(i).score < 50).length
 
   return (
     <>
-      {/* Toast ML conectado */}
       {mlToast && (
         <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10, background: '#fffde7', border: '1.5px solid #FFE600', borderRadius: 12, padding: '12px 16px' }}>
           <MlIcon size={20} />
           <div style={{ flex: 1 }}>
             <p style={{ fontSize: 13, fontWeight: 700, color: '#2D3277', margin: 0 }}>¡MercadoLibre conectado!</p>
-            <p style={{ fontSize: 12, color: '#555', margin: 0 }}>Ya puedes publicar piezas directamente en ML desde cada tarjeta.</p>
+            <p style={{ fontSize: 12, color: '#555', margin: 0 }}>Ya puedes publicar piezas directamente en ML desde cada fila.</p>
           </div>
-          <button onClick={() => setMlToast(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#9ca3af', lineHeight: 1 }}>×</button>
+          <button onClick={() => setMlToast(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#9aa0aa', lineHeight: 1 }}>×</button>
         </div>
       )}
 
@@ -230,7 +272,6 @@ export default function InventarioClient({
         </div>
       )}
 
-      {/* Banner ML — solo si no está conectado */}
       {!mlConnected && (
         <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 14, background: '#fffde7', border: '1.5px dashed #FFE600', borderRadius: 12, padding: '14px 16px', flexWrap: 'wrap' }}>
           <div style={{ background: '#FFE600', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
@@ -250,29 +291,30 @@ export default function InventarioClient({
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 800, color: '#111827', margin: '0 0 4px' }}>Mi inventario</h1>
-          <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 800, color: '#16181d', margin: '0 0 4px' }}>Mi inventario</h1>
+          <p style={{ fontSize: 13, color: '#9aa0aa', margin: 0 }}>
             {disponiblesCount} disponible{disponiblesCount !== 1 ? 's' : ''}
             {vendidoCount > 0 && ` · ${vendidoCount} vendida${vendidoCount !== 1 ? 's' : ''}`}
             {mlCount > 0 && ` · ${mlCount} en ML`}
+            {bajaCalidadCount > 0 && ` · ${bajaCalidadCount} con calidad baja`}
             {isDemo ? ' · demo' : ''}
           </p>
         </div>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px', background: '#1d4ed8', color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px', background: '#2f5fdb', color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
           <Plus size={14} /> Nueva pieza
         </Link>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
         <div style={{ position: 'relative' }}>
-          <Search size={13} color="#9ca3af" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
+          <Search size={13} color="#9aa0aa" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
           <input type="text" placeholder="Buscar pieza, marca…" value={search} onChange={e => setSearch(e.target.value)}
-            style={{ paddingLeft: 32, paddingRight: 12, paddingTop: 9, paddingBottom: 9, fontSize: 13, border: '1.5px solid #e5e7eb', borderRadius: 10, background: '#fff', color: '#111827', outline: 'none', width: 220 }} />
+            style={{ paddingLeft: 32, paddingRight: 12, paddingTop: 9, paddingBottom: 9, fontSize: 13, border: '1.5px solid #e5e7eb', borderRadius: 10, background: '#fff', color: '#16181d', outline: 'none', width: 220 }} />
         </div>
         <div style={{ display: 'flex', borderRadius: 10, border: '1.5px solid #e5e7eb', background: '#fff', overflow: 'hidden' }}>
           {(['todos', 'disponible', 'vendido'] as Filtro[]).map(f => (
             <button key={f} onClick={() => setFiltro(f)}
-              style={{ padding: '8px 14px', fontSize: 12, fontWeight: filtro === f ? 700 : 500, border: 'none', cursor: 'pointer', background: filtro === f ? '#1d4ed8' : 'transparent', color: filtro === f ? '#fff' : '#6b7280' }}>
+              style={{ padding: '8px 14px', fontSize: 12, fontWeight: filtro === f ? 700 : 500, border: 'none', cursor: 'pointer', background: filtro === f ? '#2f5fdb' : 'transparent', color: filtro === f ? '#fff' : '#6b7280' }}>
               {f === 'vendido' ? 'Vendidas' : f === 'disponible' ? 'Disponibles' : 'Todos'}
             </button>
           ))}
@@ -282,20 +324,20 @@ export default function InventarioClient({
       {products.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px' }}>
           <div style={{ width: 64, height: 64, background: '#f3f4f6', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-            <Package size={28} color="#9ca3af" />
+            <Package size={28} color="#9aa0aa" />
           </div>
-          <p style={{ fontSize: 14, fontWeight: 600, color: '#111827', margin: '0 0 6px' }}>Sin piezas publicadas aún</p>
-          <p style={{ fontSize: 13, color: '#9ca3af', margin: '0 0 20px' }}>Publica tu primera pieza y aparecerá aquí</p>
-          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 22px', background: '#1d4ed8', color: '#fff', borderRadius: 12, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+          <p style={{ fontSize: 14, fontWeight: 600, color: '#16181d', margin: '0 0 6px' }}>Sin piezas publicadas aún</p>
+          <p style={{ fontSize: 13, color: '#9aa0aa', margin: '0 0 20px' }}>Publica tu primera pieza y aparecerá aquí</p>
+          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 22px', background: '#2f5fdb', color: '#fff', borderRadius: 12, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
             <Plus size={14} /> Publicar primera pieza
           </Link>
         </div>
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '40px 20px', color: '#9ca3af', fontSize: 13 }}>No hay piezas que coincidan</div>
+        <div style={{ textAlign: 'center', padding: '40px 20px', color: '#9aa0aa', fontSize: 13 }}>No hay piezas que coincidan</div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 14 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {filtered.map(item => (
-            <PartCard
+            <InventoryRow
               key={item.id}
               item={item}
               mlConnected={mlConnected}
@@ -306,6 +348,12 @@ export default function InventarioClient({
           ))}
         </div>
       )}
+
+      <style>{`
+        @media (max-width: 860px) {
+          .inv-row { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </>
   )
 }
