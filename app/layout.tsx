@@ -24,6 +24,9 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Componenta — Gestión de repuestos",
   description: "Fotografía, digitaliza y publica tus repuestos en segundos",
+  verification: {
+    google: "eYYWBuHnJIf1IOcBP_7uvl1mntycP-gX3cXjDUs9fw4",
+  },
 };
 
 export default function RootLayout({
