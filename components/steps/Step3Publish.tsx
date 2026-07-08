@@ -16,8 +16,8 @@ interface Step3PublishProps {
 
 const CANAL_CONFIG = {
   componenta: {
-    icon: <Storefront size={24} weight="fill" color="#79C0FF" />,
-    color: '#79C0FF', bg: '#eff6ff', border: '#bfdbfe',
+    icon: <Storefront size={24} weight="fill" color="#2f5fdb" />,
+    color: '#2f5fdb', bg: '#eff6ff', border: '#bfdbfe',
     preview: 'Aparecerá en componenta.cl/marketplace visible para compradores de toda Chile',
     badge: 'Recomendado',
   },
@@ -234,20 +234,20 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 24px', gap: 16, textAlign: 'center' }}>
         <div style={{ width: 72, height: 72, borderRadius: '50%', background: '#fef3c7', border: '3px solid #fcd34d', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>⚡</div>
         <div>
-          <p style={{ fontSize: 20, fontWeight: 900, color: '#E6EDF3', margin: '0 0 8px' }}>Límite gratuito alcanzado</p>
-          <p style={{ fontSize: 14, color: '#B1BAC4', margin: '0 0 4px' }}>Has publicado los <strong>5 productos</strong> de la prueba gratuita.</p>
-          <p style={{ fontSize: 14, color: '#B1BAC4', margin: 0 }}>Sube a Plan Pro para publicar repuestos ilimitados.</p>
+          <p style={{ fontSize: 20, fontWeight: 900, color: '#16181d', margin: '0 0 8px' }}>Límite gratuito alcanzado</p>
+          <p style={{ fontSize: 14, color: '#9aa0aa', margin: '0 0 4px' }}>Has publicado los <strong>5 productos</strong> de la prueba gratuita.</p>
+          <p style={{ fontSize: 14, color: '#9aa0aa', margin: 0 }}>Sube a Plan Pro para publicar repuestos ilimitados.</p>
         </div>
-        <div style={{ background: '#0D1117', borderRadius: 16, padding: '20px', width: '100%', maxWidth: 300 }}>
-          <p style={{ fontWeight: 800, fontSize: 16, color: '#E6EDF3', margin: '0 0 12px' }}>Plan Pro</p>
+        <div style={{ background: '#ffffff', borderRadius: 16, padding: '20px', width: '100%', maxWidth: 300 }}>
+          <p style={{ fontWeight: 800, fontSize: 16, color: '#16181d', margin: '0 0 12px' }}>Plan Pro</p>
           {['Repuestos ilimitados', 'Página web en componenta.cl', 'Dashboard completo', 'Soporte prioritario'].map(f => (
             <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <Check size={14} weight="bold" color="#79C0FF" />
-              <span style={{ fontSize: 13, color: '#E6EDF3' }}>{f}</span>
+              <Check size={14} weight="bold" color="#2f5fdb" />
+              <span style={{ fontSize: 13, color: '#16181d' }}>{f}</span>
             </div>
           ))}
-          <p style={{ fontSize: 22, fontWeight: 900, color: '#E6EDF3', margin: '12px 0' }}>USD $20<span style={{ fontSize: 13, fontWeight: 400, color: '#B1BAC4' }}>/mes</span></p>
-          <a href="/planes" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px', borderRadius: 12, background: '#388BFD', color: '#fff', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
+          <p style={{ fontSize: 22, fontWeight: 900, color: '#16181d', margin: '12px 0' }}>USD $20<span style={{ fontSize: 13, fontWeight: 400, color: '#9aa0aa' }}>/mes</span></p>
+          <a href="/planes" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px', borderRadius: 12, background: '#2f5fdb', color: '#fff', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
             <Lightning size={16} weight="fill" /> Ver Plan Pro
           </a>
         </div>
@@ -260,11 +260,11 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px', gap: 16, textAlign: 'center' }}>
         <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(56,139,253,0.15)', border: '3px solid #bfdbfe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <CheckCircle size={40} weight="fill" color="#79C0FF" />
+          <CheckCircle size={40} weight="fill" color="#2f5fdb" />
         </div>
         <div>
-          <p style={{ fontSize: 22, fontWeight: 900, color: '#E6EDF3', margin: '0 0 8px' }}>¡Pieza publicada!</p>
-          <p style={{ fontSize: 14, color: '#B1BAC4', margin: 0 }}>Publicada en {selected.size} {selected.size === 1 ? 'canal' : 'canales'} · Ya es visible en el marketplace</p>
+          <p style={{ fontSize: 22, fontWeight: 900, color: '#16181d', margin: '0 0 8px' }}>¡Pieza publicada!</p>
+          <p style={{ fontSize: 14, color: '#9aa0aa', margin: 0 }}>Publicada en {selected.size} {selected.size === 1 ? 'canal' : 'canales'} · Ya es visible en el marketplace</p>
         </div>
         {sellerTelefono && (
           <div style={{ background: '#f0fdf9', border: '1.5px solid #a7f3d0', borderRadius: 14, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -275,7 +275,7 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
           </div>
         )}
         <div style={{ background: 'rgba(56,139,253,0.15)', border: '1.5px solid rgba(56,139,253,0.4)', borderRadius: 14, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Globe size={20} color="#79C0FF" weight="fill" />
+          <Globe size={20} color="#2f5fdb" weight="fill" />
           <p style={{ fontSize: 13, color: '#A5D6FF', fontWeight: 600, margin: 0 }}>Ver en componenta.cl/marketplace →</p>
         </div>
       </div>
@@ -286,7 +286,7 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
   if (profileLoading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 24px' }}>
-        <div style={{ width: 24, height: 24, border: '3px solid #e5e7eb', borderTopColor: '#1A56DB', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <div style={{ width: 24, height: 24, border: '3px solid #e5e7eb', borderTopColor: '#2f5fdb', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
       </div>
     )
   }
@@ -302,17 +302,17 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
             <WhatsappLogo size={24} weight="fill" color="#fff" />
           </div>
           <div>
-            <p style={{ fontWeight: 800, fontSize: 16, color: '#E6EDF3', margin: '0 0 6px' }}>
+            <p style={{ fontWeight: 800, fontSize: 16, color: '#16181d', margin: '0 0 6px' }}>
               Registra tu número de WhatsApp
             </p>
-            <p style={{ fontSize: 13, color: '#E6EDF3', margin: 0, lineHeight: 1.5 }}>
+            <p style={{ fontSize: 13, color: '#16181d', margin: 0, lineHeight: 1.5 }}>
               Es <strong>obligatorio</strong> para publicar como vendedor independiente. Los compradores te contactarán directamente por WhatsApp cuando vean tu pieza en el marketplace.
             </p>
           </div>
         </div>
 
         {/* Diagrama de flujo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#0D1117', borderRadius: 14, padding: '14px 18px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#ffffff', borderRadius: 14, padding: '14px 18px' }}>
           {[
             { icon: '🛒', label: 'Comprador ve la pieza' },
             { icon: '→', label: '' },
@@ -322,13 +322,13 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
           ].map((item, i) => (
             <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: item.icon === '→' ? 'none' : 1 }}>
               {item.icon === '→' ? (
-                <span style={{ fontSize: 18, color: '#B1BAC4' }}>→</span>
+                <span style={{ fontSize: 18, color: '#9aa0aa' }}>→</span>
               ) : (
                 <>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: '#161B22', border: '1.5px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: '#fafafa', border: '1.5px solid #ececea', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
                     {item.icon}
                   </div>
-                  <p style={{ fontSize: 10, color: '#B1BAC4', margin: 0, textAlign: 'center', lineHeight: 1.3 }}>{item.label}</p>
+                  <p style={{ fontSize: 10, color: '#9aa0aa', margin: 0, textAlign: 'center', lineHeight: 1.3 }}>{item.label}</p>
                 </>
               )}
             </div>
@@ -337,14 +337,14 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
 
         {/* Input de teléfono */}
         <div>
-          <label style={{ fontSize: 12, fontWeight: 700, color: '#E6EDF3', display: 'block', marginBottom: 8 }}>
+          <label style={{ fontSize: 12, fontWeight: 700, color: '#16181d', display: 'block', marginBottom: 8 }}>
             NÚMERO DE WHATSAPP (Chile)
           </label>
           <div style={{ display: 'flex', gap: 10 }}>
             {/* Prefijo fijo */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 14px', border: '1.5px solid rgba(255,255,255,0.1)', borderRadius: 10, background: '#0D1117', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 14px', border: '1.5px solid #ececea', borderRadius: 10, background: '#ffffff', flexShrink: 0 }}>
               <span style={{ fontSize: 18 }}>🇨🇱</span>
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#E6EDF3' }}>+56</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: '#16181d' }}>+56</span>
             </div>
             <input
               type="tel"
@@ -360,7 +360,7 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
                 flex: 1,
                 padding: '12px 14px',
                 borderRadius: 10,
-                border: `1.5px solid ${phoneError ? '#fca5a5' : phoneInput ? '#1A56DB' : '#e5e7eb'}`,
+                border: `1.5px solid ${phoneError ? '#fca5a5' : phoneInput ? '#2f5fdb' : '#e5e7eb'}`,
                 fontSize: 16,
                 fontWeight: 600,
                 outline: 'none',
@@ -373,15 +373,15 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
               <Warning size={12} weight="fill" /> {phoneError}
             </p>
           )}
-          <p style={{ fontSize: 11, color: '#B1BAC4', margin: '6px 0 0' }}>
+          <p style={{ fontSize: 11, color: '#9aa0aa', margin: '6px 0 0' }}>
             Ej: 9 8765 4321 — Solo números móviles chilenos
           </p>
         </div>
 
         {/* Nota de privacidad */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 14px', background: '#0D1117', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 14px', background: '#ffffff', borderRadius: 10, border: '1px solid #ececea' }}>
           <span style={{ fontSize: 14, flexShrink: 0 }}>🔒</span>
-          <p style={{ fontSize: 12, color: '#B1BAC4', margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: '#9aa0aa', margin: 0, lineHeight: 1.5 }}>
             Tu número solo se mostrará a compradores que hagan clic en "Consultar" para una pieza tuya. No se publica públicamente.
           </p>
         </div>
@@ -418,14 +418,14 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
       {/* Banner teléfono confirmado */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f0fdf9', border: '1.5px solid #a7f3d0', borderRadius: 12, padding: '10px 16px', flexWrap: 'wrap', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <CheckCircle size={16} weight="fill" color="#79C0FF" />
+          <CheckCircle size={16} weight="fill" color="#2f5fdb" />
           <span style={{ fontSize: 13, fontWeight: 600, color: '#065f46' }}>
             WhatsApp vinculado: {formatPhoneDisplay(sellerTelefono!)}
           </span>
         </div>
         <button
           onPointerDown={() => { setPhoneConfirmed(false); setPhoneInput('') }}
-          style={{ fontSize: 12, color: '#79C0FF', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>
+          style={{ fontSize: 12, color: '#2f5fdb', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>
           Cambiar número
         </button>
       </div>
@@ -434,34 +434,34 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
           <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(56,139,253,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Sparkle size={18} weight="fill" color="#79C0FF" />
+            <Sparkle size={18} weight="fill" color="#2f5fdb" />
           </div>
-          <h1 style={{ fontSize: 20, fontWeight: 800, color: '#E6EDF3', margin: 0 }}>Personalizar y publicar</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 800, color: '#16181d', margin: 0 }}>Personalizar y publicar</h1>
         </div>
-        <p style={{ fontSize: 14, color: '#B1BAC4', margin: 0 }}>Ajusta los detalles y elige dónde aparecerá tu pieza</p>
+        <p style={{ fontSize: 14, color: '#9aa0aa', margin: 0 }}>Ajusta los detalles y elige dónde aparecerá tu pieza</p>
       </div>
 
       {/* ── PRECIO Y ENVÍO ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <div>
-          <label style={{ fontSize: 12, fontWeight: 700, color: '#E6EDF3', display: 'block', marginBottom: 6 }}>
+          <label style={{ fontSize: 12, fontWeight: 700, color: '#16181d', display: 'block', marginBottom: 6 }}>
             <Tag size={12} style={{ marginRight: 4 }} />PRECIO (CLP) *
           </label>
           <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontWeight: 700, color: '#B1BAC4', fontSize: 16 }}>$</span>
+            <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontWeight: 700, color: '#9aa0aa', fontSize: 16 }}>$</span>
             <input
               type="text"
               placeholder="0"
               value={precio}
               onChange={e => setPrecio(e.target.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.'))}
-              style={{ width: '100%', padding: '11px 12px 11px 26px', borderRadius: 10, border: `1.5px solid ${precio ? '#1A56DB' : '#e5e7eb'}`, fontSize: 16, fontWeight: 700, color: '#E6EDF3', outline: 'none', boxSizing: 'border-box', background: precio ? '#eff6ff' : '#fff' }}
+              style={{ width: '100%', padding: '11px 12px 11px 26px', borderRadius: 10, border: `1.5px solid ${precio ? '#2f5fdb' : '#e5e7eb'}`, fontSize: 16, fontWeight: 700, color: '#16181d', outline: 'none', boxSizing: 'border-box', background: precio ? '#eff6ff' : '#fff' }}
             />
           </div>
         </div>
         <div>
-          <label style={{ fontSize: 12, fontWeight: 700, color: '#E6EDF3', display: 'block', marginBottom: 6 }}>ENVÍO</label>
+          <label style={{ fontSize: 12, fontWeight: 700, color: '#16181d', display: 'block', marginBottom: 6 }}>ENVÍO</label>
           <select value={envio} onChange={e => setEnvio(e.target.value)}
-            style={{ width: '100%', padding: '11px 12px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.1)', fontSize: 13, outline: 'none', background: '#161B22', color: '#E6EDF3' }}>
+            style={{ width: '100%', padding: '11px 12px', borderRadius: 10, border: '1.5px solid #ececea', fontSize: 13, outline: 'none', background: '#fafafa', color: '#16181d' }}>
             {ENVIO_OPS.map(op => <option key={op} value={op}>{op}</option>)}
           </select>
         </div>
@@ -469,14 +469,14 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
 
       {/* ── ESTADO ── */}
       <div>
-        <label style={{ fontSize: 12, fontWeight: 700, color: '#E6EDF3', display: 'block', marginBottom: 10 }}>CONDICIÓN DE LA PIEZA</label>
+        <label style={{ fontSize: 12, fontWeight: 700, color: '#16181d', display: 'block', marginBottom: 10 }}>CONDICIÓN DE LA PIEZA</label>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           {ESTADOS.map(e => (
             <button key={e.id}
               onPointerDown={() => setEstado(e.id)}
               style={{ touchAction: 'manipulation', border: `2px solid ${estado === e.id ? e.color : '#e5e7eb'}`, borderRadius: 12, padding: '12px', cursor: 'pointer', textAlign: 'left', background: estado === e.id ? e.bg : '#fff', transition: 'all 0.15s' }}>
               <p style={{ fontWeight: 700, fontSize: 13, color: estado === e.id ? e.color : '#374151', margin: '0 0 2px' }}>{e.label}</p>
-              <p style={{ fontSize: 11, color: '#B1BAC4', margin: 0 }}>{e.desc}</p>
+              <p style={{ fontSize: 11, color: '#9aa0aa', margin: 0 }}>{e.desc}</p>
             </button>
           ))}
         </div>
@@ -484,19 +484,19 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
 
       {/* ── DESCRIPCIÓN ── */}
       <div>
-        <label style={{ fontSize: 12, fontWeight: 700, color: '#E6EDF3', display: 'block', marginBottom: 6 }}>DESCRIPCIÓN ADICIONAL (opcional)</label>
+        <label style={{ fontSize: 12, fontWeight: 700, color: '#16181d', display: 'block', marginBottom: 6 }}>DESCRIPCIÓN ADICIONAL (opcional)</label>
         <textarea
           placeholder="Ej: Desmontado de Chevrolet Spark 2014 accidentado. Funciona perfecto."
           value={descripcion}
           onChange={e => setDescripcion(e.target.value)}
           rows={3}
-          style={{ width: '100%', padding: '11px 12px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.1)', fontSize: 13, outline: 'none', resize: 'vertical', color: '#E6EDF3', boxSizing: 'border-box', fontFamily: 'inherit' }}
+          style={{ width: '100%', padding: '11px 12px', borderRadius: 10, border: '1.5px solid #ececea', fontSize: 13, outline: 'none', resize: 'vertical', color: '#16181d', boxSizing: 'border-box', fontFamily: 'inherit' }}
         />
       </div>
 
       {/* ── CANALES ── */}
       <div>
-        <label style={{ fontSize: 12, fontWeight: 700, color: '#E6EDF3', display: 'block', marginBottom: 10 }}>¿DÓNDE SE PUBLICARÁ?</label>
+        <label style={{ fontSize: 12, fontWeight: 700, color: '#16181d', display: 'block', marginBottom: 10 }}>¿DÓNDE SE PUBLICARÁ?</label>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {CHANNELS.map(channel => {
             const cfg = CANAL_CONFIG[channel.id as keyof typeof CANAL_CONFIG]
@@ -509,9 +509,9 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
                 <div style={{ flexShrink: 0, marginTop: 2 }}>{cfg.icon}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                    <p style={{ fontWeight: 700, fontSize: 14, color: '#E6EDF3', margin: 0 }}>{channel.name}</p>
+                    <p style={{ fontWeight: 700, fontSize: 14, color: '#16181d', margin: 0 }}>{channel.name}</p>
                     {cfg.badge && (
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: channel.id === 'componenta' ? '#1A56DB' : '#e5e7eb', color: channel.id === 'componenta' ? '#fff' : '#6b7280' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: channel.id === 'componenta' ? '#2f5fdb' : '#e5e7eb', color: channel.id === 'componenta' ? '#fff' : '#6b7280' }}>
                         {cfg.badge}
                       </span>
                     )}
@@ -521,7 +521,7 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
                       </span>
                     )}
                   </div>
-                  <p style={{ fontSize: 12, color: '#B1BAC4', margin: 0 }}>{cfg.preview}</p>
+                  <p style={{ fontSize: 12, color: '#9aa0aa', margin: 0 }}>{cfg.preview}</p>
                   {channel.id === 'whatsapp' && isSelected && sellerTelefono && (
                     <p style={{ fontSize: 11, color: '#25d366', fontWeight: 600, margin: '4px 0 0' }}>
                       → {formatPhoneDisplay(sellerTelefono)}
@@ -535,36 +535,36 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
       </div>
 
       {/* ── PREVIEW ── */}
-      <div style={{ border: '1.5px solid rgba(255,255,255,0.1)', borderRadius: 16, overflow: 'hidden' }}>
-        <div style={{ padding: '10px 16px', background: '#0D1117', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Eye size={14} color="#6E7681" weight="fill" />
-          <p style={{ fontSize: 12, fontWeight: 700, color: '#B1BAC4', margin: 0, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+      <div style={{ border: '1.5px solid #ececea', borderRadius: 16, overflow: 'hidden' }}>
+        <div style={{ padding: '10px 16px', background: '#ffffff', borderBottom: '1px solid #ececea', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Eye size={14} color="#6b7280" weight="fill" />
+          <p style={{ fontSize: 12, fontWeight: 700, color: '#9aa0aa', margin: 0, textTransform: 'uppercase', letterSpacing: 0.5 }}>
             Vista previa — componenta.cl/marketplace
           </p>
         </div>
-        <div style={{ padding: '16px', background: '#161B22' }}>
-          <div style={{ border: '1.5px solid rgba(255,255,255,0.1)', borderRadius: 14, overflow: 'hidden', maxWidth: 200 }}>
-            <div style={{ height: 110, background: '#21262D', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        <div style={{ padding: '16px', background: '#fafafa' }}>
+          <div style={{ border: '1.5px solid #ececea', borderRadius: 14, overflow: 'hidden', maxWidth: 200 }}>
+            <div style={{ height: 110, background: '#f5f5f4', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
               <img src={photoPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
             </div>
             <div style={{ padding: '10px' }}>
-              <p style={{ fontSize: 10, color: '#B1BAC4', margin: '0 0 2px' }}>{partData.marca || 'Sin marca'}</p>
-              <p style={{ fontSize: 12, fontWeight: 700, color: '#E6EDF3', margin: '0 0 4px', lineHeight: 1.3 }}>{partData.pieza}</p>
-              <p style={{ fontSize: 16, fontWeight: 900, color: '#E6EDF3', margin: '0 0 6px' }}>
+              <p style={{ fontSize: 10, color: '#9aa0aa', margin: '0 0 2px' }}>{partData.marca || 'Sin marca'}</p>
+              <p style={{ fontSize: 12, fontWeight: 700, color: '#16181d', margin: '0 0 4px', lineHeight: 1.3 }}>{partData.pieza}</p>
+              <p style={{ fontSize: 16, fontWeight: 900, color: '#16181d', margin: '0 0 6px' }}>
                 {precioNum > 0 ? `$${precioNum.toLocaleString('es-CL')}` : <span style={{ color: '#3b5280' }}>$ —</span>}
               </p>
               <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: estadoConfig.bg, color: estadoConfig.color }}>
                 {estadoConfig.label}
               </span>
               <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 4, paddingTop: 8, borderTop: '1px solid #f3f4f6' }}>
-                <div style={{ width: 14, height: 14, borderRadius: 3, background: '#388BFD', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 7, color: '#fff', fontWeight: 900 }}>
+                <div style={{ width: 14, height: 14, borderRadius: 3, background: '#2f5fdb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 7, color: '#fff', fontWeight: 900 }}>
                   {sellerNombre[0].toUpperCase()}
                 </div>
-                <p style={{ fontSize: 9, color: '#B1BAC4', margin: 0 }}>{sellerNombre}</p>
+                <p style={{ fontSize: 9, color: '#9aa0aa', margin: 0 }}>{sellerNombre}</p>
               </div>
             </div>
           </div>
-          {compat && <p style={{ fontSize: 11, color: '#B1BAC4', margin: '10px 0 0' }}>Compatible: {compat.slice(0, 60)}{compat.length > 60 ? '…' : ''}</p>}
+          {compat && <p style={{ fontSize: 11, color: '#9aa0aa', margin: '10px 0 0' }}>Compatible: {compat.slice(0, 60)}{compat.length > 60 ? '…' : ''}</p>}
         </div>
       </div>
 
@@ -589,8 +589,8 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
             </div>
           )}
           {precio && selected.size > 0 && (
-            <p style={{ fontSize: 12, color: '#B1BAC4', margin: 0 }}>
-              Se publicará en <strong style={{ color: '#E6EDF3' }}>{selected.size}</strong> canal{selected.size > 1 ? 'es' : ''}
+            <p style={{ fontSize: 12, color: '#9aa0aa', margin: 0 }}>
+              Se publicará en <strong style={{ color: '#16181d' }}>{selected.size}</strong> canal{selected.size > 1 ? 'es' : ''}
             </p>
           )}
         </div>
@@ -601,7 +601,7 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
             touchAction: 'manipulation',
             padding: '12px 28px', borderRadius: 12, border: 'none',
             cursor: selected.size === 0 || !precio ? 'not-allowed' : 'pointer',
-            background: selected.size === 0 || !precio ? '#e5e7eb' : '#1A56DB',
+            background: selected.size === 0 || !precio ? '#e5e7eb' : '#2f5fdb',
             color: selected.size === 0 || !precio ? '#9ca3af' : '#fff',
             fontWeight: 800, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.15s',
           }}>

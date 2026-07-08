@@ -57,7 +57,7 @@ export default function Step1Photo({ onPhotoSelected }: Step1PhotoProps) {
         </label>
 
         <label
-          className="relative flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-white/10 bg-[#21262D]/50 py-6 cursor-pointer select-none"
+          className="relative flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-white/10 bg-[#f5f5f4]/50 py-6 cursor-pointer select-none"
           style={{ touchAction: 'manipulation' } as React.CSSProperties}
         >
           <ImageIcon size={26} className="text-slate-400 pointer-events-none" />
@@ -74,7 +74,7 @@ export default function Step1Photo({ onPhotoSelected }: Step1PhotoProps) {
       {/* Escritorio: drop zone */}
       <div
         className={`hidden sm:flex border-2 border-dashed rounded-xl p-14 flex-col items-center justify-center transition-colors ${
-          dragging ? 'border-blue-600 bg-blue-50' : 'border-white/10 bg-[#21262D]/50 hover:border-blue-500'
+          dragging ? 'border-blue-600 bg-blue-50' : 'border-white/10 bg-[#f5f5f4]/50 hover:border-blue-500'
         }`}
         onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
         onDragLeave={() => setDragging(false)}
