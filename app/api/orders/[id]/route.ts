@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
+import { sendWhatsApp } from '@/lib/twilio'
 
 type Ctx = { params: Promise<{ id: string }> }
 
@@ -41,7 +42,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
 
   // Verificar que el usuario es el vendedor
   const { data: order } = await supabaseAdmin
-    .from('orders').select('seller_id, buyer_id, pieza').eq('id', id).single()
+    .from('orders').select('seller_id, buyer_id, pieza, buyer_phone, precio, envio_costo').eq('id', id).single()
   if (!order) return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
   if (order.seller_id !== userId) return NextResponse.json({ error: 'Sin permiso' }, { status: 403 })
 
@@ -60,13 +61,24 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     mensaje: eventMsg,
   })
 
-  // Notificar al comprador
+  // Notificar al comprador (in-app)
   await supabaseAdmin.from('notifications').insert({
     user_id:  order.buyer_id,
     order_id: id,
     tipo:     `pedido_${estado}`,
     mensaje:  `${order.pieza}: ${eventMsg}`,
   })
+
+  // Notificar al comprador por WhatsApp si tiene teléfono
+  if (order.buyer_phone && estado !== 'cancelado') {
+    const BUYER_MSG: Record<string, string> = {
+      confirmado: `✅ *Tu pedido fue confirmado*\n\nPieza: ${order.pieza}\n\nEl vendedor está preparando tu repuesto.`,
+      despachado: `🚚 *Tu pedido va en camino*\n\nPieza: ${order.pieza}\n${tracking_code ? `Código de seguimiento: ${tracking_code}` : ''}`,
+      entregado:  `🎉 *Pedido entregado*\n\nGracias por comprar ${order.pieza} en Componenta.\n¿Todo bien? Responde esta nota si tienes algún problema.`,
+    }
+    const msg = BUYER_MSG[estado]
+    if (msg) await sendWhatsApp(order.buyer_phone, msg)
+  }
 
   return NextResponse.json({ ok: true })
 }
