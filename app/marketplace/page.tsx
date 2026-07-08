@@ -242,7 +242,8 @@ export default function MarketplacePage() {
       {/* ══ HERO — vehículo primero, solo cuando no hay búsqueda activa ══ */}
       {!inSearch && (
         <>
-          <section style={{ background:'#16181d', padding:'52px 24px', display:'grid', gridTemplateColumns:'1fr minmax(320px,420px)', gap:48, alignItems:'center', maxWidth:1280, margin:'0 auto' }}>
+          <div style={{ background:'#16181d', width:'100%', overflow:'hidden' }}>
+          <section className="hero-grid" style={{ padding:'40px 20px', display:'grid', gridTemplateColumns:'1fr minmax(300px,420px)', gap:32, alignItems:'center', maxWidth:1280, margin:'0 auto' }}>
             <div>
               <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'rgba(255,255,255,.08)', border:'1px solid rgba(255,255,255,.15)', borderRadius:20, padding:'5px 14px', fontSize:12, fontWeight:600, color:'rgba(255,255,255,.75)', marginBottom:18 }}>
                 Más de {mockInventory.length + items.length} repuestos disponibles hoy
@@ -306,7 +307,7 @@ export default function MarketplacePage() {
           </section>
 
           {/* tags populares */}
-          <div style={{ background:'#16181d', padding:'0 24px 44px', display:'flex', justifyContent:'center' }}>
+          <div style={{ padding:'0 20px 36px', display:'flex', justifyContent:'center' }}>
             <div style={{ display:'flex', gap:8, flexWrap:'wrap', justifyContent:'center', maxWidth:700 }}>
               {['Amortiguador','Alternador','Disco de freno','Radiador','Caja de cambios','Embrague'].map(t=>(
                 <button key={t} onPointerDown={()=>{setQuery(t);document.getElementById('results')?.scrollIntoView({behavior:'smooth'})}}
@@ -316,6 +317,7 @@ export default function MarketplacePage() {
               ))}
             </div>
           </div>
+          </div>{/* /dark wrapper */}
 
           {/* ── desarmadurías ── */}
           <section style={{ background:'#f7f7f5', padding:'40px 24px', borderBottom:'1px solid #ececea' }}>
@@ -593,6 +595,8 @@ export default function MarketplacePage() {
             {(cat||vSel) && <button onPointerDown={()=>{setCat(null);clrVeh();setShowFilt(false)}} style={{ marginTop:16, width:'100%', padding:12, borderRadius:10, border:'1.5px solid #fca5a5', background:'#fff5f5', color:'#b91c1c', fontSize:13, fontWeight:700, cursor:'pointer' }}>Limpiar filtros</button>}
           </div>
         </div>}
+
+      <style dangerouslySetInnerHTML={{ __html: '@media (max-width:700px){.hero-grid{grid-template-columns:1fr !important;padding:28px 16px 0 !important;gap:20px !important}}' }} />
     </div>
   )
 }

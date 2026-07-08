@@ -69,7 +69,7 @@ export default function Home() {
           </div>
         </header>
 
-        <main className="page-main" style={{ flex: 1, padding: '28px 32px 48px', maxWidth: 900, width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
+        <main className="page-main" style={{ flex: 1, padding: '20px 16px 48px', maxWidth: 900, width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
 
           {/* ── Hero ── */}
           <div className="hero-banner" style={{
@@ -110,7 +110,7 @@ export default function Home() {
           </div>
 
           {/* ── Step pills ── */}
-          <div className="step-pills" style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 22 }}>
+          <div className="step-pills" style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 22, overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
             {STEPS.map((s, i) => {
               const isDone    = step > s.num
               const isCurrent = step === s.num
