@@ -38,8 +38,12 @@ export async function GET(req: Request) {
   })
 
   if (!tokenRes.ok) {
-    console.error('ML token exchange failed', await tokenRes.text())
-    return NextResponse.redirect(new URL('/inventario?ml_error=token', BASE))
+    const errText = await tokenRes.text()
+    console.error('ML token exchange failed', errText)
+    const url = new URL('/inventario', BASE)
+    url.searchParams.set('ml_error', 'token')
+    url.searchParams.set('ml_detail', errText.slice(0, 200))
+    return NextResponse.redirect(url)
   }
 
   const tokenData = await tokenRes.json()
