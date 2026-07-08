@@ -96,18 +96,20 @@ export async function POST(req: Request) {
     ? [{ source: product.imagen_url as string }]
     : []
 
-  // Predecir categoría según el título
-  let category_id = 'MLC1747'
+  // Buscar categoría hoja por título usando domain_discovery
+  let category_id = 'MLC174408' // fallback: Repuestos para Autos
   try {
     const catRes = await fetch(
-      `https://api.mercadolibre.com/sites/MLC/category_predictor/predict?title=${encodeURIComponent(title)}`,
+      `https://api.mercadolibre.com/sites/MLC/domain_discovery/search?q=${encodeURIComponent(title)}&limit=1`,
       { headers: { Accept: 'application/json' } }
     )
     if (catRes.ok) {
       const catData = await catRes.json()
-      if (catData?.id) category_id = catData.id
+      if (Array.isArray(catData) && catData[0]?.category_id) {
+        category_id = catData[0].category_id
+      }
     }
-  } catch { /* usa fallback MLC1747 */ }
+  } catch { /* usa fallback */ }
 
   const payload: Record<string, unknown> = {
     title,
