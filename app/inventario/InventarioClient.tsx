@@ -56,11 +56,11 @@ function PartCard({ item, mlConnected, onDelete, onToggleSold, onPublishML }: {
   async function handlePublishML() {
     setLoadingML(true)
     setMlError(null)
-    const result = await onPublishML(item.id)
-    if (result) {
-      setMlResult(result)
-    } else {
-      setMlError('Error al publicar. Intenta de nuevo.')
+    try {
+      const result = await onPublishML(item.id)
+      if (result) setMlResult(result)
+    } catch (e: unknown) {
+      setMlError(e instanceof Error ? e.message : 'Error al publicar. Intenta de nuevo.')
     }
     setLoadingML(false)
   }
@@ -180,7 +180,10 @@ export default function InventarioClient({
       body: JSON.stringify({ product_id: id }),
     })
     const data = await res.json()
-    if (!res.ok) return null
+    if (!res.ok) {
+      const msg = data?.details?.message ?? data?.error ?? JSON.stringify(data)
+      throw new Error(msg)
+    }
     // Actualizar estado local
     setProducts(prev => prev.map(p =>
       p.id === id ? { ...p, ml_item_id: data.ml_item_id, ml_permalink: data.permalink } : p
