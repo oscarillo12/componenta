@@ -111,6 +111,10 @@ export async function POST(req: Request) {
     }
   } catch { /* usa fallback */ }
 
+  const attributes: { id: string; value_name: string }[] = []
+  if (product.marca) attributes.push({ id: 'BRAND', value_name: product.marca })
+  if (product.oem)   attributes.push({ id: 'PART_NUMBER', value_name: product.oem })
+
   const payload: Record<string, unknown> = {
     title,
     category_id,
@@ -120,6 +124,7 @@ export async function POST(req: Request) {
     condition:          'used',
     listing_type_id:    'free',
     description:        { plain_text: descLines.join('\n') },
+    ...(attributes.length > 0 && { attributes }),
     ...(pictures.length > 0 && { pictures }),
   }
 
