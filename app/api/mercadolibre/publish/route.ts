@@ -91,10 +91,29 @@ export async function POST(req: Request) {
     'Pieza usada extraída de desarmaduria. Verificada antes de publicar.',
   ].filter(Boolean)
 
-  // Imágenes — ML acepta URLs externas directamente
-  const pictures = product.imagen_url
-    ? [{ source: product.imagen_url as string }]
-    : []
+  // Subir imagen directamente a ML (más confiable que pasar URL externa)
+  let pictures: { id: string }[] = []
+  if (product.imagen_url) {
+    try {
+      const imgRes = await fetch(product.imagen_url as string)
+      if (imgRes.ok) {
+        const imgBuffer = await imgRes.arrayBuffer()
+        const contentType = imgRes.headers.get('content-type') ?? 'image/jpeg'
+        const ext = contentType.includes('png') ? 'png' : 'jpg'
+        const formData = new FormData()
+        formData.append('file', new Blob([imgBuffer], { type: contentType }), `image.${ext}`)
+        const mlImgRes = await fetch('https://api.mercadolibre.com/pictures/items/upload', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        })
+        if (mlImgRes.ok) {
+          const mlImg = await mlImgRes.json()
+          if (mlImg?.id) pictures = [{ id: mlImg.id }]
+        }
+      }
+    } catch { /* sin foto si falla */ }
+  }
 
   // Buscar categoría hoja por título usando domain_discovery
   let category_id = 'MLC174408' // fallback: Repuestos para Autos
