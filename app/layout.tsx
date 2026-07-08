@@ -40,6 +40,9 @@ export default function RootLayout({
         lang="es"
         className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       >
+        <head>
+          <meta name="google-site-verification" content="eYYWBuHnJIf1IOcBP_7uvl1mntycP-gX3cXjDUs9fw4" />
+        </head>
         <body className="min-h-full flex flex-col">
           <CartProvider>
             {children}
