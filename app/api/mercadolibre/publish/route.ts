@@ -103,7 +103,7 @@ export async function POST(req: Request) {
     currency_id:        'CLP',
     available_quantity: 1,
     condition:          'used',
-    listing_type_id:    'gold_special',
+    listing_type_id:    'free',
     description:        { plain_text: descLines.join('\n') },
     ...(pictures.length > 0 && { pictures }),
   }
