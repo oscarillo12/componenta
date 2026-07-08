@@ -96,9 +96,22 @@ export async function POST(req: Request) {
     ? [{ source: product.imagen_url as string }]
     : []
 
+  // Predecir categoría según el título
+  let category_id = 'MLC1747'
+  try {
+    const catRes = await fetch(
+      `https://api.mercadolibre.com/sites/MLC/category_predictor/predict?title=${encodeURIComponent(title)}`,
+      { headers: { Accept: 'application/json' } }
+    )
+    if (catRes.ok) {
+      const catData = await catRes.json()
+      if (catData?.id) category_id = catData.id
+    }
+  } catch { /* usa fallback MLC1747 */ }
+
   const payload: Record<string, unknown> = {
     title,
-    category_id:        'MLC1747',
+    category_id,
     price:              product.precio,
     currency_id:        'CLP',
     available_quantity: 1,
