@@ -150,7 +150,7 @@ ${searchResults.length > 0
 }
 
 Si hay resultados, ofrece los datos de contacto del vendedor si los tienes.
-Siempre sugiere visitar componenta.cl para ver el catálogo completo.
+Siempre sugiere visitar componenta.vercel.app para ver el catálogo completo.
 Mantén la respuesta en máximo 300 caracteres para WhatsApp.`
 
     const buyerRes = await anthropic.messages.create({
@@ -160,13 +160,13 @@ Mantén la respuesta en máximo 300 caracteres para WhatsApp.`
       messages: [{ role: 'user', content: body }],
     })
 
-    const answer = buyerRes.content[0].type === 'text' ? buyerRes.content[0].text : 'Gracias por contactar a Componenta. Visita componenta.cl para ver nuestro catálogo.'
+    const answer = buyerRes.content[0].type === 'text' ? buyerRes.content[0].text : 'Gracias por contactar a Componenta. Visita componenta.vercel.app para ver nuestro catálogo.'
 
     return twimlResponse(answer)
 
   } catch (err) {
     console.error('[whatsapp webhook]', err)
-    return twimlResponse('Hubo un error. Por favor intenta de nuevo o visita componenta.cl')
+    return twimlResponse('Hubo un error. Por favor intenta de nuevo o visita componenta.vercel.app')
   }
 }
 
