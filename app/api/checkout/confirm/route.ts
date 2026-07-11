@@ -17,11 +17,15 @@ export async function POST(req: NextRequest) {
 
   if (status.status === 2) {
     // Pago exitoso
-    await supabaseAdmin.from('orders').update({
-      payment_status: 'pagado',
-      estado: 'pagado',
-      updated_at: new Date().toISOString(),
-    }).eq('id', order.id)
+    await Promise.all([
+      supabaseAdmin.from('orders').update({
+        payment_status: 'pagado',
+        estado: 'pagado',
+        updated_at: new Date().toISOString(),
+      }).eq('id', order.id),
+      // Marcar pieza como no disponible para evitar doble venta
+      supabaseAdmin.from('products').update({ disponible: false }).eq('id', order.product_id),
+    ])
 
     await supabaseAdmin.from('order_events').insert({
       order_id: order.id,

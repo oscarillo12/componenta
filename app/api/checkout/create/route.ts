@@ -14,6 +14,13 @@ export async function POST(req: NextRequest) {
   if (!product_id || !precio || !seller_id)
     return NextResponse.json({ error: 'Datos incompletos' }, { status: 400 })
 
+  // Verificar que la pieza siga disponible (evita doble venta)
+  const { data: product } = await supabaseAdmin
+    .from('products').select('disponible').eq('id', product_id).single()
+  if (!product?.disponible) {
+    return NextResponse.json({ error: 'Esta pieza ya no está disponible. Puede que otro comprador la haya reservado.' }, { status: 409 })
+  }
+
   // Obtener email del comprador desde Clerk
   const client = await clerkClient()
   const user = await client.users.getUser(userId)
@@ -61,10 +68,10 @@ export async function POST(req: NextRequest) {
   const flowKey = process.env.FLOW_API_KEY
   if (!flowKey) {
     // Modo demo: marcar como pagado directamente
-    await supabaseAdmin.from('orders').update({
-      payment_status: 'pagado',
-      estado:         'pagado',
-    }).eq('id', order.id)
+    await Promise.all([
+      supabaseAdmin.from('orders').update({ payment_status: 'pagado', estado: 'pagado' }).eq('id', order.id),
+      supabaseAdmin.from('products').update({ disponible: false }).eq('id', product_id),
+    ])
 
     await supabaseAdmin.from('order_events').insert({
       order_id: order.id,
