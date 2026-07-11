@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Product } from '@/lib/supabase'
-import { Plus, Search, Package, Trash2, CheckCircle, RotateCcw, Loader2, ExternalLink, Eye, Pencil, X } from 'lucide-react'
+import { Plus, Search, Package, Trash2, CheckCircle, RotateCcw, Loader2, ExternalLink, Eye, Pencil, X, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 
 const estadoConfig: Record<string, { label: string; color: string; bg: string }> = {
@@ -71,20 +71,52 @@ function EditModal({ item, onClose, onSave }: {
     descripcion: item.descripcion ?? '',
   })
   const [saving, setSaving] = useState(false)
+  const [oemSuggesting, setOemSuggesting] = useState(false)
+  const [oemError, setOemError] = useState<string | null>(null)
+
+  async function suggestOem() {
+    setOemSuggesting(true)
+    setOemError(null)
+    try {
+      const res = await fetch('/api/suggest-oem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pieza: form.pieza, marca: form.marca, modelo: form.modelo, anios: form.anios }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.oem) {
+        setOemError(data.oem === null ? 'La IA no pudo sugerir un código para esta pieza' : (data.error ?? 'Error al sugerir'))
+        return
+      }
+      setForm(p => ({ ...p, oem: data.oem }))
+    } catch {
+      setOemError('Sin conexión. Intenta de nuevo.')
+    } finally {
+      setOemSuggesting(false)
+    }
+  }
 
   const field = (label: string, key: keyof typeof form, type: 'text' | 'number' | 'textarea' = 'text') => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</label>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+      <label style={{ fontSize: 11, fontWeight: 700, color: '#9aa0aa', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</label>
       {type === 'textarea' ? (
         <textarea rows={3} value={form[key] as string}
           onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))}
-          style={{ fontSize: 13, border: '1.5px solid #e5e7eb', borderRadius: 9, padding: '8px 10px', color: '#16181d', resize: 'vertical', outline: 'none', fontFamily: 'inherit' }} />
+          style={{ fontSize: 13.5, border: '1.5px solid #ececea', borderRadius: 10, padding: '10px 12px', color: '#16181d', resize: 'vertical', outline: 'none', fontFamily: 'inherit', background: '#fafafa', transition: 'border-color .15s' }}
+          onFocus={e => (e.currentTarget.style.borderColor = '#2f5fdb')}
+          onBlur={e => (e.currentTarget.style.borderColor = '#ececea')} />
       ) : (
         <input type={type} value={form[key] as string | number}
           onChange={e => setForm(p => ({ ...p, [key]: type === 'number' ? Number(e.target.value) : e.target.value }))}
-          style={{ fontSize: 13, border: '1.5px solid #e5e7eb', borderRadius: 9, padding: '8px 10px', color: '#16181d', outline: 'none' }} />
+          style={{ fontSize: 13.5, border: '1.5px solid #ececea', borderRadius: 10, padding: '10px 12px', color: '#16181d', outline: 'none', background: '#fafafa', transition: 'border-color .15s' }}
+          onFocus={e => (e.currentTarget.style.borderColor = '#2f5fdb')}
+          onBlur={e => (e.currentTarget.style.borderColor = '#ececea')} />
       )}
     </div>
+  )
+
+  const section = (label: string) => (
+    <p style={{ fontSize: 11, fontWeight: 800, color: '#2f5fdb', textTransform: 'uppercase', letterSpacing: 0.6, margin: '4px 0 -2px' }}>{label}</p>
   )
 
   async function handleSave() {
@@ -94,47 +126,105 @@ function EditModal({ item, onClose, onSave }: {
     onClose()
   }
 
+  const liveQuality = computeQuality({ ...item, ...form } as Product)
+
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} onClick={onClose} />
-      <div style={{ position: 'relative', background: '#fff', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 560, maxHeight: '90vh', overflowY: 'auto', padding: '24px 24px 32px', boxShadow: '0 -8px 40px rgba(0,0,0,0.15)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 800, color: '#16181d', margin: 0 }}>Editar pieza</h2>
-          <button onClick={onClose} style={{ background: '#f5f5f4', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', display: 'flex' }}><X size={16} color="#6b7280" /></button>
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(17,24,39,0.5)' }} onClick={onClose} />
+      <div style={{ position: 'relative', background: '#fff', borderRadius: '22px 22px 0 0', width: '100%', maxWidth: 580, maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 -12px 48px rgba(0,0,0,0.18)' }}>
+
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '22px 24px 18px', borderBottom: '1px solid #f1f2f4', flexShrink: 0 }}>
+          <div style={{ width: 42, height: 42, borderRadius: 12, background: '#eef3fc', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Pencil size={18} color="#2f5fdb" />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 800, color: '#16181d', margin: 0 }}>Editar pieza</h2>
+            <p style={{ fontSize: 12, color: '#9aa0aa', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.pieza}</p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            <QualityRing score={liveQuality.score} color={liveQuality.color} size={38} />
+            <button onClick={onClose} style={{ background: '#f5f5f4', border: 'none', borderRadius: 8, padding: 7, cursor: 'pointer', display: 'flex' }}><X size={16} color="#6b7280" /></button>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {field('Nombre de la pieza', 'pieza')}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            {field('Marca', 'marca')}
-            {field('Modelo', 'modelo')}
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            {field('Año(s)', 'anios')}
-            {field('Código OEM', 'oem')}
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>Estado</label>
-              <select value={form.estado} onChange={e => setForm(p => ({ ...p, estado: e.target.value as Product['estado'] }))}
-                style={{ fontSize: 13, border: '1.5px solid #e5e7eb', borderRadius: 9, padding: '8px 10px', color: '#16181d', outline: 'none', background: '#fff' }}>
-                <option value="excelente">Excelente</option>
-                <option value="bueno">Buen estado</option>
-                <option value="con-detalles">Con detalles</option>
-                <option value="para-reparar">Para reparar</option>
-              </select>
+        {/* Body */}
+        <div style={{ overflowY: 'auto', padding: '20px 24px 8px', flex: 1 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {section('Información básica')}
+            {field('Nombre de la pieza', 'pieza')}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              {field('Marca', 'marca')}
+              {field('Modelo', 'modelo')}
             </div>
-            {field('Precio (CLP)', 'precio', 'number')}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              {field('Año(s)', 'anios')}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: '#9aa0aa', textTransform: 'uppercase', letterSpacing: 0.5 }}>Código OEM</label>
+                  <button type="button" onClick={suggestOem} disabled={oemSuggesting || !form.pieza.trim()}
+                    style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 7, border: '1px solid #d7e3f7', background: '#eef3fc', fontSize: 10, color: '#2f5fdb', fontWeight: 700, cursor: oemSuggesting ? 'default' : 'pointer', opacity: !form.pieza.trim() ? 0.5 : 1 }}>
+                    {oemSuggesting ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
+                    {oemSuggesting ? 'Buscando…' : 'Sugerir con IA'}
+                  </button>
+                </div>
+                <input value={form.oem} onChange={e => { setOemError(null); setForm(p => ({ ...p, oem: e.target.value })) }}
+                  placeholder="Ej: 27060-21050"
+                  style={{ fontSize: 13.5, border: '1.5px solid #ececea', borderRadius: 10, padding: '10px 12px', color: '#16181d', outline: 'none', background: '#fafafa' }}
+                  onFocus={e => (e.currentTarget.style.borderColor = '#2f5fdb')}
+                  onBlur={e => (e.currentTarget.style.borderColor = '#ececea')} />
+                {oemError && <p style={{ fontSize: 10.5, color: '#b91c1c', margin: 0 }}>{oemError}</p>}
+              </div>
+            </div>
+
+            {section('Precio y estado')}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <label style={{ fontSize: 11, fontWeight: 700, color: '#9aa0aa', textTransform: 'uppercase', letterSpacing: 0.5 }}>Precio (CLP)</label>
+                <div style={{ position: 'relative' }}>
+                  <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13.5, fontWeight: 700, color: '#9aa0aa' }}>$</span>
+                  <input type="number" value={form.precio}
+                    onChange={e => setForm(p => ({ ...p, precio: Number(e.target.value) }))}
+                    style={{ width: '100%', boxSizing: 'border-box', fontSize: 13.5, fontWeight: 700, border: '1.5px solid #ececea', borderRadius: 10, padding: '10px 12px 10px 24px', color: '#16181d', outline: 'none', background: '#fafafa' }} />
+                </div>
+              </div>
+              {field('Envío', 'envio')}
+            </div>
+
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 700, color: '#9aa0aa', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 8 }}>Estado de la pieza</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {(['excelente', 'bueno', 'con-detalles', 'para-reparar'] as const).map(id => {
+                  const cfg = estadoConfig[id]
+                  const active = form.estado === id
+                  return (
+                    <button type="button" key={id} onClick={() => setForm(p => ({ ...p, estado: id }))}
+                      style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 11px', borderRadius: 10, border: `1.5px solid ${active ? cfg.color : '#ececea'}`, background: active ? cfg.bg : '#fff', cursor: 'pointer', textAlign: 'left' }}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: cfg.color, flexShrink: 0 }} />
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color: active ? cfg.color : '#374151' }}>{cfg.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {section('Descripción')}
+            {field('Descripción', 'descripcion', 'textarea')}
           </div>
-          {field('Envío', 'envio')}
-          {field('Descripción', 'descripcion', 'textarea')}
         </div>
 
-        <button onClick={handleSave} disabled={saving}
-          style={{ marginTop: 20, width: '100%', padding: '12px 0', background: '#2f5fdb', color: '#fff', border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: saving ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-          {saving ? <><Loader2 size={14} className="animate-spin" /> Guardando…</> : 'Guardar cambios'}
-        </button>
+        {/* Footer */}
+        <div style={{ display: 'flex', gap: 10, padding: '16px 24px', borderTop: '1px solid #f1f2f4', flexShrink: 0 }}>
+          <button onClick={onClose}
+            style={{ padding: '12px 20px', background: '#fff', color: '#374151', border: '1.5px solid #ececea', borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+            Cancelar
+          </button>
+          <button onClick={handleSave} disabled={saving}
+            style={{ flex: 1, padding: '12px 0', background: '#2f5fdb', color: '#fff', border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: saving ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 14px rgba(47,95,219,0.3)' }}>
+            {saving ? <><Loader2 size={14} className="animate-spin" /> Guardando…</> : <><CheckCircle size={15} /> Guardar cambios</>}
+          </button>
+        </div>
       </div>
     </div>
   )

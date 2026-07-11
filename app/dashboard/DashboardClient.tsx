@@ -4,7 +4,7 @@ import Link from 'next/link'
 import {
   TrendingUp, Package, Eye, Tag, ShoppingBag,
   ArrowRight, Zap, Plus, BarChart3, AlertCircle,
-  MessageCircle, MapPin, Phone
+  MessageCircle, MapPin, Phone, Bot, Store
 } from 'lucide-react'
 
 type TopPieza = {
@@ -31,6 +31,8 @@ interface Props {
   rendimiento:      RendimientoPieza[]
   topRegiones:      { region: string; count: number }[]
   dailyViews:       { day: string; count: number }[]
+  consultasChat:    number
+  mlConnected:      boolean
 }
 
 function StatCard({ label, value, sub, icon: Icon, color, trend }: {
@@ -63,7 +65,7 @@ const ESTADO_DOT: Record<string, string> = {
 export default function DashboardClient({
   totalPublicadas, totalDisponibles, totalVendidas,
   totalVistas, ingresosMes, topPiezas, recentItems, isDemo, plan, hasPhone,
-  rendimiento, topRegiones, dailyViews,
+  rendimiento, topRegiones, dailyViews, consultasChat, mlConnected,
 }: Props) {
   const isPro = plan === 'pro'
   const tasaVenta = totalPublicadas > 0 ? Math.round((totalVendidas / totalPublicadas) * 100) : 0
@@ -253,6 +255,62 @@ export default function DashboardClient({
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Consultas por canal */}
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', gap: 7 }}>
+              <MessageCircle size={14} color="#16a34a" />
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>Consultas por canal</span>
+            </div>
+            <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+              {/* Chat Componenta — real */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 30, height: 30, borderRadius: 9, background: '#eef3fc', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Store size={14} color="#1d4ed8" />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: '#374151', margin: '0 0 3px' }}>Chat Componenta</p>
+                  <div style={{ height: 5, background: '#f3f4f6', borderRadius: 4 }}>
+                    <div style={{ height: '100%', width: consultasChat > 0 ? '100%' : '0%', background: '#1d4ed8', borderRadius: 4 }} />
+                  </div>
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 800, color: '#111827', flexShrink: 0 }}>{consultasChat}</span>
+              </div>
+
+              {/* WhatsApp — próximamente con el bot */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, opacity: 0.6 }}>
+                <div style={{ width: 30, height: 30, borderRadius: 9, background: '#f0fdf9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Bot size={14} color="#25d366" />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: '#374151', margin: '0 0 3px' }}>WhatsApp (bot)</p>
+                  <div style={{ height: 5, background: '#f3f4f6', borderRadius: 4 }} />
+                </div>
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#25d366', background: '#f0fdf9', border: '1px solid #a7f3d0', padding: '2px 7px', borderRadius: 20, flexShrink: 0, whiteSpace: 'nowrap' }}>Próximamente</span>
+              </div>
+
+              {/* MercadoLibre — conectado (sin tracking aún) o invitación a conectar */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, opacity: mlConnected ? 0.6 : 1 }}>
+                <div style={{ width: 30, height: 30, borderRadius: 9, background: '#fffbeb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <ShoppingBag size={14} color="#b45309" />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: '#374151', margin: '0 0 3px' }}>MercadoLibre</p>
+                  <div style={{ height: 5, background: '#f3f4f6', borderRadius: 4 }} />
+                </div>
+                {mlConnected ? (
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#b45309', background: '#fffbeb', border: '1px solid #fcd34d', padding: '2px 7px', borderRadius: 20, flexShrink: 0, whiteSpace: 'nowrap' }}>Próximamente</span>
+                ) : (
+                  <a href="/api/mercadolibre/connect" style={{ fontSize: 10, fontWeight: 700, color: '#fff', background: '#b45309', padding: '4px 9px', borderRadius: 20, flexShrink: 0, whiteSpace: 'nowrap', textDecoration: 'none' }}>Conectar →</a>
+                )}
+              </div>
+
+              <p style={{ fontSize: 11, color: '#9ca3af', margin: 0, lineHeight: 1.5 }}>
+                Cuando actives el bot de WhatsApp vas a ver aquí cuántas consultas llegan por ese canal, junto a las del chat de Componenta y MercadoLibre.
+              </p>
+            </div>
           </div>
 
           {/* Vistas últimos 7 días */}

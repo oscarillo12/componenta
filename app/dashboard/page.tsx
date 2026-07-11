@@ -21,6 +21,19 @@ export default async function DashboardPage() {
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
+  // Estado de conexión con MercadoLibre (para el canal de consultas)
+  let mlConnected = false
+  try {
+    const { data: mlToken } = await supabaseAdmin
+      .from('ml_tokens')
+      .select('expires_at')
+      .eq('user_id', userId)
+      .single()
+    mlConnected = !!mlToken
+  } catch {
+    mlConnected = false
+  }
+
   const items      = products ?? []
   const disponibles = items.filter(p => p.disponible)
   const vendidas    = items.filter(p => !p.disponible)
@@ -86,6 +99,10 @@ export default async function DashboardPage() {
     precio:    p.precio,
   })).sort((a, b) => b.vistas - a.vistas).slice(0, 8)
 
+  // Consultas por canal — Chat Componenta es el único canal medido hoy.
+  // WhatsApp se activará con el bot; MercadoLibre cuando se sume el tracking de preguntas de su API.
+  const consultasChat = Object.values(chatCount).reduce((s, n) => s + n, 0)
+
   return (
     <SellerLayout section="dashboard">
       <DashboardClient
@@ -102,6 +119,8 @@ export default async function DashboardPage() {
         rendimiento={rendimiento}
         topRegiones={topRegiones}
         dailyViews={dailyViews}
+        consultasChat={consultasChat}
+        mlConnected={mlConnected}
       />
     </SellerLayout>
   )

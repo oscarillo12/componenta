@@ -72,72 +72,65 @@ export default function SolicitudesPage() {
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '10px 14px', borderRadius: 10, fontSize: 14,
-    border: '1.5px solid #30363D', background: '#161B22', color: '#E6EDF3',
-    outline: 'none', boxSizing: 'border-box',
+    border: '1.5px solid #ececea', background: '#fafafa', color: '#16181d',
+    outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0D1117', fontFamily: 'system-ui,sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#f7f7f5', fontFamily: "'Inter',system-ui,sans-serif" }}>
 
       {/* Nav */}
-      <header style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', gap: 14, position: 'sticky', top: 0, background: 'rgba(13,17,23,0.95)', backdropFilter: 'blur(10px)', zIndex: 40 }}>
-        <Link href="/marketplace" style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', color: '#8B949E', fontSize: 13 }}>
+      <header style={{ borderBottom: '1px solid #ececea', padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', gap: 14, position: 'sticky', top: 0, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', zIndex: 40 }}>
+        <Link href="/marketplace" style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', color: '#6b7280', fontSize: 13, fontWeight: 600 }}>
           <ArrowLeft size={15} /> Marketplace
         </Link>
-        <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.1)' }} />
+        <div style={{ width: 1, height: 20, background: '#ececea' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <Search size={15} color="#388BFD" />
-          <span style={{ fontSize: 14, fontWeight: 700, color: '#E6EDF3' }}>Tablero de búsquedas</span>
+          <Search size={15} color="#2f5fdb" />
+          <span style={{ fontSize: 14, fontWeight: 700, color: '#16181d' }}>Tablero de búsquedas</span>
         </div>
       </header>
 
       <main style={{ maxWidth: 720, margin: '0 auto', padding: '32px 16px' }}>
 
         {/* Hero */}
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div style={{ width: 60, height: 60, borderRadius: 18, background: 'linear-gradient(135deg,rgba(56,139,253,0.2),rgba(56,139,253,0.08))', border: '1.5px solid rgba(56,139,253,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 4px 20px rgba(56,139,253,0.15)' }}>
-            <Search size={28} color="#79C0FF" />
+        <div style={{ textAlign: 'center', marginBottom: 36 }}>
+          <div style={{ width: 56, height: 56, borderRadius: 16, background: '#eef3fc', border: '1.5px solid #d7e3f7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <Search size={26} color="#2f5fdb" />
           </div>
-          <h1 style={{ fontSize: 26, fontWeight: 900, color: '#E6EDF3', margin: '0 0 10px', letterSpacing: -0.5 }}>
+          <h1 style={{ fontSize: 26, fontWeight: 900, color: '#16181d', margin: '0 0 8px', letterSpacing: -0.5 }}>
             ¿Buscas una pieza?
           </h1>
-          <p style={{ fontSize: 15, color: '#8B949E', margin: '0 auto', maxWidth: 480, lineHeight: 1.65 }}>
+          <p style={{ fontSize: 15, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>
             Publica lo que necesitas y todos los desarmaderos de la zona recibirán un WhatsApp al instante.
           </p>
         </div>
 
         {/* Formulario */}
-        <div style={{ background: '#161B22', border: '1.5px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '28px 24px', marginBottom: 40 }}>
+        <div style={{ background: '#fff', border: '1.5px solid #ececea', borderRadius: 18, padding: '24px 20px', marginBottom: 36, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
 
           {enviado ? (
-            <div style={{ textAlign: 'center', padding: '32px 0' }}>
-              <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(63,185,80,0.12)', border: '2px solid rgba(63,185,80,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                <CheckCircle size={32} color="#3FB950" />
-              </div>
-              <p style={{ fontSize: 18, fontWeight: 900, color: '#E6EDF3', margin: '0 0 8px' }}>¡Búsqueda publicada!</p>
-              <p style={{ fontSize: 13, color: '#8B949E', margin: '0 0 24px', lineHeight: 1.6 }}>Los desarmaderos de la zona recibieron un WhatsApp con tu solicitud. Espera su contacto.</p>
+            <div style={{ textAlign: 'center', padding: '24px 0' }}>
+              <CheckCircle size={40} color="#16a34a" style={{ margin: '0 auto 12px', display: 'block' }} />
+              <p style={{ fontSize: 17, fontWeight: 800, color: '#16181d', margin: '0 0 8px' }}>¡Búsqueda enviada!</p>
+              <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 20px' }}>Los desarmaderos de la zona recibieron tu WhatsApp. Espera su contacto.</p>
               <button
                 onClick={() => setEnviado(false)}
-                style={{ padding: '10px 28px', background: '#21262D', border: '1.5px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#E6EDF3', fontWeight: 700, fontSize: 13, cursor: 'pointer', transition: 'border-color 0.15s' }}
-                onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.22)')}
-                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)')}
+                style={{ padding: '9px 24px', background: '#fff', border: '1.5px solid #ececea', borderRadius: 10, color: '#16181d', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
               >
                 Publicar otra búsqueda
               </button>
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-                <div style={{ width: 6, height: 20, background: '#388BFD', borderRadius: 3 }} />
-                <p style={{ fontSize: 14, fontWeight: 800, color: '#E6EDF3', margin: 0 }}>Nueva búsqueda</p>
-              </div>
+              <p style={{ fontSize: 13, fontWeight: 700, color: '#16181d', margin: '0 0 16px' }}>Nueva búsqueda</p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
 
                 {/* Pieza (obligatorio) */}
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#8B949E', display: 'block', marginBottom: 5 }}>
-                    ¿Qué pieza buscas? <span style={{ color: '#F85149' }}>*</span>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 5 }}>
+                    ¿Qué pieza buscas? <span style={{ color: '#b91c1c' }}>*</span>
                   </label>
                   <input
                     style={inputStyle}
@@ -151,22 +144,22 @@ export default function SolicitudesPage() {
                 {/* Marca / Modelo / Año */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px', gap: 10 }}>
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: '#8B949E', display: 'block', marginBottom: 5 }}>Marca</label>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 5 }}>Marca</label>
                     <input style={inputStyle} placeholder="Toyota" value={form.marca} onChange={e => setForm(f => ({ ...f, marca: e.target.value }))} />
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: '#8B949E', display: 'block', marginBottom: 5 }}>Modelo</label>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 5 }}>Modelo</label>
                     <input style={inputStyle} placeholder="Yaris" value={form.modelo} onChange={e => setForm(f => ({ ...f, modelo: e.target.value }))} />
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: '#8B949E', display: 'block', marginBottom: 5 }}>Año</label>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 5 }}>Año</label>
                     <input style={inputStyle} placeholder="2015" value={form.anio} onChange={e => setForm(f => ({ ...f, anio: e.target.value }))} />
                   </div>
                 </div>
 
                 {/* Descripción */}
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#8B949E', display: 'block', marginBottom: 5 }}>Descripción adicional (opcional)</label>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 5 }}>Descripción adicional (opcional)</label>
                   <textarea
                     style={{ ...inputStyle, resize: 'vertical', minHeight: 64 }}
                     placeholder="OEM, detalles de desgaste, urgencia…"
@@ -178,25 +171,25 @@ export default function SolicitudesPage() {
                 {/* Nombre y teléfono */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: '#8B949E', display: 'block', marginBottom: 5 }}>
-                      Tu nombre <span style={{ color: '#F85149' }}>*</span>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 5 }}>
+                      Tu nombre <span style={{ color: '#b91c1c' }}>*</span>
                     </label>
                     <input style={inputStyle} placeholder="Juan Pérez" value={form.buyer_name} onChange={e => setForm(f => ({ ...f, buyer_name: e.target.value }))} required />
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: '#8B949E', display: 'block', marginBottom: 5 }}>WhatsApp</label>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 5 }}>WhatsApp</label>
                     <input style={inputStyle} placeholder="+569 1234 5678" value={form.buyer_phone} onChange={e => setForm(f => ({ ...f, buyer_phone: e.target.value }))} />
                   </div>
                 </div>
 
                 {error && (
-                  <p style={{ fontSize: 12, color: '#F85149', margin: 0 }}>{error}</p>
+                  <p style={{ fontSize: 12, color: '#b91c1c', margin: 0 }}>{error}</p>
                 )}
 
                 <button
                   type="submit"
                   disabled={enviando || !form.pieza.trim() || !form.buyer_name.trim()}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '13px', borderRadius: 12, border: 'none', background: enviando || !form.pieza.trim() || !form.buyer_name.trim() ? '#21262D' : 'linear-gradient(135deg,#388BFD,#1F6FEB)', color: enviando || !form.pieza.trim() || !form.buyer_name.trim() ? '#6E7681' : '#fff', fontWeight: 800, fontSize: 14, cursor: enviando ? 'default' : 'pointer', transition: 'opacity 0.2s', boxShadow: !form.pieza.trim() || !form.buyer_name.trim() ? 'none' : '0 4px 14px rgba(56,139,253,0.3)' }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '13px', borderRadius: 12, border: 'none', background: enviando || !form.pieza.trim() || !form.buyer_name.trim() ? '#ececea' : '#2f5fdb', color: enviando || !form.pieza.trim() || !form.buyer_name.trim() ? '#9aa0aa' : '#fff', fontWeight: 800, fontSize: 14, cursor: enviando ? 'default' : 'pointer', transition: 'all 0.2s', boxShadow: enviando || !form.pieza.trim() || !form.buyer_name.trim() ? 'none' : '0 4px 14px rgba(47,95,219,0.3)' }}
                 >
                   {enviando
                     ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Enviando…</>
@@ -210,63 +203,65 @@ export default function SolicitudesPage() {
 
         {/* Tablero de búsquedas activas */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
-            <Package size={15} color="#8B949E" />
-            <h2 style={{ fontSize: 16, fontWeight: 800, color: '#E6EDF3', margin: 0 }}>Búsquedas activas</h2>
-            {!loading && (
-              <span style={{ fontSize: 11, color: '#6E7681', background: '#21262D', border: '1px solid rgba(255,255,255,0.07)', padding: '2px 10px', borderRadius: 20, marginLeft: 'auto', fontWeight: 600 }}>
-                {solicitudes.length} publicadas
-              </span>
-            )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <Package size={15} color="#9aa0aa" />
+            <h2 style={{ fontSize: 16, fontWeight: 800, color: '#16181d', margin: 0 }}>Búsquedas activas</h2>
+            <span style={{ fontSize: 11, color: '#6b7280', background: '#f0f0ee', padding: '2px 8px', borderRadius: 20, marginLeft: 'auto' }}>
+              {solicitudes.length} publicadas
+            </span>
           </div>
 
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-              <Loader2 size={28} color="#388BFD" style={{ animation: 'spin 1s linear infinite', display: 'inline-block', opacity: 0.6 }} />
-              <p style={{ fontSize: 13, color: '#6E7681', margin: '12px 0 0' }}>Cargando búsquedas…</p>
+            <div style={{ textAlign: 'center', padding: 40 }}>
+              <Loader2 size={24} color="#9aa0aa" style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }} />
             </div>
           ) : solicitudes.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '56px 24px', background: '#161B22', borderRadius: 18, border: '1.5px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ width: 52, height: 52, borderRadius: 14, background: '#21262D', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-                <Search size={24} color="#30363D" />
-              </div>
-              <p style={{ fontSize: 15, fontWeight: 700, color: '#8B949E', margin: '0 0 6px' }}>Sin búsquedas aún</p>
-              <p style={{ fontSize: 13, color: '#6E7681', margin: 0 }}>Sé el primero en publicar lo que buscas</p>
+            <div style={{ textAlign: 'center', padding: '48px 20px', background: '#fff', borderRadius: 16, border: '1.5px dashed #d7e3f7' }}>
+              <Search size={32} color="#2f5fdb" style={{ margin: '0 auto 12px', display: 'block' }} />
+              <p style={{ fontSize: 15, fontWeight: 700, color: '#16181d', margin: '0 0 6px' }}>Aún no hay búsquedas publicadas</p>
+              <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>¡Sé el primero en publicar la tuya arriba! 👆</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {solicitudes.map(s => (
-                <div key={s.id} style={{ background: '#161B22', border: '1.5px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '18px 20px', transition: 'border-color 0.15s' }}
-                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.14)')}
-                  onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)')}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+              {solicitudes.map(s => {
+                const isRecent = (Date.now() - new Date(s.created_at).getTime()) < 10 * 60000
+                return (
+                <div key={s.id}
+                  style={{ background: '#fff', border: `1.5px solid ${isRecent ? '#a9c2f2' : '#ececea'}`, borderRadius: 14, padding: '16px 18px', transition: 'border-color 0.15s', boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = '#2f5fdb'}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = isRecent ? '#a9c2f2' : '#ececea'}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: s.descripcion ? 8 : 0 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 15, fontWeight: 800, color: '#E6EDF3', margin: '0 0 8px' }}>{s.pieza}</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+                        <p style={{ fontSize: 15, fontWeight: 800, color: '#16181d', margin: 0 }}>{s.pieza}</p>
+                        {isRecent && (
+                          <span style={{ fontSize: 9, fontWeight: 800, color: '#fff', background: '#2f5fdb', padding: '2px 7px', borderRadius: 20, letterSpacing: 0.3 }}>
+                            NUEVA
+                          </span>
+                        )}
+                      </div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                         {(s.marca || s.modelo || s.anio) && (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#79C0FF', background: 'rgba(56,139,253,0.1)', border: '1px solid rgba(56,139,253,0.2)', padding: '3px 9px', borderRadius: 20, fontWeight: 600 }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#2f5fdb', background: '#eef3fc', padding: '2px 8px', borderRadius: 20, fontWeight: 600 }}>
                             <Car size={10} /> {[s.marca, s.modelo, s.anio].filter(Boolean).join(' ')}
                           </span>
                         )}
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#6E7681', background: '#21262D', padding: '3px 8px', borderRadius: 20 }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#9aa0aa' }}>
                           <Clock size={10} /> {timeAgo(s.created_at)}
                         </span>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0, background: '#21262D', padding: '4px 10px', borderRadius: 20 }}>
-                      <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#388BFD22', border: '1px solid #388BFD44', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#79C0FF', fontWeight: 700 }}>
-                        {s.buyer_name.charAt(0).toUpperCase()}
-                      </div>
-                      <span style={{ fontSize: 12, color: '#8B949E', fontWeight: 600 }}>{s.buyer_name}</span>
-                    </div>
+                    <span style={{ fontSize: 12, color: '#6b7280', flexShrink: 0, fontWeight: 500 }}>{s.buyer_name}</span>
                   </div>
                   {s.descripcion && (
-                    <p style={{ fontSize: 13, color: '#8B949E', margin: '12px 0 0', lineHeight: 1.6, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 12 }}>
+                    <p style={{ fontSize: 12, color: '#6b7280', margin: '8px 0 0', lineHeight: 1.5, borderTop: '1px solid #f1f2f4', paddingTop: 8 }}>
                       {s.descripcion}
                     </p>
                   )}
                 </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
