@@ -69,6 +69,8 @@ export default function MiTiendaPage() {
   const [specInput, setSpecInput] = useState('')
   const [copied,   setCopied]   = useState(false)
   const [gmcCopied, setGmcCopied] = useState(false)
+  const [activeChannel, setActiveChannel] = useState<'meta' | 'gadw' | 'wacatalog'>('meta')
+  const [metaCopied, setMetaCopied] = useState(false)
   const [aiLoading, setAiLoading] = useState(false)
   const [step, setStep] = useState(0)
   const [uploadingBanner, setUploadingBanner] = useState(false)
@@ -440,6 +442,170 @@ export default function MiTiendaPage() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* ── Más canales de distribución ── */}
+        <div style={{ marginTop: 20, background: '#fff', borderRadius: 16, border: '1px solid #ececea', overflow: 'hidden' }}>
+
+          {/* Header */}
+          <div style={{ padding: '18px 24px', borderBottom: '1px solid #f1f2f4' }}>
+            <h2 style={{ fontSize: 15, fontWeight: 800, color: '#16181d', margin: '0 0 4px' }}>Más canales de venta</h2>
+            <p style={{ fontSize: 12, color: '#9aa0aa', margin: 0 }}>Llega a más compradores publicando en múltiples plataformas</p>
+          </div>
+
+          {/* Tabs */}
+          <div style={{ display: 'flex', borderBottom: '1px solid #f1f2f4', padding: '0 24px', overflowX: 'auto' }}>
+            {([
+              { id: 'meta',   label: 'Facebook + Instagram' },
+              { id: 'gadw',   label: 'Google Ads' },
+              { id: 'wacatalog', label: 'WhatsApp Catalog' },
+            ] as const).map(tab => (
+              <button key={tab.id} onPointerDown={() => setActiveChannel(tab.id as typeof activeChannel)}
+                style={{ padding: '12px 16px', fontSize: 12.5, fontWeight: activeChannel === tab.id ? 800 : 600, color: activeChannel === tab.id ? '#2f5fdb' : '#9aa0aa', background: 'none', border: 'none', borderBottom: activeChannel === tab.id ? '2px solid #2f5fdb' : '2px solid transparent', cursor: 'pointer', marginBottom: -1, whiteSpace: 'nowrap' }}>
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Contenido Facebook + Instagram */}
+          {activeChannel === 'meta' && (
+            <div style={{ padding: '20px 24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {/* Facebook icon */}
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: '#1877F2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ color: '#fff', fontWeight: 900, fontSize: 16, lineHeight: 1 }}>f</span>
+                  </div>
+                  {/* Instagram icon */}
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid #fff' }} />
+                  </div>
+                </div>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 800, color: '#16181d', margin: 0 }}>Meta Commerce Manager</p>
+                  <p style={{ fontSize: 11, color: '#9aa0aa', margin: '2px 0 0' }}>Publica en Facebook Shopping e Instagram Shopping al mismo tiempo</p>
+                </div>
+              </div>
+
+              <label style={{ display: 'block', fontSize: 10.5, fontWeight: 700, color: '#9aa0aa', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.6px' }}>
+                Usa el mismo feed que Google (Meta lo acepta)
+              </label>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                <div style={{ flex: 1, background: '#f9fafb', border: '1.5px solid #ececea', borderRadius: 9, padding: '10px 12px', fontSize: 12, color: '#374151', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  https://componenta.vercel.app/api/merchant-feed
+                </div>
+                <button
+                  onPointerDown={() => { navigator.clipboard.writeText('https://componenta.vercel.app/api/merchant-feed'); setMetaCopied(true); setTimeout(() => setMetaCopied(false), 2000) }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderRadius: 9, border: '1.5px solid #ececea', background: '#fff', fontSize: 12, fontWeight: 600, color: '#374151', cursor: 'pointer', flexShrink: 0 }}>
+                  {metaCopied ? <Check size={13} color="#2f5fdb" /> : <Copy size={13} color="#9aa0aa" />}
+                  {metaCopied ? 'Copiada' : 'Copiar'}
+                </button>
+              </div>
+
+              <p style={{ fontSize: 12, fontWeight: 700, color: '#374151', margin: '0 0 10px' }}>Configurar en 4 pasos</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {([
+                  'Entra a business.facebook.com y crea o abre tu cuenta Business.',
+                  'Ve a Commerce Manager → Catálogos → Crear catálogo → Productos de comercio electrónico.',
+                  'En Fuentes de datos, elige "Fuente de datos programada" y pega la URL del feed.',
+                  'Conecta el catálogo a tu página de Facebook y/o cuenta de Instagram para activar Shopping.',
+                ]).map((text, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                    <span style={{ width: 20, height: 20, borderRadius: '50%', background: '#eef3fc', color: '#2f5fdb', fontSize: 10, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
+                    <p style={{ fontSize: 12, color: '#374151', margin: 0, lineHeight: 1.5 }}>{text}</p>
+                  </div>
+                ))}
+              </div>
+              <a href="https://business.facebook.com/commerce" target="_blank" rel="noopener noreferrer"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 14, fontSize: 12, color: '#1877F2', fontWeight: 700, textDecoration: 'none' }}>
+                <ExternalLink size={12} /> Abrir Meta Commerce Manager
+              </a>
+            </div>
+          )}
+
+          {/* Contenido Google Ads */}
+          {activeChannel === 'gadw' && (
+            <div style={{ padding: '20px 24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: '#fff', border: '1.5px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span style={{ fontSize: 13, fontWeight: 900 }}>G</span>
+                </div>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 800, color: '#16181d', margin: 0 }}>Google Ads — Performance Max</p>
+                  <p style={{ fontSize: 11, color: '#9aa0aa', margin: '2px 0 0' }}>Muestra anuncios automáticos de tus piezas en Search, YouTube, Gmail y Maps</p>
+                </div>
+              </div>
+
+              <p style={{ fontSize: 12.5, color: '#374151', margin: '0 0 14px', lineHeight: 1.5 }}>
+                Una vez que tu catálogo esté en Google Merchant Center, puedes crear una campaña <strong>Performance Max</strong> en Google Ads. Google usa tus productos y genera anuncios automáticamente en todos sus canales.
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+                {([
+                  'Conecta tu cuenta de Google Merchant Center (sección anterior de esta página).',
+                  'Abre ads.google.com → Nueva campaña → Performance Max.',
+                  'Selecciona tu catálogo de Componenta como fuente de productos.',
+                  'Google genera los anuncios automáticamente y los optimiza solo.',
+                ]).map((text, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                    <span style={{ width: 20, height: 20, borderRadius: '50%', background: '#f0fdf4', color: '#16a34a', fontSize: 10, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
+                    <p style={{ fontSize: 12, color: '#374151', margin: 0, lineHeight: 1.5 }}>{text}</p>
+                  </div>
+                ))}
+              </div>
+
+              <a href="https://ads.google.com" target="_blank" rel="noopener noreferrer"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 10, border: '1.5px solid #4285F4', color: '#4285F4', fontWeight: 700, fontSize: 12, textDecoration: 'none' }}>
+                <ExternalLink size={12} /> Abrir Google Ads
+              </a>
+
+              <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 10, background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                <p style={{ fontSize: 12, color: '#166534', margin: 0 }}>
+                  <strong>Ventaja clave:</strong> Performance Max usa IA para mostrar tus piezas a personas que están buscando exactamente eso en Google ahora mismo. Sin elegir keywords manualmente.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Contenido WhatsApp Business Catalog */}
+          {activeChannel === 'wacatalog' && (
+            <div style={{ padding: '20px 24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <MessageCircle size={16} color="#fff" />
+                </div>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 800, color: '#16181d', margin: 0 }}>WhatsApp Business Catalog</p>
+                  <p style={{ fontSize: 11, color: '#9aa0aa', margin: '2px 0 0' }}>Catálogo oficial de productos dentro de WhatsApp Business</p>
+                </div>
+              </div>
+
+              <p style={{ fontSize: 12.5, color: '#374151', margin: '0 0 14px', lineHeight: 1.5 }}>
+                Con WhatsApp Business (app gratuita) puedes crear un catálogo de piezas que los compradores ven directo en el chat. Al chatear contigo, verán tus productos sin salir de WhatsApp.
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+                {([
+                  'Descarga WhatsApp Business (app gratuita, diferente a WhatsApp normal).',
+                  'Ve a Configuración → Herramientas para empresas → Catálogo.',
+                  'Agrega cada pieza: foto, nombre, precio y enlace a tu publicación en Componenta.',
+                  'Cuando alguien te escribe, puede ver y compartir tu catálogo directamente.',
+                ]).map((text, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                    <span style={{ width: 20, height: 20, borderRadius: '50%', background: '#f0fdf4', color: '#16a34a', fontSize: 10, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
+                    <p style={{ fontSize: 12, color: '#374151', margin: 0, lineHeight: 1.5 }}>{text}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ padding: '10px 14px', borderRadius: 10, background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                <p style={{ fontSize: 12, color: '#166534', margin: 0 }}>
+                  <strong>Próximamente en Componenta:</strong> Sincronización automática de tu inventario con WhatsApp Business Catalog vía la API oficial de Meta.
+                </p>
+              </div>
+            </div>
+          )}
+
         </div>
 
       </div>

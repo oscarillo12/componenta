@@ -1,8 +1,10 @@
 'use client'
 
+'use client'
+
 import { useState } from 'react'
 import { Product } from '@/lib/supabase'
-import { Plus, Search, Package, Trash2, CheckCircle, RotateCcw, Loader2, ExternalLink, Eye, Pencil, X, Sparkles } from 'lucide-react'
+import { Plus, Search, Package, Trash2, CheckCircle, RotateCcw, Loader2, ExternalLink, Eye, Pencil, X, Sparkles, Copy, Check } from 'lucide-react'
 import Link from 'next/link'
 
 const estadoConfig: Record<string, { label: string; color: string; bg: string }> = {
@@ -246,6 +248,20 @@ function InventoryRow({ item, mlConnected, onDelete, onToggleSold, onPublishML, 
   const [mlResult,      setMlResult]      = useState<{ ml_item_id: string; permalink: string } | null>(
     item.ml_item_id && item.ml_permalink ? { ml_item_id: item.ml_item_id, permalink: item.ml_permalink } : null
   )
+  const [fbCopied, setFbCopied] = useState(false)
+
+  function buildFbPost() {
+    const auto = [item.marca, item.modelo, item.anios].filter(Boolean).join(' ')
+    const estado = estadoConfig[item.estado]?.label ?? 'Usado'
+    const tags = ['#repuestos', '#desarmaduria', '#autopartes', item.marca ? `#${item.marca.toLowerCase().replace(/\s+/g, '')}` : '', '#ComponentaChile'].filter(Boolean).join(' ')
+    return `🔧 VENDO: ${item.pieza}${auto ? ` para ${auto}` : ''}
+Estado: ${estado}
+💵 $${item.precio.toLocaleString('es-CL')}
+${item.descripcion ? `📝 ${item.descripcion.slice(0, 120)}\n` : ''}📸 Ver foto y contactar:
+componenta.vercel.app/marketplace/${item.id}
+
+${tags}`
+  }
 
   const est = estadoConfig[item.estado] ?? estadoConfig.bueno
   const quality = computeQuality(item)
@@ -304,7 +320,14 @@ function InventoryRow({ item, mlConnected, onDelete, onToggleSold, onPublishML, 
           </div>
           <div>
             <p style={{ fontSize: 11, color: '#6b7280', margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}><Eye size={11} color="#9aa0aa" /> {item.vistas} vistas</p>
-            <p style={{ fontSize: 11, fontWeight: 600, color: '#2f5fdb', margin: '2px 0 0' }}>Aumentar exposición</p>
+            {item.disponible && (
+              <button
+                onClick={() => { navigator.clipboard.writeText(buildFbPost()); setFbCopied(true); setTimeout(() => setFbCopied(false), 2500) }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 3, fontSize: 10.5, fontWeight: 700, color: fbCopied ? '#16a34a' : '#1877F2', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                {fbCopied ? <Check size={10} /> : <Copy size={10} />}
+                {fbCopied ? 'Copiado' : 'Post para grupos FB'}
+              </button>
+            )}
           </div>
         </div>
 
