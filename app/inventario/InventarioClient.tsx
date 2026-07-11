@@ -4,7 +4,7 @@
 
 import { useState } from 'react'
 import { Product } from '@/lib/supabase'
-import { Plus, Search, Package, Trash2, CheckCircle, RotateCcw, Loader2, ExternalLink, Eye, Pencil, X, Sparkles, Copy, Check } from 'lucide-react'
+import { Plus, Search, Package, Trash2, CheckCircle, RotateCcw, Loader2, ExternalLink, Eye, Pencil, X, Sparkles, Copy, Check, Globe } from 'lucide-react'
 import Link from 'next/link'
 
 const estadoConfig: Record<string, { label: string; color: string; bg: string }> = {
@@ -232,9 +232,10 @@ function EditModal({ item, onClose, onSave }: {
   )
 }
 
-function InventoryRow({ item, mlConnected, onDelete, onToggleSold, onPublishML, onEdit }: {
+function InventoryRow({ item, mlConnected, gscConnected, onDelete, onToggleSold, onPublishML, onEdit }: {
   item: Product
   mlConnected: boolean
+  gscConnected: boolean
   onDelete: (id: string) => Promise<void>
   onToggleSold: (id: string, disponible: boolean) => Promise<void>
   onPublishML: (id: string) => Promise<{ ml_item_id: string; permalink: string } | null>
@@ -248,7 +249,28 @@ function InventoryRow({ item, mlConnected, onDelete, onToggleSold, onPublishML, 
   const [mlResult,      setMlResult]      = useState<{ ml_item_id: string; permalink: string } | null>(
     item.ml_item_id && item.ml_permalink ? { ml_item_id: item.ml_item_id, permalink: item.ml_permalink } : null
   )
-  const [fbCopied, setFbCopied] = useState(false)
+  const [fbCopied,    setFbCopied]    = useState(false)
+  const [gscLoading,  setGscLoading]  = useState(false)
+  const [gscError,    setGscError]    = useState<string | null>(null)
+  const [gscPublished, setGscPublished] = useState((item.canales ?? []).includes('google_shopping'))
+
+  async function handlePublishGSC() {
+    setGscLoading(true)
+    setGscError(null)
+    try {
+      const res = await fetch('/api/google/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: item.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Error al publicar')
+      setGscPublished(true)
+    } catch (e: unknown) {
+      setGscError(e instanceof Error ? e.message : 'Error al publicar en Google Shopping')
+    }
+    setGscLoading(false)
+  }
 
   function buildFbPost() {
     const auto = [item.marca, item.modelo, item.anios].filter(Boolean).join(' ')
@@ -388,6 +410,26 @@ ${tags}`
           )}
         </div>
       )}
+
+      {/* Fila Google Shopping — solo si conectado y disponible */}
+      {gscConnected && item.disponible && (
+        <div style={{ padding: '10px 16px', borderTop: '1px solid #f1f2f4', background: '#f8faff', display: 'flex', alignItems: 'center', gap: 10 }}>
+          {gscPublished ? (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: '#16a34a' }}>
+              <CheckCircle size={12} /> Publicado en Google Shopping
+            </span>
+          ) : (
+            <>
+              <button onClick={handlePublishGSC} disabled={gscLoading}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: gscLoading ? 'default' : 'pointer', border: '1.5px solid #4285F4', background: gscLoading ? '#f0f4ff' : '#eef2ff', color: '#4285F4' }}>
+                {gscLoading ? <Loader2 size={11} className="animate-spin" /> : <Globe size={11} />}
+                {gscLoading ? 'Publicando…' : 'Publicar en Google Shopping'}
+              </button>
+              {gscError && <p style={{ fontSize: 10, color: '#b91c1c', margin: 0 }}>{gscError}</p>}
+            </>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -398,10 +440,12 @@ export default function InventarioClient({
   products: initial,
   isDemo = false,
   mlConnected = false,
+  gscConnected = false,
 }: {
   products: Product[]
   isDemo?: boolean
   mlConnected?: boolean
+  gscConnected?: boolean
 }) {
   const [products,     setProducts]     = useState<Product[]>(initial)
   const [search,       setSearch]       = useState('')
@@ -409,6 +453,9 @@ export default function InventarioClient({
   const [editingItem,  setEditingItem]  = useState<Product | null>(null)
   const [mlToast,      setMlToast]      = useState(
     typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('ml_connected') === '1'
+  )
+  const [gscToast, setGscToast] = useState(
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('gsc_connected') === '1'
   )
 
   async function handleEdit(id: string, data: Partial<Product>) {
@@ -487,7 +534,7 @@ export default function InventarioClient({
       )}
 
       {!mlConnected && (
-        <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 14, background: '#fffde7', border: '1.5px dashed #FFE600', borderRadius: 12, padding: '14px 16px', flexWrap: 'wrap' }}>
+        <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 14, background: '#fffde7', border: '1.5px dashed #FFE600', borderRadius: 12, padding: '14px 16px', flexWrap: 'wrap' }}>
           <div style={{ background: '#FFE600', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
             <MlIcon size={18} />
             <span style={{ fontSize: 13, fontWeight: 800, color: '#2D3277' }}>MercadoLibre</span>
@@ -498,6 +545,34 @@ export default function InventarioClient({
           </div>
           <a href="/api/mercadolibre/connect"
             style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 16px', background: '#2D3277', color: '#FFE600', borderRadius: 9, fontSize: 12, fontWeight: 800, textDecoration: 'none', flexShrink: 0 }}>
+            Conectar cuenta →
+          </a>
+        </div>
+      )}
+
+      {gscToast && (
+        <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10, background: '#eef2ff', border: '1.5px solid #4285F4', borderRadius: 12, padding: '12px 16px' }}>
+          <Globe size={20} color="#4285F4" />
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#1a3a8f', margin: 0 }}>¡Google Shopping conectado!</p>
+            <p style={{ fontSize: 12, color: '#555', margin: 0 }}>Ya puedes publicar piezas directamente en Google Shopping desde cada fila.</p>
+          </div>
+          <button onClick={() => setGscToast(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#9aa0aa', lineHeight: 1 }}>×</button>
+        </div>
+      )}
+
+      {!gscConnected && (
+        <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 14, background: '#f0f4ff', border: '1.5px dashed #4285F4', borderRadius: 12, padding: '14px 16px', flexWrap: 'wrap' }}>
+          <div style={{ background: '#4285F4', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
+            <Globe size={18} color="#fff" />
+            <span style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Google Shopping</span>
+          </div>
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#1a3a8f', margin: '0 0 2px' }}>Publica en Google Shopping con un clic</p>
+            <p style={{ fontSize: 11, color: '#555', margin: 0 }}>Conecta tu cuenta de Google Merchant Center y aparece en búsquedas de Google.</p>
+          </div>
+          <a href="/api/google/connect"
+            style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 16px', background: '#4285F4', color: '#fff', borderRadius: 9, fontSize: 12, fontWeight: 800, textDecoration: 'none', flexShrink: 0 }}>
             Conectar cuenta →
           </a>
         </div>
@@ -555,6 +630,7 @@ export default function InventarioClient({
               key={item.id}
               item={item}
               mlConnected={mlConnected}
+              gscConnected={gscConnected}
               onDelete={handleDelete}
               onToggleSold={handleToggleSold}
               onPublishML={handlePublishML}

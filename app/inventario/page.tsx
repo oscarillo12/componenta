@@ -52,21 +52,23 @@ export default async function InventarioPage() {
     : (realProducts ?? [])
 
   // Verificar si el usuario tiene ML conectado
-  let mlConnected = false
+  let mlConnected  = false
+  let gscConnected = false
   try {
-    const { data: mlToken } = await supabaseAdmin
-      .from('ml_tokens')
-      .select('expires_at')
-      .eq('user_id', userId)
-      .single()
-    mlConnected = !!mlToken
+    const [{ data: mlToken }, { data: gscToken }] = await Promise.all([
+      supabaseAdmin.from('ml_tokens').select('expires_at').eq('user_id', userId).single(),
+      supabaseAdmin.from('google_tokens').select('expires_at').eq('user_id', userId).single(),
+    ])
+    mlConnected  = !!mlToken
+    gscConnected = !!gscToken
   } catch {
-    mlConnected = false
+    mlConnected  = false
+    gscConnected = false
   }
 
   return (
     <SellerLayout section="inventario">
-      <InventarioClient products={products} isDemo={hasDbError} mlConnected={mlConnected} />
+      <InventarioClient products={products} isDemo={hasDbError} mlConnected={mlConnected} gscConnected={gscConnected} />
     </SellerLayout>
   )
 }
