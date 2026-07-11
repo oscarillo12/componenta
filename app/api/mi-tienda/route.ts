@@ -60,6 +60,16 @@ export async function PATCH(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
+  // Sincronizar whatsapp → publicMetadata.telefono para que aparezca en products
+  if (body.whatsapp) {
+    const client = await clerkClient()
+    const user   = await client.users.getUser(userId)
+    const meta   = (user.publicMetadata ?? {}) as Meta
+    await client.users.updateUser(userId, {
+      publicMetadata: { ...meta, telefono: body.whatsapp },
+    })
+  }
+
   return NextResponse.json({ ok: true, slug: body.slug })
 }
 

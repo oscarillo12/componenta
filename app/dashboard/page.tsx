@@ -10,6 +10,10 @@ export default async function DashboardPage() {
 
   const user = await currentUser()
   const plan = (user?.publicMetadata?.plan as string) ?? 'gratuito'
+  const hasPhone = !!(
+    user?.phoneNumbers?.[0]?.phoneNumber ??
+    (user?.publicMetadata?.telefono as string | null)
+  )
 
   const { data: products } = await supabaseAdmin
     .from('products')
@@ -94,6 +98,7 @@ export default async function DashboardPage() {
         recentItems={items.slice(0, 6)}
         isDemo={items.length === 0}
         plan={plan}
+        hasPhone={hasPhone}
         rendimiento={rendimiento}
         topRegiones={topRegiones}
         dailyViews={dailyViews}

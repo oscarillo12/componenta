@@ -4,7 +4,7 @@ import Link from 'next/link'
 import {
   TrendingUp, Package, Eye, Tag, ShoppingBag,
   ArrowRight, Zap, Plus, BarChart3, AlertCircle,
-  MessageCircle, MapPin
+  MessageCircle, MapPin, Phone
 } from 'lucide-react'
 
 type TopPieza = {
@@ -27,6 +27,7 @@ interface Props {
   recentItems:      TopPieza[]
   isDemo:           boolean
   plan:             string
+  hasPhone:         boolean
   rendimiento:      RendimientoPieza[]
   topRegiones:      { region: string; count: number }[]
   dailyViews:       { day: string; count: number }[]
@@ -61,7 +62,7 @@ const ESTADO_DOT: Record<string, string> = {
 
 export default function DashboardClient({
   totalPublicadas, totalDisponibles, totalVendidas,
-  totalVistas, ingresosMes, topPiezas, recentItems, isDemo, plan,
+  totalVistas, ingresosMes, topPiezas, recentItems, isDemo, plan, hasPhone,
   rendimiento, topRegiones, dailyViews,
 }: Props) {
   const isPro = plan === 'pro'
@@ -84,6 +85,18 @@ export default function DashboardClient({
           <Plus size={15} /> Nueva pieza
         </Link>
       </div>
+
+      {!hasPhone && (
+        <div style={{ background: '#fff7ed', border: '1.5px solid #fed7aa', borderRadius: 14, padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Phone size={16} color="#ea580c" />
+          <p style={{ fontSize: 13, color: '#9a3412', margin: 0, fontWeight: 500, flex: 1 }}>
+            <strong>Falta tu número de WhatsApp.</strong> Sin él, los compradores no pueden contactarte y el bot no funciona.
+          </p>
+          <Link href="/mi-tienda" style={{ fontSize: 13, color: '#ea580c', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+            Agregar →
+          </Link>
+        </div>
+      )}
 
       {isDemo && (
         <div style={{ background: '#fffbeb', border: '1.5px solid #fde68a', borderRadius: 14, padding: '14px 18px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 10 }}>

@@ -117,6 +117,10 @@ function LandingPage() {
           <a href="/marketplace" style={{ color: '#388BFD', textDecoration: 'none' }}>Marketplace</a>
           {' · '}
           <a href="/solicitudes" style={{ color: '#388BFD', textDecoration: 'none' }}>Tablero de búsquedas</a>
+          {' · '}
+          <a href="/terminos" style={{ color: '#388BFD', textDecoration: 'none' }}>Términos</a>
+          {' · '}
+          <a href="/privacidad" style={{ color: '#388BFD', textDecoration: 'none' }}>Privacidad</a>
         </p>
       </footer>
 
