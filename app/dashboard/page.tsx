@@ -17,7 +17,7 @@ export default async function DashboardPage() {
 
   const { data: products } = await supabaseAdmin
     .from('products')
-    .select('id,pieza,precio,disponible,vistas,estado,imagen_url,created_at,marca')
+    .select('id,pieza,precio,disponible,vistas,estado,imagen_url,created_at,marca,modelo')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
@@ -28,6 +28,7 @@ export default async function DashboardPage() {
     mlConnected = !!mlToken
   } catch { mlConnected = false }
 
+  const now         = new Date()
   const items       = products ?? []
   const disponibles = items.filter(p => p.disponible)
   const vendidas    = items.filter(p => !p.disponible)
@@ -35,18 +36,63 @@ export default async function DashboardPage() {
   const topPiezas   = [...items].sort((a, b) => (b.vistas ?? 0) - (a.vistas ?? 0)).slice(0, 5)
   const productIds  = items.map(p => p.id)
 
-  // Consultas chat
+  // ── Consultas chat + hora pico ──
   const roomIds = productIds.map(id => `pieza-${id}`)
   const { data: chatMsgs } = productIds.length
-    ? await supabaseAdmin.from('chat_messages').select('room_id').in('room_id', roomIds)
+    ? await supabaseAdmin.from('chat_messages').select('room_id,created_at').in('room_id', roomIds)
     : { data: [] }
+
   const chatCount: Record<string, number> = {}
+  const hourMap:   Record<number, number> = {}
   for (const m of (chatMsgs ?? [])) {
     chatCount[m.room_id] = (chatCount[m.room_id] ?? 0) + 1
+    const h = new Date(m.created_at).getHours()
+    hourMap[h] = (hourMap[h] ?? 0) + 1
   }
   const consultasChat = Object.values(chatCount).reduce((s, n) => s + n, 0)
+  // Horas 8–22 (horario comercial)
+  const horasPico = Array.from({ length: 15 }, (_, i) => i + 8)
+    .map(h => ({ hora: h, count: hourMap[h] ?? 0 }))
 
-  // Ventas por marca (de piezas vendidas)
+  // ── Inventario inteligente ──
+  const valorInventario = disponibles.reduce((s, p) => s + (p.precio ?? 0), 0)
+  const precioPromedio  = disponibles.length > 0 ? Math.round(valorInventario / disponibles.length) : 0
+  const piezasSinFoto   = disponibles.filter(p => !p.imagen_url).length
+
+  // Piezas aging: >30 días en vitrina sin vender
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400_000)
+  const piezasAging = disponibles
+    .filter(p => new Date(p.created_at) < thirtyDaysAgo)
+    .map(p => ({
+      id:    p.id,
+      pieza: p.pieza,
+      dias:  Math.floor((now.getTime() - new Date(p.created_at).getTime()) / 86400_000),
+      precio: p.precio ?? 0,
+      vistas: p.vistas ?? 0,
+    }))
+    .sort((a, b) => b.dias - a.dias)
+    .slice(0, 5)
+
+  // Piezas con alta visibilidad pero sin consultas (precio alto o descripción mala)
+  const avgVistas = disponibles.length > 0 ? totalVistas / disponibles.length : 0
+  const umbralVistas = Math.max(5, Math.round(avgVistas * 0.5))
+  const piezasOportunidad = disponibles
+    .filter(p => (p.vistas ?? 0) >= umbralVistas && (chatCount[`pieza-${p.id}`] ?? 0) === 0)
+    .sort((a, b) => (b.vistas ?? 0) - (a.vistas ?? 0))
+    .slice(0, 4)
+    .map(p => ({ id: p.id, pieza: p.pieza, vistas: p.vistas ?? 0, precio: p.precio ?? 0 }))
+
+  // ── Top modelos ──
+  const modeloMap: Record<string, number> = {}
+  for (const p of items) {
+    const m = (p.modelo as string | null)
+    if (m && m.trim()) modeloMap[m.trim()] = (modeloMap[m.trim()] ?? 0) + 1
+  }
+  const topModelos = Object.entries(modeloMap)
+    .sort((a, b) => b[1] - a[1]).slice(0, 5)
+    .map(([modelo, count]) => ({ modelo, count }))
+
+  // ── Ventas por marca ──
   const marcaMap: Record<string, number> = {}
   for (const p of vendidas) {
     const m = (p.marca as string | null) || 'Otras'
@@ -56,13 +102,24 @@ export default async function DashboardPage() {
     .sort((a, b) => b[1] - a[1]).slice(0, 4)
     .map(([marca, count]) => ({ marca, count }))
 
-  // Ingresos por mes + comparativa mes anterior (desde orders)
-  const now = new Date()
-  const thisMonthStart  = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-  const lastMonthStart  = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString()
-  const sixMonthsAgo    = new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString()
+  // ── Distribución por estado del catálogo ──
+  const ESTADO_LABEL: Record<string, string> = {
+    excelente: 'Excelente', bueno: 'Bueno', 'con-detalles': 'Con detalles', 'para-reparar': 'Para reparar',
+  }
+  const estadoMapDist: Record<string, number> = {}
+  for (const p of disponibles) {
+    const e = (p.estado as string | null) || 'sin-estado'
+    estadoMapDist[e] = (estadoMapDist[e] ?? 0) + 1
+  }
+  const distribucionEstado = Object.entries(estadoMapDist)
+    .sort((a, b) => b[1] - a[1])
+    .map(([estado, count]) => ({ estado: ESTADO_LABEL[estado] ?? estado, count, raw: estado }))
 
-  // Siempre generar los últimos 6 meses (valor 0 si no hay órdenes)
+  // ── Ingresos por mes (últimos 6 meses, siempre poblados) ──
+  const thisMonthStart   = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+  const lastMonthStart   = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString()
+  const sixMonthsAgo     = new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString()
+
   const last6Months = Array.from({ length: 6 }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1)
     return { mes: d.toLocaleDateString('es-CL', { month: 'short' }), total: 0, key: `${d.getFullYear()}-${d.getMonth()}` }
@@ -76,7 +133,7 @@ export default async function DashboardPage() {
   try {
     const { data: orders } = await supabaseAdmin
       .from('orders')
-      .select('precio, created_at, estado')
+      .select('precio,created_at,estado')
       .eq('seller_id', userId)
       .gte('created_at', sixMonthsAgo)
 
@@ -92,11 +149,11 @@ export default async function DashboardPage() {
       vendidasEsteMes     = orders.filter(o => o.created_at >= thisMonthStart).length
       vendidasMesAnterior = orders.filter(o => o.created_at >= lastMonthStart && o.created_at < thisMonthStart).length
     }
-  } catch { /* tabla puede no existir aún */ }
+  } catch { /* tabla puede no existir */ }
 
   const ingresosPorMes = last6Months.map(({ mes, total }) => ({ mes, total }))
 
-  // Analytics de visitas
+  // ── Analytics de visitas por región y día ──
   let topRegiones: { region: string; count: number }[] = []
   let dailyViews:  { day: string; count: number }[]    = []
   let vistasEsteMes    = 0
@@ -104,12 +161,12 @@ export default async function DashboardPage() {
 
   if (productIds.length) {
     try {
-      const thirtyAgo = new Date(now.getTime() - 30 * 86400_000).toISOString()
-      const sevenAgo  = new Date(now.getTime() -  7 * 86400_000).toISOString()
+      const thirtyAgoISO = new Date(now.getTime() - 30 * 86400_000).toISOString()
+      const sevenAgoISO  = new Date(now.getTime() -  7 * 86400_000).toISOString()
 
       const [{ data: regionRows }, { data: dayRows }, { data: thisMoViews }, { data: lastMoViews }] = await Promise.all([
-        supabaseAdmin.from('product_views').select('region').in('product_id', productIds).gte('viewed_at', thirtyAgo),
-        supabaseAdmin.from('product_views').select('viewed_at').in('product_id', productIds).gte('viewed_at', sevenAgo),
+        supabaseAdmin.from('product_views').select('region').in('product_id', productIds).gte('viewed_at', thirtyAgoISO),
+        supabaseAdmin.from('product_views').select('viewed_at').in('product_id', productIds).gte('viewed_at', sevenAgoISO),
         supabaseAdmin.from('product_views').select('id').in('product_id', productIds).gte('viewed_at', thisMonthStart),
         supabaseAdmin.from('product_views').select('id').in('product_id', productIds).gte('viewed_at', lastMonthStart).lt('viewed_at', thisMonthStart),
       ])
@@ -128,15 +185,20 @@ export default async function DashboardPage() {
       }
       dailyViews = Object.entries(dayMap).map(([day, count]) => ({ day, count }))
 
-      vistasEsteMes    = thisMoViews?.length ?? 0
+      vistasEsteMes     = thisMoViews?.length ?? 0
       vistasMesAnterior = lastMoViews?.length ?? 0
-    } catch { /* tabla no existe aún */ }
+    } catch { /* tabla no existe */ }
   }
 
-  // Métricas derivadas
-  const ingresosMes     = vendidas.reduce((s, p) => s + (p.precio ?? 0), 0)
-  const ticketPromedio  = vendidas.length > 0 ? Math.round(ingresosMes / vendidas.length) : 0
+  // ── Métricas derivadas ──
+  const ingresosMes      = vendidas.reduce((s, p) => s + (p.precio ?? 0), 0)
+  const ticketPromedio   = vendidas.length > 0 ? Math.round(ingresosMes / vendidas.length) : 0
   const consultaVentaRate = consultasChat > 0 ? Math.round((vendidas.length / consultasChat) * 100) : 0
+
+  // Días desde última publicación
+  const diasDesdeUltimaPublicacion = items.length > 0
+    ? Math.floor((now.getTime() - new Date(items[0].created_at).getTime()) / 86400_000)
+    : null
 
   const rendimiento = items.map(p => ({
     id: p.id, pieza: p.pieza, vistas: p.vistas ?? 0,
@@ -172,6 +234,15 @@ export default async function DashboardPage() {
         vendidasMesAnterior={vendidasMesAnterior}
         ingresosEsteMes={ingresosEsteMes}
         ingresosMesAnterior={ingresosMesAnterior}
+        valorInventario={valorInventario}
+        precioPromedio={precioPromedio}
+        piezasSinFoto={piezasSinFoto}
+        piezasAging={piezasAging}
+        piezasOportunidad={piezasOportunidad}
+        topModelos={topModelos}
+        horasPico={horasPico}
+        distribucionEstado={distribucionEstado}
+        diasDesdeUltimaPublicacion={diasDesdeUltimaPublicacion}
       />
     </SellerLayout>
   )
