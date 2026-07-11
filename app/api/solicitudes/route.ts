@@ -1,15 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
 import { sendWhatsApp } from '@/lib/twilio'
 
 // GET — lista solicitudes activas (más recientes primero)
+// Si el usuario está autenticado, incluye buyer_phone para que vendedores puedan contactar
 export async function GET() {
+  const { userId } = await auth()
+  const fields = userId
+    ? 'id, pieza, marca, modelo, anio, descripcion, buyer_name, buyer_phone, created_at'
+    : 'id, pieza, marca, modelo, anio, descripcion, buyer_name, created_at'
+
   const { data, error } = await supabaseAdmin
     .from('solicitudes')
-    .select('id, pieza, marca, modelo, anio, descripcion, buyer_name, created_at')
+    .select(fields)
     .eq('activa', true)
     .order('created_at', { ascending: false })
-    .limit(50)
+    .limit(80)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ solicitudes: data ?? [] })
