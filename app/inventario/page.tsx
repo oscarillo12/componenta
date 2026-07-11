@@ -45,11 +45,11 @@ export default async function InventarioPage() {
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
-  // Si la tabla no existe aún o hay error → mostrar mock como demo
-  const hasRealData = !error && realProducts && realProducts.length > 0
-  const products: Product[] = hasRealData
-    ? realProducts
-    : mockInventory.slice(0, 8).map(i => mockToProduct(i, userId))
+  // Mock solo si hay error de BD (tabla no existe, etc.) — usuario nuevo sin piezas → array vacío
+  const hasDbError = !!error
+  const products: Product[] = error
+    ? mockInventory.slice(0, 8).map(i => mockToProduct(i, userId))
+    : (realProducts ?? [])
 
   // Verificar si el usuario tiene ML conectado
   let mlConnected = false
@@ -66,7 +66,7 @@ export default async function InventarioPage() {
 
   return (
     <SellerLayout section="inventario">
-      <InventarioClient products={products} isDemo={!hasRealData} mlConnected={mlConnected} />
+      <InventarioClient products={products} isDemo={hasDbError} mlConnected={mlConnected} />
     </SellerLayout>
   )
 }
