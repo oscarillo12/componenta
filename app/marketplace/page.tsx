@@ -254,11 +254,14 @@ export default function MarketplacePage() {
               <p style={{ fontSize:15, color:'rgba(255,255,255,.55)', margin:'0 0 26px', lineHeight:1.7, maxWidth:440 }}>
                 Ingresa marca, modelo y año una vez — filtramos automáticamente cada pieza compatible en todas las desarmadurías de Componenta.
               </p>
-              <div style={{ display:'flex', gap:22, flexWrap:'wrap' }}>
+              <div style={{ display:'flex', gap:22, flexWrap:'wrap', marginBottom:20 }}>
                 <span style={{ display:'flex', alignItems:'center', gap:7, fontSize:12.5, fontWeight:600, color:'rgba(255,255,255,.65)' }}><Shield size={14} color="#fff" /> Vendedores verificados</span>
                 <span style={{ display:'flex', alignItems:'center', gap:7, fontSize:12.5, fontWeight:600, color:'rgba(255,255,255,.65)' }}><Truck size={14} color="#fff" /> Envío a todo Chile</span>
                 <span style={{ display:'flex', alignItems:'center', gap:7, fontSize:12.5, fontWeight:600, color:'rgba(255,255,255,.65)' }}><Star size={14} color="#fff" /> 4.6 promedio vendedores</span>
               </div>
+              <Link href="/solicitudes" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'10px 18px', borderRadius:12, background:'rgba(255,255,255,0.1)', border:'1.5px solid rgba(255,255,255,0.2)', color:'#fff', textDecoration:'none', fontWeight:700, fontSize:13 }}>
+                🔍 ¿No encuentras tu pieza? Publícalo aquí
+              </Link>
             </div>
 
             <div style={{ background:'#fff', borderRadius:16, padding:22, boxShadow:'0 20px 50px rgba(0,0,0,.35)' }}>
@@ -476,7 +479,10 @@ export default function MarketplacePage() {
                 <Package size={40} color="#d1d5db" style={{ margin:'0 auto 12px', display:'block' }} />
                 <p style={{ fontSize:16, fontWeight:700, color:'#16181d', margin:'0 0 6px' }}>Sin resultados en Componenta</p>
                 <p style={{ fontSize:14, color:'#9aa0aa', margin:'0 0 20px' }}>Prueba con otro término o mira los resultados de MercadoLibre abajo</p>
-                <button onPointerDown={()=>{setQuery('');setCat(null)}} style={{ padding:'10px 22px', borderRadius:10, background:'#16181d', color:'#fff', fontWeight:700, fontSize:14, border:'none', cursor:'pointer' }}>Ver todo</button>
+                <div style={{ display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap' }}>
+                  <button onPointerDown={()=>{setQuery('');setCat(null)}} style={{ padding:'10px 22px', borderRadius:10, background:'#16181d', color:'#fff', fontWeight:700, fontSize:14, border:'none', cursor:'pointer' }}>Ver todo</button>
+                  <a href="/solicitudes" style={{ padding:'10px 22px', borderRadius:10, background:'#eef3fc', color:'#1d4ed8', fontWeight:700, fontSize:14, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:6 }}>🔍 Publicar búsqueda</a>
+                </div>
               </div>
             : <div className="mp-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(195px,1fr))', gap:14 }}>
                 {all.map(item=>{
