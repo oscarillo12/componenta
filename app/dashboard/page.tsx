@@ -62,7 +62,12 @@ export default async function DashboardPage() {
   const lastMonthStart  = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString()
   const sixMonthsAgo    = new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString()
 
-  let ingresosPorMes:    { mes: string; total: number }[] = []
+  // Siempre generar los últimos 6 meses (valor 0 si no hay órdenes)
+  const last6Months = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1)
+    return { mes: d.toLocaleDateString('es-CL', { month: 'short' }), total: 0, key: `${d.getFullYear()}-${d.getMonth()}` }
+  })
+
   let ingresosEsteMes    = 0
   let ingresosMesAnterior = 0
   let vendidasEsteMes    = 0
@@ -76,20 +81,20 @@ export default async function DashboardPage() {
       .gte('created_at', sixMonthsAgo)
 
     if (orders && orders.length > 0) {
-      // Agrupar por mes
-      const mesMap: Record<string, number> = {}
       for (const o of orders) {
-        const mes = new Date(o.created_at).toLocaleDateString('es-CL', { month: 'short' })
-        mesMap[mes] = (mesMap[mes] ?? 0) + (o.precio ?? 0)
+        const d   = new Date(o.created_at)
+        const key = `${d.getFullYear()}-${d.getMonth()}`
+        const slot = last6Months.find(m => m.key === key)
+        if (slot) slot.total += o.precio ?? 0
       }
-      ingresosPorMes = Object.entries(mesMap).map(([mes, total]) => ({ mes, total }))
-
       ingresosEsteMes     = orders.filter(o => o.created_at >= thisMonthStart).reduce((s, o) => s + (o.precio ?? 0), 0)
       ingresosMesAnterior = orders.filter(o => o.created_at >= lastMonthStart && o.created_at < thisMonthStart).reduce((s, o) => s + (o.precio ?? 0), 0)
       vendidasEsteMes     = orders.filter(o => o.created_at >= thisMonthStart).length
       vendidasMesAnterior = orders.filter(o => o.created_at >= lastMonthStart && o.created_at < thisMonthStart).length
     }
   } catch { /* tabla puede no existir aún */ }
+
+  const ingresosPorMes = last6Months.map(({ mes, total }) => ({ mes, total }))
 
   // Analytics de visitas
   let topRegiones: { region: string; count: number }[] = []

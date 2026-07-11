@@ -227,32 +227,37 @@ export default function DashboardClient({
 
           {/* ── Ingresos por mes ── */}
           <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-            <div style={{ padding: '14px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ padding: '14px 20px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
               <TrendingUp size={13} color="#15803d" />
               <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>Ingresos por mes</span>
               <span style={{ fontSize: 10, color: '#9ca3af', marginLeft: 'auto' }}>Últimos 6 meses</span>
             </div>
-            <div style={{ padding: '16px 20px' }}>
-              {ingresosPorMes.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                  <TrendingUp size={24} color="#e5e7eb" style={{ margin: '0 auto 8px', display: 'block' }} />
-                  <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>Los ingresos aparecerán cuando tengas órdenes.</p>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 110 }}>
-                  {ingresosPorMes.map(m => {
-                    const pct = Math.max(8, (m.total / maxMesIngresos) * 90)
-                    return (
-                      <div key={m.mes} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, height: '100%', justifyContent: 'flex-end' }}>
-                        <span style={{ fontSize: 9, fontWeight: 700, color: '#15803d' }}>
-                          {m.total > 0 ? `$${Math.round(m.total / 1000)}K` : ''}
-                        </span>
-                        <div style={{ width: '100%', maxWidth: 36, borderRadius: '5px 5px 0 0', height: `${pct}px`, background: 'linear-gradient(180deg,#15803d 0%,#4ade80 100%)' }} />
-                        <span style={{ fontSize: 9, color: '#9ca3af', textAlign: 'center' }}>{m.mes}</span>
-                      </div>
-                    )
-                  })}
-                </div>
+            <div style={{ padding: '12px 20px 16px' }}>
+              {/* El gráfico siempre se muestra — barras grises si no hay datos */}
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 120 }}>
+                {ingresosPorMes.map(m => {
+                  const hasData = maxMesIngresos > 0
+                  const pct     = hasData ? Math.max(4, (m.total / maxMesIngresos) * 96) : 4
+                  return (
+                    <div key={m.mes} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, height: '100%', justifyContent: 'flex-end' }}>
+                      <span style={{ fontSize: 9, fontWeight: 700, color: '#15803d', height: 12 }}>
+                        {m.total > 0 ? `$${Math.round(m.total / 1000)}K` : ''}
+                      </span>
+                      <div style={{
+                        width: '100%', maxWidth: 40, borderRadius: '5px 5px 0 0', height: `${pct}px`,
+                        background: m.total > 0
+                          ? 'linear-gradient(180deg,#15803d 0%,#4ade80 100%)'
+                          : '#f3f4f6',
+                      }} />
+                      <span style={{ fontSize: 9, color: '#9ca3af', textAlign: 'center' }}>{m.mes}</span>
+                    </div>
+                  )
+                })}
+              </div>
+              {maxMesIngresos === 0 && (
+                <p style={{ fontSize: 11, color: '#d1d5db', textAlign: 'center', margin: '6px 0 0' }}>
+                  Las barras se llenarán cuando registres ingresos
+                </p>
               )}
             </div>
           </div>
@@ -268,9 +273,25 @@ export default function DashboardClient({
               </div>
               <div style={{ padding: '14px 18px' }}>
                 {ventasPorMarca.length === 0 ? (
-                  <p style={{ fontSize: 12, color: '#9ca3af', margin: 0, textAlign: 'center', padding: '16px 0' }}>
-                    Aparecerá cuando vendas piezas.
-                  </p>
+                  /* Placeholder visual cuando no hay datos */
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {[
+                      { label: 'Sin datos aún', pct: 60 },
+                      { label: '—', pct: 35 },
+                      { label: '—', pct: 20 },
+                    ].map((row, i) => (
+                      <div key={i}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                          <span style={{ fontSize: 12, color: '#d1d5db', fontWeight: 600 }}>{row.label}</span>
+                          <span style={{ fontSize: 12, fontWeight: 800, color: '#e5e7eb' }}>—%</span>
+                        </div>
+                        <div style={{ height: 7, background: '#f3f4f6', borderRadius: 4, overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${row.pct}%`, background: '#e5e7eb', borderRadius: 4 }} />
+                        </div>
+                      </div>
+                    ))}
+                    <p style={{ fontSize: 10, color: '#d1d5db', margin: '2px 0 0', textAlign: 'center' }}>Aparecerá cuando marques piezas como vendidas</p>
+                  </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {ventasPorMarca.map((m, i) => {
@@ -300,28 +321,34 @@ export default function DashboardClient({
               </div>
               <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {[
-                  { label: 'Vistas',     value: funnelVistas,    pct: 100,        color: '#1d4ed8', convLabel: null },
-                  { label: 'Consultas',  value: funnelConsultas, pct: wConsultas, color: '#7c3aed',
-                    convLabel: funnelVistas > 0 ? `${((funnelConsultas / funnelVistas) * 100).toFixed(1)}% conv.` : null },
-                  { label: 'Ventas',     value: funnelVentas,    pct: wVentas,    color: '#15803d',
-                    convLabel: funnelConsultas > 0 ? `${((funnelVentas / funnelConsultas) * 100).toFixed(1)}% conv.` : null },
-                ].map(step => (
-                  <div key={step.label}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: '#6b7280' }}>{step.label}</span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                        {step.convLabel && <span style={{ fontSize: 10, color: '#9ca3af' }}>{step.convLabel}</span>}
-                        <span style={{ fontSize: 14, fontWeight: 800, color: '#111827', fontVariantNumeric: 'tabular-nums' }}>{step.value.toLocaleString('es-CL')}</span>
+                  { label: 'Vistas',    value: funnelVistas,    pct: 100,
+                    convLabel: null, color: '#1d4ed8' },
+                  { label: 'Consultas', value: funnelConsultas, pct: funnelVistas > 0 ? Math.max(4, wConsultas) : 30,
+                    convLabel: funnelVistas > 0 ? `${((funnelConsultas / funnelVistas) * 100).toFixed(1)}% conv.` : null, color: '#7c3aed' },
+                  { label: 'Ventas',    value: funnelVentas,    pct: funnelVistas > 0 ? Math.max(4, wVentas) : 12,
+                    convLabel: funnelConsultas > 0 ? `${((funnelVentas / funnelConsultas) * 100).toFixed(1)}% conv.` : null, color: '#15803d' },
+                ].map(step => {
+                  const isEmpty = funnelVistas === 0
+                  return (
+                    <div key={step.label}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: isEmpty ? '#d1d5db' : '#6b7280' }}>{step.label}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                          {step.convLabel && <span style={{ fontSize: 10, color: '#9ca3af' }}>{step.convLabel}</span>}
+                          <span style={{ fontSize: 14, fontWeight: 800, color: isEmpty ? '#d1d5db' : '#111827', fontVariantNumeric: 'tabular-nums' }}>
+                            {isEmpty ? '—' : step.value.toLocaleString('es-CL')}
+                          </span>
+                        </div>
+                      </div>
+                      <div style={{ height: 9, background: '#f3f4f6', borderRadius: 5, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${step.pct}%`, background: isEmpty ? '#e5e7eb' : step.color, borderRadius: 5 }} />
                       </div>
                     </div>
-                    <div style={{ height: 9, background: '#f3f4f6', borderRadius: 5, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${step.pct}%`, background: step.color, borderRadius: 5 }} />
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
                 {funnelVistas === 0 && (
-                  <p style={{ fontSize: 11, color: '#9ca3af', textAlign: 'center', margin: '8px 0 0' }}>
-                    Se llenará cuando tus piezas reciban visitas.
+                  <p style={{ fontSize: 10, color: '#d1d5db', textAlign: 'center', margin: '4px 0 0' }}>
+                    Se llenará cuando tus piezas reciban visitas
                   </p>
                 )}
               </div>
