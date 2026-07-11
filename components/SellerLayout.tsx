@@ -1,5 +1,6 @@
 import { Bell } from 'lucide-react'
 import { UserButton } from '@clerk/nextjs'
+import Link from 'next/link'
 import Sidebar from './Sidebar'
 
 interface SellerLayoutProps {
@@ -32,16 +33,16 @@ export default function SellerLayout({ children, section }: SellerLayoutProps) {
             <span style={{ fontSize: 14, color: '#9ca3af', textTransform: 'capitalize' }}>{section}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button style={{
+            <Link href="/pedidos" title="Notificaciones" style={{
               width: 32, height: 32, borderRadius: 8,
               background: '#f3f4f6',
               border: '1px solid #e5e7eb',
               color: '#6b7280',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer',
+              textDecoration: 'none',
             }}>
               <Bell size={15} />
-            </button>
+            </Link>
             <UserButton appearance={{ elements: { avatarBox: 'w-8 h-8' } }} />
           </div>
         </header>

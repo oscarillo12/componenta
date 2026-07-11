@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
 import { useState, useEffect } from 'react'
-import { Plus, LayoutGrid, BarChart2, Package, CreditCard, ShoppingBag, UserCircle, Store, MessageCircle } from 'lucide-react'
+import { Plus, LayoutGrid, BarChart2, Package, CreditCard, ShoppingBag, UserCircle, Store, MessageCircle, Search } from 'lucide-react'
 
 const navItems = [
   { icon: Plus,          href: '/',           label: 'Nuevo ingreso' },
@@ -18,6 +18,7 @@ const navItems = [
 ]
 
 const bottomItems = [
+  { icon: Search,      href: '/solicitudes', label: 'Solicitudes' },
   { icon: ShoppingBag, href: '/marketplace', label: 'Marketplace' },
 ]
 
