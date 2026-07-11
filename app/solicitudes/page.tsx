@@ -94,36 +94,43 @@ export default function SolicitudesPage() {
       <main style={{ maxWidth: 720, margin: '0 auto', padding: '32px 16px' }}>
 
         {/* Hero */}
-        <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(56,139,253,0.15)', border: '1.5px solid rgba(56,139,253,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-            <Search size={26} color="#79C0FF" />
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <div style={{ width: 60, height: 60, borderRadius: 18, background: 'linear-gradient(135deg,rgba(56,139,253,0.2),rgba(56,139,253,0.08))', border: '1.5px solid rgba(56,139,253,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 4px 20px rgba(56,139,253,0.15)' }}>
+            <Search size={28} color="#79C0FF" />
           </div>
-          <h1 style={{ fontSize: 24, fontWeight: 900, color: '#E6EDF3', margin: '0 0 8px' }}>
+          <h1 style={{ fontSize: 26, fontWeight: 900, color: '#E6EDF3', margin: '0 0 10px', letterSpacing: -0.5 }}>
             ¿Buscas una pieza?
           </h1>
-          <p style={{ fontSize: 15, color: '#8B949E', margin: 0, lineHeight: 1.6 }}>
+          <p style={{ fontSize: 15, color: '#8B949E', margin: '0 auto', maxWidth: 480, lineHeight: 1.65 }}>
             Publica lo que necesitas y todos los desarmaderos de la zona recibirán un WhatsApp al instante.
           </p>
         </div>
 
         {/* Formulario */}
-        <div style={{ background: '#161B22', border: '1.5px solid rgba(255,255,255,0.08)', borderRadius: 18, padding: '24px 20px', marginBottom: 36 }}>
+        <div style={{ background: '#161B22', border: '1.5px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '28px 24px', marginBottom: 40 }}>
 
           {enviado ? (
-            <div style={{ textAlign: 'center', padding: '24px 0' }}>
-              <CheckCircle size={40} color="#3FB950" style={{ margin: '0 auto 12px', display: 'block' }} />
-              <p style={{ fontSize: 17, fontWeight: 800, color: '#E6EDF3', margin: '0 0 8px' }}>¡Búsqueda enviada!</p>
-              <p style={{ fontSize: 13, color: '#8B949E', margin: '0 0 20px' }}>Los desarmaderos de la zona recibieron tu WhatsApp. Espera su contacto.</p>
+            <div style={{ textAlign: 'center', padding: '32px 0' }}>
+              <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(63,185,80,0.12)', border: '2px solid rgba(63,185,80,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <CheckCircle size={32} color="#3FB950" />
+              </div>
+              <p style={{ fontSize: 18, fontWeight: 900, color: '#E6EDF3', margin: '0 0 8px' }}>¡Búsqueda publicada!</p>
+              <p style={{ fontSize: 13, color: '#8B949E', margin: '0 0 24px', lineHeight: 1.6 }}>Los desarmaderos de la zona recibieron un WhatsApp con tu solicitud. Espera su contacto.</p>
               <button
                 onClick={() => setEnviado(false)}
-                style={{ padding: '9px 24px', background: '#21262D', border: '1.5px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#E6EDF3', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+                style={{ padding: '10px 28px', background: '#21262D', border: '1.5px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#E6EDF3', fontWeight: 700, fontSize: 13, cursor: 'pointer', transition: 'border-color 0.15s' }}
+                onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.22)')}
+                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)')}
               >
                 Publicar otra búsqueda
               </button>
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: '#E6EDF3', margin: '0 0 16px' }}>Nueva búsqueda</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+                <div style={{ width: 6, height: 20, background: '#388BFD', borderRadius: 3 }} />
+                <p style={{ fontSize: 14, fontWeight: 800, color: '#E6EDF3', margin: 0 }}>Nueva búsqueda</p>
+              </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
 
@@ -189,7 +196,7 @@ export default function SolicitudesPage() {
                 <button
                   type="submit"
                   disabled={enviando || !form.pieza.trim() || !form.buyer_name.trim()}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px', borderRadius: 12, border: 'none', background: enviando || !form.pieza.trim() || !form.buyer_name.trim() ? '#21262D' : '#388BFD', color: enviando || !form.pieza.trim() || !form.buyer_name.trim() ? '#6E7681' : '#fff', fontWeight: 700, fontSize: 14, cursor: enviando ? 'default' : 'pointer', transition: 'background 0.2s' }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '13px', borderRadius: 12, border: 'none', background: enviando || !form.pieza.trim() || !form.buyer_name.trim() ? '#21262D' : 'linear-gradient(135deg,#388BFD,#1F6FEB)', color: enviando || !form.pieza.trim() || !form.buyer_name.trim() ? '#6E7681' : '#fff', fontWeight: 800, fontSize: 14, cursor: enviando ? 'default' : 'pointer', transition: 'opacity 0.2s', boxShadow: !form.pieza.trim() || !form.buyer_name.trim() ? 'none' : '0 4px 14px rgba(56,139,253,0.3)' }}
                 >
                   {enviando
                     ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Enviando…</>
@@ -203,45 +210,58 @@ export default function SolicitudesPage() {
 
         {/* Tablero de búsquedas activas */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
             <Package size={15} color="#8B949E" />
             <h2 style={{ fontSize: 16, fontWeight: 800, color: '#E6EDF3', margin: 0 }}>Búsquedas activas</h2>
-            <span style={{ fontSize: 11, color: '#6E7681', background: '#21262D', padding: '2px 8px', borderRadius: 20, marginLeft: 'auto' }}>
-              {solicitudes.length} publicadas
-            </span>
+            {!loading && (
+              <span style={{ fontSize: 11, color: '#6E7681', background: '#21262D', border: '1px solid rgba(255,255,255,0.07)', padding: '2px 10px', borderRadius: 20, marginLeft: 'auto', fontWeight: 600 }}>
+                {solicitudes.length} publicadas
+              </span>
+            )}
           </div>
 
           {loading ? (
-            <div style={{ textAlign: 'center', padding: 40 }}>
-              <Loader2 size={24} color="#6E7681" style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }} />
+            <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+              <Loader2 size={28} color="#388BFD" style={{ animation: 'spin 1s linear infinite', display: 'inline-block', opacity: 0.6 }} />
+              <p style={{ fontSize: 13, color: '#6E7681', margin: '12px 0 0' }}>Cargando búsquedas…</p>
             </div>
           ) : solicitudes.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '48px 20px', background: '#161B22', borderRadius: 16, border: '1.5px solid rgba(255,255,255,0.06)' }}>
-              <Search size={32} color="#30363D" style={{ margin: '0 auto 12px', display: 'block' }} />
-              <p style={{ fontSize: 14, color: '#8B949E', margin: 0 }}>Aún no hay búsquedas publicadas. ¡Sé el primero!</p>
+            <div style={{ textAlign: 'center', padding: '56px 24px', background: '#161B22', borderRadius: 18, border: '1.5px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ width: 52, height: 52, borderRadius: 14, background: '#21262D', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+                <Search size={24} color="#30363D" />
+              </div>
+              <p style={{ fontSize: 15, fontWeight: 700, color: '#8B949E', margin: '0 0 6px' }}>Sin búsquedas aún</p>
+              <p style={{ fontSize: 13, color: '#6E7681', margin: 0 }}>Sé el primero en publicar lo que buscas</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {solicitudes.map(s => (
-                <div key={s.id} style={{ background: '#161B22', border: '1.5px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '16px 18px' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: s.descripcion ? 8 : 0 }}>
+                <div key={s.id} style={{ background: '#161B22', border: '1.5px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '18px 20px', transition: 'border-color 0.15s' }}
+                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.14)')}
+                  onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)')}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 15, fontWeight: 800, color: '#E6EDF3', margin: '0 0 4px' }}>{s.pieza}</p>
+                      <p style={{ fontSize: 15, fontWeight: 800, color: '#E6EDF3', margin: '0 0 8px' }}>{s.pieza}</p>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                         {(s.marca || s.modelo || s.anio) && (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#79C0FF', background: 'rgba(56,139,253,0.12)', padding: '2px 8px', borderRadius: 20 }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#79C0FF', background: 'rgba(56,139,253,0.1)', border: '1px solid rgba(56,139,253,0.2)', padding: '3px 9px', borderRadius: 20, fontWeight: 600 }}>
                             <Car size={10} /> {[s.marca, s.modelo, s.anio].filter(Boolean).join(' ')}
                           </span>
                         )}
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#6E7681' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#6E7681', background: '#21262D', padding: '3px 8px', borderRadius: 20 }}>
                           <Clock size={10} /> {timeAgo(s.created_at)}
                         </span>
                       </div>
                     </div>
-                    <span style={{ fontSize: 12, color: '#8B949E', flexShrink: 0, fontWeight: 500 }}>{s.buyer_name}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0, background: '#21262D', padding: '4px 10px', borderRadius: 20 }}>
+                      <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#388BFD22', border: '1px solid #388BFD44', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#79C0FF', fontWeight: 700 }}>
+                        {s.buyer_name.charAt(0).toUpperCase()}
+                      </div>
+                      <span style={{ fontSize: 12, color: '#8B949E', fontWeight: 600 }}>{s.buyer_name}</span>
+                    </div>
                   </div>
                   {s.descripcion && (
-                    <p style={{ fontSize: 12, color: '#8B949E', margin: '8px 0 0', lineHeight: 1.5, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
+                    <p style={{ fontSize: 13, color: '#8B949E', margin: '12px 0 0', lineHeight: 1.6, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 12 }}>
                       {s.descripcion}
                     </p>
                   )}

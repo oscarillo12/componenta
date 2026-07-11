@@ -17,103 +17,145 @@ function LandingPage() {
     <div style={{ minHeight: '100vh', background: '#0D1117', fontFamily: 'system-ui,sans-serif', color: '#E6EDF3' }}>
 
       {/* Nav */}
-      <nav style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '0 24px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'rgba(13,17,23,0.95)', backdropFilter: 'blur(12px)', zIndex: 50 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 32, height: 32, background: 'linear-gradient(135deg,#1d4ed8,#3b82f6)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 16, color: '#fff' }}>C</div>
-          <span style={{ fontWeight: 800, fontSize: 16, color: '#E6EDF3' }}>Componenta</span>
-        </div>
+      <nav style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'rgba(13,17,23,0.96)', backdropFilter: 'blur(16px)', zIndex: 50 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <a href="/marketplace" style={{ fontSize: 13, color: '#8B949E', textDecoration: 'none', fontWeight: 600, padding: '7px 14px' }}>Ver marketplace</a>
+          <div style={{ width: 34, height: 34, background: 'linear-gradient(135deg,#1d4ed8,#3b82f6)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 17, color: '#fff', boxShadow: '0 2px 8px rgba(29,78,216,0.4)' }}>C</div>
+          <span style={{ fontWeight: 800, fontSize: 16, color: '#E6EDF3', letterSpacing: -0.3 }}>Componenta</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <a href="/marketplace" style={{ fontSize: 13, color: '#8B949E', textDecoration: 'none', fontWeight: 600, padding: '7px 14px', borderRadius: 8, transition: 'color 0.15s' }}
+            onMouseEnter={e => ((e.target as HTMLElement).style.color = '#CDD9E5')}
+            onMouseLeave={e => ((e.target as HTMLElement).style.color = '#8B949E')}>
+            Ver marketplace
+          </a>
           <SignInButton mode="modal">
-            <button style={{ fontSize: 13, color: '#E6EDF3', background: 'transparent', border: '1.5px solid rgba(255,255,255,0.15)', borderRadius: 10, padding: '7px 16px', cursor: 'pointer', fontWeight: 600 }}>
+            <button style={{ fontSize: 13, color: '#CDD9E5', background: 'transparent', border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '7px 16px', cursor: 'pointer', fontWeight: 600, transition: 'border-color 0.15s, background 0.15s' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.28)'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.12)'; (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
               Iniciar sesión
             </button>
           </SignInButton>
           <SignUpButton mode="modal">
-            <button style={{ fontSize: 13, color: '#fff', background: '#1d4ed8', border: 'none', borderRadius: 10, padding: '8px 18px', cursor: 'pointer', fontWeight: 700 }}>
-              Empieza gratis
+            <button style={{ fontSize: 13, color: '#fff', background: 'linear-gradient(135deg,#1d4ed8,#2563eb)', border: 'none', borderRadius: 10, padding: '8px 18px', cursor: 'pointer', fontWeight: 700, boxShadow: '0 2px 8px rgba(29,78,216,0.35)', transition: 'opacity 0.15s' }}
+              onMouseEnter={e => ((e.currentTarget as HTMLElement).style.opacity = '0.9')}
+              onMouseLeave={e => ((e.currentTarget as HTMLElement).style.opacity = '1')}>
+              Publicar mis piezas gratis
             </button>
           </SignUpButton>
         </div>
       </nav>
 
       {/* Hero */}
-      <section style={{ maxWidth: 960, margin: '0 auto', padding: '80px 24px 60px', textAlign: 'center' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(56,139,253,0.12)', border: '1px solid rgba(56,139,253,0.3)', borderRadius: 20, padding: '5px 14px', fontSize: 12, fontWeight: 600, color: '#79C0FF', marginBottom: 24 }}>
+      <section style={{ maxWidth: 960, margin: '0 auto', padding: '96px 24px 72px', textAlign: 'center' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(56,139,253,0.1)', border: '1px solid rgba(56,139,253,0.25)', borderRadius: 20, padding: '5px 14px', fontSize: 12, fontWeight: 600, color: '#79C0FF', marginBottom: 28 }}>
           <Sparkles size={12} /> Potenciado por IA · Gratis para empezar
         </div>
-        <h1 style={{ fontSize: 'clamp(32px,5vw,58px)', fontWeight: 900, color: '#E6EDF3', margin: '0 0 20px', lineHeight: 1.1, letterSpacing: -1 }}>
+        <h1 style={{ fontSize: 'clamp(36px,5.5vw,62px)', fontWeight: 900, color: '#E6EDF3', margin: '0 0 22px', lineHeight: 1.08, letterSpacing: -1.5 }}>
           Tu desarmadería,<br />
-          <span style={{ background: 'linear-gradient(135deg,#388BFD,#79C0FF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>digital en minutos</span>
+          <span style={{ background: 'linear-gradient(135deg,#388BFD 30%,#79C0FF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>digital en minutos</span>
         </h1>
-        <p style={{ fontSize: 'clamp(15px,2vw,18px)', color: '#8B949E', margin: '0 auto 36px', maxWidth: 540, lineHeight: 1.7 }}>
+        <p style={{ fontSize: 'clamp(15px,2vw,19px)', color: '#8B949E', margin: '0 auto 40px', maxWidth: 560, lineHeight: 1.7 }}>
           Fotografía una pieza, la IA la identifica y la publica en tu catálogo online, MercadoLibre y WhatsApp — automáticamente.
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
           <SignUpButton mode="modal">
-            <button style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 28px', borderRadius: 14, background: '#1d4ed8', color: '#fff', fontWeight: 800, fontSize: 15, border: 'none', cursor: 'pointer' }}>
-              Empieza gratis <ArrowRight size={16} />
+            <button style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '15px 30px', borderRadius: 14, background: 'linear-gradient(135deg,#1d4ed8,#2563eb)', color: '#fff', fontWeight: 800, fontSize: 15, border: 'none', cursor: 'pointer', boxShadow: '0 4px 16px rgba(29,78,216,0.4)', transition: 'transform 0.15s, box-shadow 0.15s' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 20px rgba(29,78,216,0.5)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 16px rgba(29,78,216,0.4)' }}>
+              Publicar mis piezas gratis <ArrowRight size={16} />
             </button>
           </SignUpButton>
-          <a href="/marketplace" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 24px', borderRadius: 14, background: 'rgba(255,255,255,0.06)', color: '#E6EDF3', fontWeight: 700, fontSize: 15, textDecoration: 'none', border: '1.5px solid rgba(255,255,255,0.1)' }}>
+          <a href="/marketplace" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '15px 26px', borderRadius: 14, background: 'rgba(255,255,255,0.05)', color: '#CDD9E5', fontWeight: 600, fontSize: 15, textDecoration: 'none', border: '1.5px solid rgba(255,255,255,0.1)', transition: 'border-color 0.15s, background 0.15s' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.22)'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)' }}>
             Ver marketplace
           </a>
+        </div>
+        {/* Social proof */}
+        <div style={{ marginTop: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, flexWrap: 'wrap' }}>
+          {[
+            { val: '30 seg', label: 'promedio por pieza' },
+            { val: '40+', label: 'marcas de autos' },
+            { val: '100%', label: 'gratis para empezar' },
+          ].map(({ val, label }) => (
+            <div key={label} style={{ textAlign: 'center' }}>
+              <p style={{ fontSize: 22, fontWeight: 900, color: '#388BFD', margin: '0 0 2px' }}>{val}</p>
+              <p style={{ fontSize: 12, color: '#6E7681', margin: 0 }}>{label}</p>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* Features */}
       <section style={{ maxWidth: 960, margin: '0 auto', padding: '0 24px 80px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 16 }}>
+        <p style={{ fontSize: 12, fontWeight: 700, color: '#6E7681', textTransform: 'uppercase', letterSpacing: 1.2, textAlign: 'center', marginBottom: 28 }}>Todo lo que necesitas incluido</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 14 }}>
           {[
-            { icon: Camera, color: '#388BFD', title: 'Foto → publicado en segundos', desc: 'Saca una foto a la pieza. La IA la identifica, completa los datos y la publica.' },
-            { icon: Globe, color: '#3FB950', title: 'Multi-canal automático', desc: 'Publica a la vez en Componenta, MercadoLibre y Google Shopping sin trabajo extra.' },
-            { icon: MessageCircle, color: '#25d366', title: 'Bot WhatsApp incluido', desc: 'Compradores consultan por WhatsApp y tú recibes notificaciones de cada pedido.' },
-            { icon: BarChart3, color: '#7c3aed', title: 'Dashboard de ventas', desc: 'Vistas por pieza, región de compradores y tasa de conversión en tiempo real.' },
-          ].map(({ icon: Icon, color, title, desc }) => (
-            <div key={title} style={{ background: '#161B22', border: '1.5px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '22px 20px' }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: `${color}18`, border: `1.5px solid ${color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
-                <Icon size={18} color={color} />
+            { icon: Camera, color: '#388BFD', bg: 'rgba(56,139,253,0.1)', title: 'Foto → publicado en segundos', desc: 'Saca una foto a la pieza. La IA la identifica, completa los datos y la publica automáticamente.' },
+            { icon: Globe, color: '#3FB950', bg: 'rgba(63,185,80,0.1)', title: 'Multi-canal automático', desc: 'Publica a la vez en Componenta, MercadoLibre y Google Shopping sin trabajo extra.' },
+            { icon: MessageCircle, color: '#25d366', bg: 'rgba(37,211,102,0.1)', title: 'Bot WhatsApp incluido', desc: 'Compradores consultan por WhatsApp y tú recibes notificaciones de cada pedido.' },
+            { icon: BarChart3, color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', title: 'Dashboard de ventas', desc: 'Vistas por pieza, región de compradores y tasa de conversión en tiempo real.' },
+          ].map(({ icon: Icon, color, bg, title, desc }) => (
+            <div key={title} style={{ background: '#161B22', border: '1.5px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '24px 20px', transition: 'border-color 0.2s, transform 0.2s' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.15)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)' }}>
+              <div style={{ width: 42, height: 42, borderRadius: 12, background: bg, border: `1.5px solid ${color}28`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                <Icon size={20} color={color} />
               </div>
-              <p style={{ fontSize: 14, fontWeight: 800, color: '#E6EDF3', margin: '0 0 8px' }}>{title}</p>
-              <p style={{ fontSize: 13, color: '#8B949E', margin: 0, lineHeight: 1.6 }}>{desc}</p>
+              <p style={{ fontSize: 14, fontWeight: 800, color: '#E6EDF3', margin: '0 0 8px', lineHeight: 1.4 }}>{title}</p>
+              <p style={{ fontSize: 13, color: '#8B949E', margin: 0, lineHeight: 1.65 }}>{desc}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Plan gratuito */}
-      <section style={{ maxWidth: 600, margin: '0 auto 80px', padding: '0 24px' }}>
-        <div style={{ background: 'linear-gradient(135deg,#161B22,#1a2332)', border: '1.5px solid rgba(56,139,253,0.25)', borderRadius: 20, padding: '36px 32px', textAlign: 'center' }}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: '#388BFD', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 12px' }}>Plan gratuito</p>
-          <p style={{ fontSize: 28, fontWeight: 900, color: '#E6EDF3', margin: '0 0 8px' }}>$0 / mes</p>
-          <p style={{ fontSize: 14, color: '#8B949E', margin: '0 0 24px' }}>Para empezar sin riesgo</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28, textAlign: 'left' }}>
-            {[
-              'Hasta 5 repuestos publicados',
-              'Identificación con IA incluida',
-              'Recibe pedidos online con pago',
-              'Bot WhatsApp para compradores',
-              'Dashboard de analíticas básico',
-            ].map(f => (
-              <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <CheckCircle size={15} color="#3FB950" />
-                <span style={{ fontSize: 14, color: '#CDD9E5' }}>{f}</span>
-              </div>
-            ))}
+      <section style={{ maxWidth: 520, margin: '0 auto 96px', padding: '0 24px' }}>
+        <div style={{ background: 'linear-gradient(160deg,#161B22 0%,#1a2332 100%)', border: '1.5px solid rgba(56,139,253,0.22)', borderRadius: 22, padding: '40px 36px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+          {/* subtle glow */}
+          <div style={{ position: 'absolute', top: -60, left: '50%', transform: 'translateX(-50%)', width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(56,139,253,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, color: '#388BFD', textTransform: 'uppercase', letterSpacing: 1.2, background: 'rgba(56,139,253,0.12)', border: '1px solid rgba(56,139,253,0.25)', borderRadius: 20, padding: '3px 12px', marginBottom: 16 }}>Plan gratuito</span>
+            <p style={{ fontSize: 42, fontWeight: 900, color: '#E6EDF3', margin: '0 0 4px', letterSpacing: -1 }}>$0<span style={{ fontSize: 16, fontWeight: 500, color: '#8B949E', letterSpacing: 0 }}> / mes</span></p>
+            <p style={{ fontSize: 14, color: '#6E7681', margin: '0 0 28px' }}>Para empezar sin riesgo · Sin tarjeta de crédito</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 11, marginBottom: 30, textAlign: 'left' }}>
+              {[
+                { text: 'Hasta 5 repuestos publicados', note: '' },
+                { text: 'Identificación con IA incluida', note: '' },
+                { text: 'Recibe pedidos online con pago', note: 'vía Flow' },
+                { text: 'Bot WhatsApp para compradores', note: '' },
+                { text: 'Dashboard de analíticas básico', note: '' },
+              ].map(({ text, note }) => (
+                <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(63,185,80,0.15)', border: '1.5px solid rgba(63,185,80,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <CheckCircle size={11} color="#3FB950" />
+                  </div>
+                  <span style={{ fontSize: 14, color: '#CDD9E5' }}>{text}</span>
+                  {note && <span style={{ fontSize: 11, color: '#6E7681', marginLeft: 2 }}>· {note}</span>}
+                </div>
+              ))}
+            </div>
+            <SignUpButton mode="modal">
+              <button style={{ width: '100%', padding: '14px', borderRadius: 12, background: 'linear-gradient(135deg,#1d4ed8,#2563eb)', color: '#fff', fontWeight: 800, fontSize: 15, border: 'none', cursor: 'pointer', boxShadow: '0 4px 16px rgba(29,78,216,0.35)', transition: 'opacity 0.15s' }}
+                onMouseEnter={e => ((e.currentTarget as HTMLElement).style.opacity = '0.9')}
+                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.opacity = '1')}>
+                Publicar mis piezas gratis
+              </button>
+            </SignUpButton>
+            <p style={{ fontSize: 12, color: '#6E7681', margin: '12px 0 0' }}>Activo en 2 minutos · Sin compromisos</p>
           </div>
-          <SignUpButton mode="modal">
-            <button style={{ width: '100%', padding: '13px', borderRadius: 12, background: '#1d4ed8', color: '#fff', fontWeight: 800, fontSize: 15, border: 'none', cursor: 'pointer' }}>
-              Crear cuenta gratis
-            </button>
-          </SignUpButton>
-          <p style={{ fontSize: 12, color: '#6E7681', margin: '12px 0 0' }}>Sin tarjeta de crédito · Activo en 2 minutos</p>
         </div>
       </section>
 
       {/* Footer */}
-      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '24px', textAlign: 'center' }}>
-        <p style={{ fontSize: 12, color: '#6E7681', margin: 0 }}>
-          © 2025 Componenta · La Araucanía, Chile ·{' '}
+      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '28px 24px', textAlign: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 12 }}>
+          <div style={{ width: 22, height: 22, background: 'linear-gradient(135deg,#1d4ed8,#3b82f6)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 11, color: '#fff' }}>C</div>
+          <span style={{ fontSize: 13, fontWeight: 700, color: '#6E7681' }}>Componenta</span>
+        </div>
+        <p style={{ fontSize: 12, color: '#6E7681', margin: 0, lineHeight: 2 }}>
+          © 2025 Componenta · La Araucanía, Chile
+          <br />
           <a href="/marketplace" style={{ color: '#388BFD', textDecoration: 'none' }}>Marketplace</a>
           {' · '}
           <a href="/solicitudes" style={{ color: '#388BFD', textDecoration: 'none' }}>Tablero de búsquedas</a>
@@ -124,7 +166,12 @@ function LandingPage() {
         </p>
       </footer>
 
-      <style>{`@media(max-width:600px){nav>div:last-child>button:first-child{display:none}}`}</style>
+      <style>{`
+        @media(max-width:600px){
+          nav>div:last-child>button:first-child{ display: none; }
+          nav>div:last-child>*:nth-child(2){ display: none; }
+        }
+      `}</style>
     </div>
   )
 }
