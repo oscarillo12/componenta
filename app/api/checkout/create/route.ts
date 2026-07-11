@@ -2,6 +2,7 @@ import { auth, clerkClient } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
 import { createFlowPayment } from '@/lib/flow'
+import { sendWhatsApp } from '@/lib/twilio'
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth()
@@ -85,6 +86,18 @@ export async function POST(req: NextRequest) {
       tipo:     'pedido_nuevo',
       mensaje:  `Nueva compra: ${pieza} — $${total.toLocaleString('es-CL')}`,
     })
+
+    // Confirmar al comprador por WhatsApp (demo)
+    if (buyer_phone) {
+      sendWhatsApp(
+        buyer_phone,
+        `✅ *¡Pedido confirmado en Componenta!*\n\n` +
+        `Pieza: *${pieza}*\n` +
+        `Total: $${total.toLocaleString('es-CL')}\n\n` +
+        `El vendedor te contactará para coordinar la entrega.\n\n` +
+        `Sigue tu pedido aquí:\nhttps://componenta.vercel.app/mis-pedidos/${order.id}`
+      ).catch(() => {})
+    }
 
     return NextResponse.json({ redirect: `/mis-pedidos/${order.id}?demo=1` })
   }

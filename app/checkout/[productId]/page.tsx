@@ -180,7 +180,9 @@ export default function CheckoutPage({ params }: { params: Promise<{ productId: 
                 style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.1)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: '#E6EDF3', display: 'block', marginBottom: 4 }}>Teléfono</label>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#E6EDF3', display: 'block', marginBottom: 4 }}>
+                WhatsApp <span style={{ fontWeight: 400, color: '#8B949E' }}>(para enviarte la confirmación)</span>
+              </label>
               <input value={telefono} onChange={e => setTelefono(e.target.value)} placeholder="+56 9 1234 5678"
                 style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.1)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
             </div>
