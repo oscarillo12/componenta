@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
     user.phoneNumbers[0]?.phoneNumber ?? meta.telefono ?? null
 
   // â”€â”€ Guardar en Supabase â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const { error: dbError } = await supabaseAdmin.from('products').insert({
+  const { data: inserted, error: dbError } = await supabaseAdmin.from('products').insert({
     user_id:          userId,
     pieza:            body.pieza ?? 'Sin nombre',
     marca:            body.marca ?? null,
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
     image_hash:       body.image_hash ?? null,
     seller_nombre:    sellerNombre,
     seller_telefono:  sellerTelefono,
-  })
+  }).select('id').single()
 
   if (dbError) {
     console.error('[publish] Supabase error:', dbError)
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
     publicMetadata: { ...meta, productsCount: count + 1 },
   })
 
-  return NextResponse.json({ ok: true, productsCount: count + 1, limit: FREE_LIMIT })
+  return NextResponse.json({ ok: true, id: inserted?.id ?? null, productsCount: count + 1, limit: FREE_LIMIT })
 }
 
 export async function GET() {

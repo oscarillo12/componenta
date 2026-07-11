@@ -30,8 +30,8 @@ const CANAL_CONFIG = {
   mercadolibre: {
     icon: <ShoppingCart size={24} weight="fill" color="#f59e0b" />,
     color: '#f59e0b', bg: '#fffbeb', border: '#fcd34d',
-    preview: 'Se publicará en MercadoLibre con descripción generada automáticamente',
-    badge: 'Próximamente',
+    preview: 'Se publicará en MercadoLibre con descripción y foto generadas automáticamente',
+    badge: null,
   },
 }
 
@@ -81,13 +81,17 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
   const [envio,       setEnvio]       = useState('Envío a todo Chile')
   const [descripcion, setDescripcion] = useState('')
 
+  // ── MercadoLibre ──────────────────────────────────────────────────────────
+  const [mlConnected,  setMlConnected]  = useState(false)
+  const [mlPermalink,  setMlPermalink]  = useState<string | null>(null)
+
   // ── Estados de publicación ─────────────────────────────────────────────────
   const [publishing,      setPublishing]      = useState(false)
   const [published,       setPublished]       = useState(false)
   const [limiteAlcanzado, setLimiteAlcanzado] = useState(false)
   const [publishError,    setPublishError]    = useState<string | null>(null)
 
-  // Cargar perfil al montar
+  // Cargar perfil y estado ML al montar
   useEffect(() => {
     fetch('/api/profile')
       .then(r => r.json())
@@ -97,10 +101,15 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
       })
       .catch(() => {})
       .finally(() => setProfileLoading(false))
+
+    fetch('/api/mercadolibre/status')
+      .then(r => r.json())
+      .then(d => { if (d.connected) setMlConnected(true) })
+      .catch(() => {})
   }, [])
 
   const toggle = (id: string) => {
-    if (id === 'mercadolibre') return
+    if (id === 'mercadolibre' && !mlConnected) return
     const next = new Set(selected)
     next.has(id) ? next.delete(id) : next.add(id)
     setSelected(next)
@@ -216,6 +225,22 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
         )
         return
       }
+
+      // Publicar en MercadoLibre si está seleccionado y conectado
+      if (selected.has('mercadolibre') && mlConnected && data.id) {
+        try {
+          const mlRes = await fetch('/api/mercadolibre/publish', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ product_id: data.id }),
+          })
+          if (mlRes.ok) {
+            const mlData = await mlRes.json()
+            if (mlData.permalink) setMlPermalink(mlData.permalink)
+          }
+        } catch { /* no-bloqueante */ }
+      }
+
       setPublished(true)
       setTimeout(onPublished, 3000)
     } catch {
@@ -278,6 +303,13 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
           <Globe size={20} color="#2f5fdb" weight="fill" />
           <p style={{ fontSize: 13, color: '#A5D6FF', fontWeight: 600, margin: 0 }}>Ver en componenta.cl/marketplace →</p>
         </div>
+        {mlPermalink && (
+          <a href={mlPermalink} target="_blank" rel="noopener noreferrer"
+            style={{ background: '#fffbeb', border: '1.5px solid #fcd34d', borderRadius: 14, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+            <ShoppingCart size={20} color="#f59e0b" weight="fill" />
+            <p style={{ fontSize: 13, color: '#92400e', fontWeight: 600, margin: 0 }}>Ver publicación en MercadoLibre →</p>
+          </a>
+        )}
       </div>
     )
   }
@@ -501,7 +533,7 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
           {CHANNELS.map(channel => {
             const cfg = CANAL_CONFIG[channel.id as keyof typeof CANAL_CONFIG]
             const isSelected = selected.has(channel.id)
-            const disabled   = channel.id === 'mercadolibre'
+            const disabled   = channel.id === 'mercadolibre' && !mlConnected
             return (
               <button key={channel.id}
                 onPointerDown={() => toggle(channel.id)}
@@ -514,6 +546,11 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
                       <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: channel.id === 'componenta' ? '#2f5fdb' : '#e5e7eb', color: channel.id === 'componenta' ? '#fff' : '#6b7280' }}>
                         {cfg.badge}
                       </span>
+                    )}
+                    {channel.id === 'mercadolibre' && !mlConnected && (
+                      <a href="/api/mercadolibre/connect" style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: '#fef3c7', color: '#b45309', textDecoration: 'none', marginLeft: 'auto' }}>
+                        Conectar cuenta →
+                      </a>
                     )}
                     {isSelected && !disabled && (
                       <span style={{ marginLeft: 'auto', flexShrink: 0 }}>
