@@ -1,6 +1,10 @@
+'use client'
+
 import { Bell } from 'lucide-react'
 import { UserButton } from '@clerk/nextjs'
+import { useUser } from '@clerk/nextjs'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import Sidebar from './Sidebar'
 
 interface SellerLayoutProps {
@@ -9,6 +13,23 @@ interface SellerLayoutProps {
 }
 
 export default function SellerLayout({ children, section }: SellerLayoutProps) {
+  const { user } = useUser()
+  const [unread, setUnread] = useState(0)
+  const [bellHover, setBellHover] = useState(false)
+
+  useEffect(() => {
+    if (!user?.id) return
+    function loadUnread() {
+      fetch('/api/notifications')
+        .then(r => r.json())
+        .then(d => setUnread((d.notifications ?? []).filter((n: { leida: boolean }) => !n.leida).length))
+        .catch(() => {})
+    }
+    loadUnread()
+    const interval = setInterval(loadUnread, 30000)
+    return () => clearInterval(interval)
+  }, [user?.id])
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f5f6f7', overflowX: 'hidden' }}>
       <Sidebar />
@@ -33,15 +54,29 @@ export default function SellerLayout({ children, section }: SellerLayoutProps) {
             <span style={{ fontSize: 14, color: '#9ca3af', textTransform: 'capitalize' }}>{section}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Link href="/pedidos" title="Notificaciones" style={{
-              width: 32, height: 32, borderRadius: 8,
-              background: '#f3f4f6',
-              border: '1px solid #e5e7eb',
-              color: '#6b7280',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              textDecoration: 'none',
-            }}>
+            <Link
+              href="/pedidos"
+              title="Notificaciones"
+              onMouseEnter={() => setBellHover(true)}
+              onMouseLeave={() => setBellHover(false)}
+              style={{
+                width: 32, height: 32, borderRadius: 8, position: 'relative',
+                background: bellHover ? '#eff6ff' : '#f3f4f6',
+                border: `1px solid ${bellHover ? '#bfdbfe' : '#e5e7eb'}`,
+                color: bellHover ? '#1d4ed8' : '#6b7280',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                textDecoration: 'none', cursor: 'pointer', transition: 'all 0.15s',
+              }}>
               <Bell size={15} />
+              {unread > 0 && (
+                <span style={{
+                  position: 'absolute', top: -3, right: -3, minWidth: 15, height: 15, padding: '0 3px',
+                  borderRadius: 8, background: '#ef4444', color: '#fff', fontSize: 9, fontWeight: 700,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 2px #fff',
+                }}>
+                  {unread > 9 ? '9+' : unread}
+                </span>
+              )}
             </Link>
             <UserButton appearance={{ elements: { avatarBox: 'w-8 h-8' } }} />
           </div>

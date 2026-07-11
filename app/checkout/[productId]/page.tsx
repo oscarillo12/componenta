@@ -3,7 +3,7 @@
 import { use, useState, useEffect } from 'react'
 import { useUser } from '@clerk/nextjs'
 import Link from 'next/link'
-import { ArrowLeft, ShoppingBag, Truck, CreditCard, Loader2, User } from 'lucide-react'
+import { ArrowLeft, ShoppingBag, Truck, CreditCard, Loader2, User, MessageCircle } from 'lucide-react'
 
 interface ProductInfo {
   id: string
@@ -180,11 +180,14 @@ export default function CheckoutPage({ params }: { params: Promise<{ productId: 
                 style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.1)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: '#E6EDF3', display: 'block', marginBottom: 4 }}>
-                WhatsApp <span style={{ fontWeight: 400, color: '#8B949E' }}>(para enviarte la confirmación)</span>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#E6EDF3', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                <MessageCircle size={13} color="#25d366" />
+                WhatsApp
+                <span style={{ fontWeight: 400, color: '#8B949E', fontSize: 11 }}>· opcional, para enviarte la confirmación del pedido</span>
               </label>
               <input value={telefono} onChange={e => setTelefono(e.target.value)} placeholder="+56 9 1234 5678"
-                style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.1)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+                style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.1)', background: '#0D1117', color: '#E6EDF3', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+              <p style={{ fontSize: 11, color: '#6E7681', margin: '5px 0 0' }}>No es obligatorio. Solo lo usamos para avisarte cuando el vendedor confirme tu pedido.</p>
             </div>
             {envioOpt === 'envio' && (
               <div>

@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { MessageCircle, ChevronRight, Package } from 'lucide-react'
+import { MessageCircle, ChevronRight, Package, RefreshCw } from 'lucide-react'
 import { supabaseClient } from '@/lib/supabase'
 
 interface Conversation {
@@ -19,6 +19,14 @@ interface Conversation {
 
 export default function ChatInboxClient({ conversations, sellerId }: { conversations: Conversation[]; sellerId: string }) {
   const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const [justUpdated, setJustUpdated] = useState(false)
+
+  function refresh() {
+    startTransition(() => router.refresh())
+    setJustUpdated(true)
+    setTimeout(() => setJustUpdated(false), 1800)
+  }
 
   useEffect(() => {
     const roomIds = new Set(conversations.map(c => c.roomId))
@@ -30,19 +38,20 @@ export default function ChatInboxClient({ conversations, sellerId }: { conversat
         { event: 'INSERT', schema: 'public', table: 'chat_messages' },
         payload => {
           if (roomIds.has(payload.new.room_id as string)) {
-            router.refresh()
+            refresh()
           }
         }
       )
       .subscribe()
 
     // Polling cada 30s como respaldo
-    const poll = setInterval(() => router.refresh(), 30_000)
+    const poll = setInterval(refresh, 30_000)
 
     return () => {
       supabaseClient.removeChannel(channel)
       clearInterval(poll)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router, conversations])
 
   function formatFecha(iso: string) {
@@ -72,11 +81,23 @@ export default function ChatInboxClient({ conversations, sellerId }: { conversat
 
   return (
     <div>
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 800, color: '#E6EDF3', margin: '0 0 4px' }}>Mensajes</h1>
-        <p style={{ fontSize: 13, color: '#8B949E', margin: 0 }}>
-          {conversations.length} conversación{conversations.length !== 1 ? 'es' : ''} activa{conversations.length !== 1 ? 's' : ''}
-        </p>
+      <div style={{ marginBottom: 20, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+        <div>
+          <h1 style={{ fontSize: 20, fontWeight: 800, color: '#E6EDF3', margin: '0 0 4px' }}>Mensajes</h1>
+          <p style={{ fontSize: 13, color: '#8B949E', margin: 0 }}>
+            {conversations.length} conversación{conversations.length !== 1 ? 'es' : ''} activa{conversations.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 600, padding: '5px 10px', borderRadius: 20,
+          color: justUpdated ? '#3FB950' : '#6E7681',
+          background: justUpdated ? 'rgba(63,185,80,0.12)' : 'transparent',
+          border: `1px solid ${justUpdated ? 'rgba(63,185,80,0.3)' : 'transparent'}`,
+          transition: 'all 0.2s', whiteSpace: 'nowrap', marginTop: 2,
+        }}>
+          <RefreshCw size={12} style={isPending ? { animation: 'spin 0.8s linear infinite' } : undefined} />
+          {isPending ? 'Actualizando…' : justUpdated ? 'Al día' : 'En vivo'}
+        </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -146,6 +167,8 @@ export default function ChatInboxClient({ conversations, sellerId }: { conversat
           💡 <strong>Tip:</strong> Los mensajes marcados con <span style={{ color: '#388BFD', fontWeight: 700 }}>!</span> son consultas nuevas de compradores. Responde rápido para aumentar tus ventas.
         </p>
       </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }

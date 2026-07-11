@@ -305,9 +305,9 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
         </div>
         {mlPermalink && (
           <a href={mlPermalink} target="_blank" rel="noopener noreferrer"
-            style={{ background: '#fffbeb', border: '1.5px solid #fcd34d', borderRadius: 14, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+            style={{ background: '#fffbeb', border: '1.5px solid #fcd34d', borderRadius: 14, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', boxShadow: '0 2px 6px rgba(245,158,11,0.15)' }}>
             <ShoppingCart size={20} color="#f59e0b" weight="fill" />
-            <p style={{ fontSize: 13, color: '#92400e', fontWeight: 600, margin: 0 }}>Ver publicación en MercadoLibre →</p>
+            <p style={{ fontSize: 13, color: '#92400e', fontWeight: 700, margin: 0 }}>Ver publicación en MercadoLibre →</p>
           </a>
         )}
       </div>
@@ -547,8 +547,13 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
                         {cfg.badge}
                       </span>
                     )}
+                    {channel.id === 'mercadolibre' && (
+                      <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 20, background: '#f59e0b', color: '#fff', letterSpacing: 0.3 }}>
+                        Nuevo
+                      </span>
+                    )}
                     {channel.id === 'mercadolibre' && !mlConnected && (
-                      <a href="/api/mercadolibre/connect" style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: '#fef3c7', color: '#b45309', textDecoration: 'none', marginLeft: 'auto' }}>
+                      <a href="/api/mercadolibre/connect" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 20, background: '#f59e0b', color: '#fff', textDecoration: 'none', marginLeft: 'auto', boxShadow: '0 1px 3px rgba(245,158,11,0.4)' }}>
                         Conectar cuenta →
                       </a>
                     )}

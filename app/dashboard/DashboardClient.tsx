@@ -87,12 +87,14 @@ export default function DashboardClient({
       </div>
 
       {!hasPhone && (
-        <div style={{ background: '#fff7ed', border: '1.5px solid #fed7aa', borderRadius: 14, padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Phone size={16} color="#ea580c" />
+        <div style={{ background: 'linear-gradient(135deg,#fff7ed,#ffedd5)', border: '1.5px solid #fdba74', borderRadius: 14, padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 1px 4px rgba(234,88,12,0.1)' }}>
+          <div style={{ width: 34, height: 34, borderRadius: 10, background: '#fed7aa', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Phone size={16} color="#ea580c" />
+          </div>
           <p style={{ fontSize: 13, color: '#9a3412', margin: 0, fontWeight: 500, flex: 1 }}>
             <strong>Falta tu número de WhatsApp.</strong> Sin él, los compradores no pueden contactarte y el bot no funciona.
           </p>
-          <Link href="/mi-tienda" style={{ fontSize: 13, color: '#ea580c', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+          <Link href="/mi-tienda" style={{ fontSize: 13, color: '#fff', background: '#ea580c', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap', padding: '8px 16px', borderRadius: 10, boxShadow: '0 2px 6px rgba(234,88,12,0.35)' }}>
             Agregar →
           </Link>
         </div>

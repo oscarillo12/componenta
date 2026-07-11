@@ -79,7 +79,10 @@ export default function Sidebar() {
             >
               <Icon size={18} />
               {href === '/pedidos' && unread > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                <span
+                  className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center"
+                  style={{ boxShadow: '0 0 0 2px #fff' }}
+                >
                   {unread > 9 ? '9+' : unread}
                 </span>
               )}
@@ -96,9 +99,15 @@ export default function Sidebar() {
               style={isActive(href)
                 ? { background: '#eff6ff', color: '#1d4ed8' }
                 : { color: '#9ca3af' }}
-              className="w-9 h-9 rounded-lg flex items-center justify-center transition-all hover:bg-gray-100"
+              className="w-9 h-9 rounded-lg flex items-center justify-center transition-all relative hover:bg-gray-100"
             >
               <Icon size={18} />
+              {href === '/solicitudes' && !isActive(href) && (
+                <span
+                  title="Novedad"
+                  style={{ position: 'absolute', top: 5, right: 6, width: 6, height: 6, borderRadius: '50%', background: '#1d4ed8', boxShadow: '0 0 0 2px #fff' }}
+                />
+              )}
             </Link>
           ))}
         </div>
@@ -119,7 +128,10 @@ export default function Sidebar() {
             <Icon size={22} />
             <span style={{ fontSize: 9, fontWeight: 600 }}>{label}</span>
             {href === '/pedidos' && unread > 0 && (
-              <span className="absolute top-2 right-2 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+              <span
+                className="absolute top-2 right-2 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center"
+                style={{ boxShadow: '0 0 0 2px #fff' }}
+              >
                 {unread > 9 ? '9+' : unread}
               </span>
             )}
