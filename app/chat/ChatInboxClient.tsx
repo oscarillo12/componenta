@@ -1,7 +1,10 @@
 'use client'
 
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { MessageCircle, ChevronRight, Package } from 'lucide-react'
+import { supabaseClient } from '@/lib/supabase'
 
 interface Conversation {
   productId:  string
@@ -15,6 +18,33 @@ interface Conversation {
 }
 
 export default function ChatInboxClient({ conversations, sellerId }: { conversations: Conversation[]; sellerId: string }) {
+  const router = useRouter()
+
+  useEffect(() => {
+    const roomIds = new Set(conversations.map(c => c.roomId))
+
+    // Supabase Realtime: actualiza inbox cuando llega mensaje nuevo
+    const channel = supabaseClient
+      .channel('inbox-realtime')
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'chat_messages' },
+        payload => {
+          if (roomIds.has(payload.new.room_id as string)) {
+            router.refresh()
+          }
+        }
+      )
+      .subscribe()
+
+    // Polling cada 30s como respaldo
+    const poll = setInterval(() => router.refresh(), 30_000)
+
+    return () => {
+      supabaseClient.removeChannel(channel)
+      clearInterval(poll)
+    }
+  }, [router, conversations])
+
   function formatFecha(iso: string) {
     const d = new Date(iso)
     const now = new Date()
