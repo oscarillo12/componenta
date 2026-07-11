@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import {
   TrendingUp, Package, Eye, Tag, ShoppingBag,
-  ArrowRight, Zap, Plus, BarChart3, AlertCircle
+  ArrowRight, Zap, Plus, BarChart3, AlertCircle,
+  MessageCircle, MapPin
 } from 'lucide-react'
 
 type TopPieza = {
@@ -11,10 +12,24 @@ type TopPieza = {
   disponible: boolean; imagen_url: string | null; estado: string
 }
 
+type RendimientoPieza = {
+  id: string; pieza: string; vistas: number; consultas: number
+  disponible: boolean; precio: number
+}
+
 interface Props {
-  totalPublicadas:  number; totalDisponibles: number; totalVendidas: number
-  totalVistas:      number; ingresosMes:      number; topPiezas:    TopPieza[]
-  recentItems:      TopPieza[]; isDemo: boolean; plan: string
+  totalPublicadas:  number
+  totalDisponibles: number
+  totalVendidas:    number
+  totalVistas:      number
+  ingresosMes:      number
+  topPiezas:        TopPieza[]
+  recentItems:      TopPieza[]
+  isDemo:           boolean
+  plan:             string
+  rendimiento:      RendimientoPieza[]
+  topRegiones:      { region: string; count: number }[]
+  dailyViews:       { day: string; count: number }[]
 }
 
 function StatCard({ label, value, sub, icon: Icon, color, trend }: {
@@ -47,9 +62,13 @@ const ESTADO_DOT: Record<string, string> = {
 export default function DashboardClient({
   totalPublicadas, totalDisponibles, totalVendidas,
   totalVistas, ingresosMes, topPiezas, recentItems, isDemo, plan,
+  rendimiento, topRegiones, dailyViews,
 }: Props) {
   const isPro = plan === 'pro'
   const tasaVenta = totalPublicadas > 0 ? Math.round((totalVendidas / totalPublicadas) * 100) : 0
+  const maxVistas = Math.max(...rendimiento.map(r => r.vistas), 1)
+  const maxRegion = Math.max(...topRegiones.map(r => r.count), 1)
+  const maxDay    = Math.max(...dailyViews.map(d => d.count), 1)
 
   return (
     <>
@@ -85,51 +104,163 @@ export default function DashboardClient({
 
       <div className="dash-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 20, alignItems: 'start' }}>
 
-        {/* Piezas recientes */}
-        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <BarChart3 size={15} color="#9ca3af" />
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>Inventario reciente</span>
-            </div>
-            <Link href="/inventario" style={{ fontSize: 12, color: '#1d4ed8', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
-              Ver todo <ArrowRight size={11} />
-            </Link>
-          </div>
-          {recentItems.length === 0 ? (
-            <div style={{ padding: '48px 20px', textAlign: 'center' }}>
-              <Package size={32} color="#e5e7eb" style={{ margin: '0 auto 12px', display: 'block' }} />
-              <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Sin piezas aún</p>
-            </div>
-          ) : (
-            <div>
-              {recentItems.map((item, i) => (
-                <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: i < recentItems.length - 1 ? '1px solid #f9fafb' : 'none' }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 10, background: '#f3f4f6', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {item.imagen_url ? <img src={item.imagen_url} alt={item.pieza} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Package size={18} color="#9ca3af" />}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.pieza}</p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
-                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: ESTADO_DOT[item.estado] ?? '#9ca3af', flexShrink: 0 }} />
-                      <span style={{ fontSize: 11, color: '#9ca3af' }}>{item.disponible ? 'En venta' : 'Vendida'}</span>
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>${item.precio.toLocaleString('es-CL')}</p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 3, justifyContent: 'flex-end' }}>
-                      <Eye size={10} color="#d1d5db" />
-                      <span style={{ fontSize: 11, color: '#9ca3af' }}>{item.vistas}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+        {/* Columna principal */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+          {/* Rendimiento por pieza */}
+          {rendimiento.length > 0 && (
+            <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <BarChart3 size={15} color="#9ca3af" />
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>Rendimiento por pieza</span>
+              </div>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ background: '#f9fafb' }}>
+                      <th style={{ padding: '10px 20px', textAlign: 'left', fontWeight: 600, color: '#6b7280', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.4 }}>Pieza</th>
+                      <th style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 600, color: '#6b7280', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.4 }}>Vistas</th>
+                      <th style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 600, color: '#6b7280', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.4 }}>Consultas</th>
+                      <th style={{ padding: '10px 20px', textAlign: 'right', fontWeight: 600, color: '#6b7280', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.4 }}>Conv.</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rendimiento.map((r, i) => {
+                      const conv = r.vistas > 0 ? Math.round((r.consultas / r.vistas) * 100) : 0
+                      return (
+                        <tr key={r.id} style={{ borderTop: i > 0 ? '1px solid #f3f4f6' : 'none' }}>
+                          <td style={{ padding: '12px 20px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                              <span style={{ fontWeight: 600, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 220 }}>{r.pieza}</span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <div style={{ flex: 1, height: 4, background: '#f3f4f6', borderRadius: 4, maxWidth: 120 }}>
+                                  <div style={{ height: '100%', width: `${(r.vistas / maxVistas) * 100}%`, background: '#1d4ed8', borderRadius: 4 }} />
+                                </div>
+                                <span style={{ fontSize: 10, color: r.disponible ? '#15803d' : '#9ca3af', fontWeight: 600 }}>
+                                  {r.disponible ? 'En venta' : 'Vendida'}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+                          <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#111827' }}>{r.vistas}</td>
+                          <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end' }}>
+                              <MessageCircle size={11} color={r.consultas > 0 ? '#0891b2' : '#d1d5db'} />
+                              <span style={{ fontWeight: 600, color: r.consultas > 0 ? '#0891b2' : '#9ca3af' }}>{r.consultas}</span>
+                            </div>
+                          </td>
+                          <td style={{ padding: '12px 20px', textAlign: 'right' }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: conv >= 10 ? '#15803d' : conv > 0 ? '#b45309' : '#9ca3af', background: conv >= 10 ? '#eefbf2' : conv > 0 ? '#fffbeb' : '#f9fafb', padding: '2px 8px', borderRadius: 20 }}>
+                              {conv}%
+                            </span>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
+
+          {/* Inventario reciente */}
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Package size={15} color="#9ca3af" />
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>Últimas publicaciones</span>
+              </div>
+              <Link href="/inventario" style={{ fontSize: 12, color: '#1d4ed8', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+                Ver todo <ArrowRight size={11} />
+              </Link>
+            </div>
+            {recentItems.length === 0 ? (
+              <div style={{ padding: '48px 20px', textAlign: 'center' }}>
+                <Package size={32} color="#e5e7eb" style={{ margin: '0 auto 12px', display: 'block' }} />
+                <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Sin piezas aún</p>
+              </div>
+            ) : (
+              <div>
+                {recentItems.map((item, i) => (
+                  <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: i < recentItems.length - 1 ? '1px solid #f9fafb' : 'none' }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 10, background: '#f3f4f6', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {item.imagen_url ? <img src={item.imagen_url} alt={item.pieza} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Package size={18} color="#9ca3af" />}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.pieza}</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: ESTADO_DOT[item.estado] ?? '#9ca3af', flexShrink: 0 }} />
+                        <span style={{ fontSize: 11, color: '#9ca3af' }}>{item.disponible ? 'En venta' : 'Vendida'}</span>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>${item.precio.toLocaleString('es-CL')}</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 3, justifyContent: 'flex-end' }}>
+                        <Eye size={10} color="#d1d5db" />
+                        <span style={{ fontSize: 11, color: '#9ca3af' }}>{item.vistas}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Columna lateral */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+          {/* Vistas por región */}
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', gap: 7 }}>
+              <MapPin size={14} color="#0891b2" />
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>Visitas por región</span>
+              <span style={{ fontSize: 10, color: '#9ca3af', marginLeft: 'auto' }}>30 días</span>
+            </div>
+            {topRegiones.length === 0 ? (
+              <div style={{ padding: '20px 18px', textAlign: 'center' }}>
+                <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>
+                  Los datos de región aparecerán aquí cuando los compradores visiten tus piezas.
+                </p>
+              </div>
+            ) : (
+              <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {topRegiones.map(r => (
+                  <div key={r.region}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: 12, color: '#374151', fontWeight: 500 }}>{r.region}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: '#0891b2' }}>{r.count}</span>
+                    </div>
+                    <div style={{ height: 5, background: '#f3f4f6', borderRadius: 4 }}>
+                      <div style={{ height: '100%', width: `${(r.count / maxRegion) * 100}%`, background: 'linear-gradient(90deg,#0891b2,#38bdf8)', borderRadius: 4 }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Vistas últimos 7 días */}
+          {dailyViews.length > 0 && (
+            <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+              <div style={{ padding: '14px 18px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', gap: 7 }}>
+                <Eye size={14} color="#7c3aed" />
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>Vistas esta semana</span>
+              </div>
+              <div style={{ padding: '14px 18px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 64 }}>
+                  {dailyViews.map(d => (
+                    <div key={d.day} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, height: '100%', justifyContent: 'flex-end' }}>
+                      <div style={{ width: '100%', background: '#ede9fe', borderRadius: '4px 4px 0 0', height: `${Math.max(8, (d.count / maxDay) * 52)}px`, position: 'relative' }}>
+                        <div style={{ position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)', fontSize: 9, color: '#7c3aed', fontWeight: 700, whiteSpace: 'nowrap' }}>{d.count}</div>
+                      </div>
+                      <span style={{ fontSize: 9, color: '#9ca3af', textAlign: 'center' }}>{d.day.split(' ')[0]}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Top por vistas */}
           {topPiezas.length > 0 && (
@@ -150,42 +281,6 @@ export default function DashboardClient({
               ))}
             </div>
           )}
-
-          {/* Agente WhatsApp */}
-          <div style={{ background: 'linear-gradient(135deg,#0f172a,#1e3a5f)', borderRadius: 16, padding: 20, overflow: 'hidden', position: 'relative' }}>
-            <div style={{ position: 'absolute', top: -20, right: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(22,163,74,0.15)', filter: 'blur(30px)' }} />
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(34,197,94,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Zap size={14} color={isPro ? '#22c55e' : '#60a5fa'} />
-                </div>
-                <span style={{ fontSize: 11, fontWeight: 700, color: isPro ? '#22c55e' : '#60a5fa', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  {isPro ? '✓ Activado en tu plan' : 'Próximamente'}
-                </span>
-              </div>
-              <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: '0 0 8px', lineHeight: 1.4 }}>Agente WhatsApp IA</p>
-              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', margin: '0 0 14px', lineHeight: 1.5 }}>
-                Vende presencialmente y dile al agente por WhatsApp qué pieza vendiste. Se actualiza solo.
-              </p>
-              <div style={{ background: 'rgba(255,255,255,0.07)', borderRadius: 10, padding: '10px 12px', marginBottom: 12 }}>
-                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', margin: '0 0 4px' }}>Ejemplo de uso:</p>
-                <p style={{ fontSize: 12, color: '#60a5fa', margin: 0, fontStyle: 'italic' }}>"Vendí el amortiguador del Corolla"</p>
-                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: '4px 0 0' }}>→ Pieza marcada como vendida automáticamente</p>
-              </div>
-              {isPro ? (
-                <div style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 10, padding: '10px 12px' }}>
-                  <p style={{ fontSize: 11, color: '#22c55e', fontWeight: 700, margin: '0 0 4px' }}>Para activar tu número:</p>
-                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', margin: 0, lineHeight: 1.5 }}>
-                    Contáctanos en <span style={{ color: '#60a5fa' }}>soporte@componenta.cl</span> con tu número de WhatsApp.
-                  </p>
-                </div>
-              ) : (
-                <Link href="/planes" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 14px', borderRadius: 10, background: 'rgba(22,163,74,0.2)', border: '1px solid rgba(22,163,74,0.4)', color: '#60a5fa', fontWeight: 700, fontSize: 12, textDecoration: 'none' }}>
-                  <Tag size={12} /> Disponible en Plan Pro
-                </Link>
-              )}
-            </div>
-          </div>
 
           {/* Plan actual */}
           <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e7eb', padding: 18, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>

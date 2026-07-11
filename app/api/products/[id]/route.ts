@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 type RouteContext = { params: Promise<{ id: string }> }
 
 // GET — detalle de un producto por ID
-export async function GET(_req: Request, { params }: RouteContext) {
+export async function GET(req: Request, { params }: RouteContext) {
   const { id } = await params
 
   const { data, error } = await supabaseAdmin
@@ -17,6 +17,28 @@ export async function GET(_req: Request, { params }: RouteContext) {
   if (error || !data) {
     return NextResponse.json({ product: null }, { status: 404 })
   }
+
+  // Fire-and-forget: incrementa vistas + registra región
+  ;(async () => {
+    const rawIp = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim()
+    const ip = rawIp && rawIp !== '::1' && !rawIp.startsWith('127.') ? rawIp : null
+
+    let region: string | null = null
+    if (ip) {
+      try {
+        const geo = await fetch(`https://ipapi.co/${ip}/json/`, { signal: AbortSignal.timeout(2500) })
+        if (geo.ok) {
+          const j = await geo.json()
+          region = (j.region as string | null) ?? (j.city as string | null) ?? null
+        }
+      } catch { /* ignore */ }
+    }
+
+    await Promise.all([
+      supabaseAdmin.from('products').update({ vistas: (data.vistas ?? 0) + 1 }).eq('id', id),
+      supabaseAdmin.from('product_views').insert({ product_id: id, seller_id: data.user_id, region }),
+    ])
+  })().catch(() => {})
 
   return NextResponse.json({
     product: {
