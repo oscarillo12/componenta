@@ -279,16 +279,21 @@ export default function DashboardClient({
                 <span style={{ fontSize: 13, fontWeight: 800, color: '#111827', flexShrink: 0 }}>{consultasChat}</span>
               </div>
 
-              {/* WhatsApp — próximamente con el bot */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, opacity: 0.6 }}>
-                <div style={{ width: 30, height: 30, borderRadius: 9, background: '#f0fdf9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Bot size={14} color="#25d366" />
+              {/* WhatsApp bot — activo */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 30, height: 30, borderRadius: 9, background: '#25d366', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Bot size={14} color="#fff" />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: 12, fontWeight: 600, color: '#374151', margin: '0 0 3px' }}>WhatsApp (bot)</p>
-                  <div style={{ height: 5, background: '#f3f4f6', borderRadius: 4 }} />
+                  <div style={{ height: 5, background: '#f3f4f6', borderRadius: 4 }}>
+                    <div style={{ height: '100%', width: hasPhone ? '80%' : '20%', background: '#25d366', borderRadius: 4 }} />
+                  </div>
                 </div>
-                <span style={{ fontSize: 10, fontWeight: 700, color: '#25d366', background: '#f0fdf9', border: '1px solid #a7f3d0', padding: '2px 7px', borderRadius: 20, flexShrink: 0, whiteSpace: 'nowrap' }}>Próximamente</span>
+                {hasPhone
+                  ? <span style={{ fontSize: 10, fontWeight: 700, color: '#15803d', background: '#eefbf2', border: '1px solid #a7f3d0', padding: '2px 7px', borderRadius: 20, flexShrink: 0, whiteSpace: 'nowrap' }}>Activo</span>
+                  : <Link href="/mi-tienda" style={{ fontSize: 10, fontWeight: 700, color: '#b45309', background: '#fffbeb', border: '1px solid #fcd34d', padding: '2px 7px', borderRadius: 20, flexShrink: 0, whiteSpace: 'nowrap', textDecoration: 'none' }}>Configurar →</Link>
+                }
               </div>
 
               {/* MercadoLibre — conectado (sin tracking aún) o invitación a conectar */}
@@ -308,18 +313,63 @@ export default function DashboardClient({
               </div>
 
               <p style={{ fontSize: 11, color: '#9ca3af', margin: 0, lineHeight: 1.5 }}>
-                Cuando actives el bot de WhatsApp vas a ver aquí cuántas consultas llegan por ese canal, junto a las del chat de Componenta y MercadoLibre.
+                El bot de WhatsApp está activo. Los compradores consultan piezas enviando un mensaje al número del bot.
               </p>
             </div>
           </div>
 
-          {/* Vistas últimos 7 días */}
-          {dailyViews.length > 0 && (
-            <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-              <div style={{ padding: '14px 18px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', gap: 7 }}>
-                <Eye size={14} color="#7c3aed" />
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>Vistas esta semana</span>
+          {/* WhatsApp Bot Card */}
+          <div style={{ background: 'linear-gradient(160deg,#ecfdf5,#f0fdf9)', borderRadius: 16, border: '1.5px solid #a7f3d0', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 30, height: 30, borderRadius: 9, background: '#25d366', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Bot size={15} color="#fff" />
+                </div>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#065f46', margin: 0 }}>Bot de WhatsApp</p>
+                  <p style={{ fontSize: 10, color: '#6b7280', margin: 0 }}>Consultas automáticas 24/7</p>
+                </div>
               </div>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700, color: '#15803d', background: '#a7f3d0', padding: '3px 9px', borderRadius: 20, whiteSpace: 'nowrap' }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#15803d', display: 'inline-block' }} />
+                Activo
+              </span>
+            </div>
+            <div style={{ padding: '0 18px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <a href="https://wa.me/14155238886" target="_blank" rel="noopener noreferrer"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: '#25d366', color: '#fff', padding: '10px', borderRadius: 10, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
+                <Bot size={13} /> Número del bot: +1 415 523 8886
+              </a>
+              <div style={{ background: 'rgba(255,255,255,0.7)', borderRadius: 10, padding: '10px 12px', border: '1px solid #d1fae5' }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: '#374151', margin: '0 0 5px' }}>Comandos del vendedor:</p>
+                <p style={{ fontSize: 11, color: '#4b5563', margin: 0, lineHeight: 1.7 }}>
+                  💬 &quot;vendí el alternador&quot; — saca del catálogo<br/>
+                  💬 &quot;vendí la 2&quot; — saca por número<br/>
+                  💬 Cualquier mensaje — ver tu inventario
+                </p>
+              </div>
+              {!hasPhone && (
+                <Link href="/mi-tienda" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: '#b45309', fontWeight: 700, textDecoration: 'none', background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 9, padding: '8px 12px' }}>
+                  <Phone size={12} /> Agrega tu número de WhatsApp para activar comandos →
+                </Link>
+              )}
+            </div>
+          </div>
+
+          {/* Vistas últimos 7 días */}
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', gap: 7 }}>
+              <Eye size={14} color="#7c3aed" />
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>Vistas esta semana</span>
+              <span style={{ fontSize: 10, color: '#9ca3af', marginLeft: 'auto' }}>7 días</span>
+            </div>
+            {dailyViews.length === 0 ? (
+              <div style={{ padding: '20px 18px', textAlign: 'center' }}>
+                <p style={{ fontSize: 12, color: '#9ca3af', margin: 0, lineHeight: 1.5 }}>
+                  Las vistas aparecerán aquí cuando publiques piezas.
+                </p>
+              </div>
+            ) : (
               <div style={{ padding: '14px 18px' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 64 }}>
                   {dailyViews.map(d => (
@@ -332,8 +382,8 @@ export default function DashboardClient({
                   ))}
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Top por vistas */}
           {topPiezas.length > 0 && (

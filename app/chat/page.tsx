@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { supabaseAdmin } from '@/lib/supabase-server'
 import SellerLayout from '@/components/SellerLayout'
 import ChatInboxClient from './ChatInboxClient'
+import { MessageCircle } from 'lucide-react'
 
 export default async function ChatPage() {
   const { userId } = await auth()
@@ -19,10 +20,12 @@ export default async function ChatPage() {
     return (
       <SellerLayout section="mensajes">
         <div style={{ textAlign: 'center', padding: '80px 24px' }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>💬</div>
-          <p style={{ fontSize: 18, fontWeight: 700, color: '#E6EDF3', margin: '0 0 8px' }}>Sin conversaciones aún</p>
-          <p style={{ fontSize: 14, color: '#8B949E', margin: '0 0 24px' }}>Cuando alguien pregunte por una de tus piezas, la conversación aparecerá aquí.</p>
-          <a href="/marketplace" style={{ display: 'inline-block', padding: '10px 24px', background: '#388BFD', color: '#fff', borderRadius: 10, textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
+          <div style={{ width: 64, height: 64, borderRadius: 20, background: '#eff6ff', border: '1.5px solid #bfdbfe', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <MessageCircle size={28} color="#1d4ed8" />
+          </div>
+          <p style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Sin conversaciones aún</p>
+          <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 24px' }}>Cuando alguien pregunte por una de tus piezas, la conversación aparecerá aquí.</p>
+          <a href="/marketplace" style={{ display: 'inline-block', padding: '10px 24px', background: '#1d4ed8', color: '#fff', borderRadius: 12, textDecoration: 'none', fontWeight: 700, fontSize: 14 }}>
             Ver marketplace
           </a>
         </div>
