@@ -16,12 +16,14 @@ export async function GET() {
   }
 
   const items = products.map(p => {
-    const title = [p.pieza, p.marca, p.modelo, p.anios].filter(Boolean).join(' — ')
-    const desc  = p.descripcion || `${p.pieza} en buen estado. Disponible en Componenta.`
-    const price = `${p.precio} CLP`
+    const title = [p.pieza, p.marca, p.modelo, p.anios].filter(Boolean).join(' — ').slice(0, 150)
+    const desc  = (p.descripcion || `${p.pieza} usado en buen estado, disponible en Componenta Chile.`).slice(0, 5000)
+    // GMC requiere formato "AMOUNT CURRENCY" sin decimales para CLP (moneda sin centavos)
+    const price = `${Math.round(p.precio)} CLP`
+    // Mapeo completo de condiciones al vocabulario de Google
     const cond  = p.estado === 'nuevo' ? 'new' : 'used'
-    const brand = p.marca ?? 'Universal'
-    const img   = p.imagen_url ?? `${BASE}/placeholder-part.jpg`
+    const brand = (p.marca ?? 'Universal').slice(0, 70)
+    const img   = p.imagen_url ?? `${BASE}/og-image.png`
 
     return `
     <item>
@@ -34,8 +36,15 @@ export async function GET() {
       <g:availability>in stock</g:availability>
       <g:price>${price}</g:price>
       <g:brand>${brand}</g:brand>
-      <g:product_type>Repuestos automotrices</g:product_type>
-      ${p.oem ? `<g:mpn>${p.oem}</g:mpn>` : ''}
+      <g:product_type>Vehículos y repuestos > Repuestos y accesorios para automóviles</g:product_type>
+      <g:google_product_category>916</g:google_product_category>
+      <g:identifier_exists>no</g:identifier_exists>
+      ${p.oem ? `<g:mpn><![CDATA[${p.oem}]]></g:mpn>` : ''}
+      <g:shipping>
+        <g:country>CL</g:country>
+        <g:service>Estándar</g:service>
+        <g:price>0 CLP</g:price>
+      </g:shipping>
     </item>`
   }).join('\n')
 

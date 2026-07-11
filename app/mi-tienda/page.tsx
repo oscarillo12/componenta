@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import SellerLayout from '@/components/SellerLayout'
-import { Check, Copy, ExternalLink, MapPin, Clock, Phone, MessageCircle, AlertCircle, Loader2, Sparkles, ArrowRight, ArrowLeft, Upload } from 'lucide-react'
+import { Check, Copy, ExternalLink, MapPin, Clock, Phone, MessageCircle, AlertCircle, Loader2, Sparkles, ArrowRight, ArrowLeft, Upload, Globe } from 'lucide-react'
 
 const COLOR_PRESETS = [
   { label: 'Verde',   value: '#1A56DB' },
@@ -68,6 +68,7 @@ export default function MiTiendaPage() {
   const [error,    setError]    = useState('')
   const [specInput, setSpecInput] = useState('')
   const [copied,   setCopied]   = useState(false)
+  const [gmcCopied, setGmcCopied] = useState(false)
   const [aiLoading, setAiLoading] = useState(false)
   const [step, setStep] = useState(0)
   const [uploadingBanner, setUploadingBanner] = useState(false)
@@ -364,6 +365,83 @@ export default function MiTiendaPage() {
             )}
           </div>
         </div>
+
+        {/* ── Google Merchant Center ── */}
+        <div style={{ marginTop: 20, background: '#fff', borderRadius: 16, border: '1px solid #ececea', overflow: 'hidden' }}>
+
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '18px 24px', borderBottom: '1px solid #f1f2f4' }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: '#eef3fc', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Globe size={18} color="#2f5fdb" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <h2 style={{ fontSize: 15, fontWeight: 800, color: '#16181d', margin: 0 }}>Google Shopping</h2>
+              <p style={{ fontSize: 12, color: '#9aa0aa', margin: '2px 0 0' }}>Muestra tus repuestos en búsquedas de Google</p>
+            </div>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 20, background: '#f0fdf4', border: '1px solid #bbf7d0', fontSize: 11, fontWeight: 700, color: '#16a34a', flexShrink: 0 }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
+              Feed activo
+            </span>
+          </div>
+
+          {/* Feed URL */}
+          <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f2f4' }}>
+            <label style={{ display: 'block', fontSize: 10.5, fontWeight: 700, color: '#9aa0aa', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.6px' }}>
+              URL de tu feed de productos
+            </label>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
+              <div style={{ flex: 1, background: '#f9fafb', border: '1.5px solid #ececea', borderRadius: 9, padding: '10px 12px', fontSize: 12, color: '#374151', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.6 }}>
+                https://componenta.vercel.app/api/merchant-feed
+              </div>
+              <button
+                onPointerDown={() => {
+                  navigator.clipboard.writeText('https://componenta.vercel.app/api/merchant-feed')
+                  setGmcCopied(true)
+                  setTimeout(() => setGmcCopied(false), 2000)
+                }}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderRadius: 9, border: '1.5px solid #ececea', background: '#fff', fontSize: 12, fontWeight: 600, color: '#374151', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                {gmcCopied ? <Check size={13} color="#2f5fdb" /> : <Copy size={13} color="#9aa0aa" />}
+                {gmcCopied ? 'Copiada' : 'Copiar URL'}
+              </button>
+            </div>
+            <div style={{ display: 'flex', gap: 16, marginTop: 10 }}>
+              <a href="https://componenta.vercel.app/api/merchant-feed" target="_blank" rel="noopener noreferrer"
+                style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#2f5fdb', fontWeight: 600, textDecoration: 'none' }}>
+                <ExternalLink size={12} /> Ver feed
+              </a>
+              <a href="https://merchants.google.com" target="_blank" rel="noopener noreferrer"
+                style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#374151', fontWeight: 600, textDecoration: 'none' }}>
+                <ExternalLink size={12} /> Abrir Google Merchant Center
+              </a>
+            </div>
+          </div>
+
+          {/* Instrucciones paso a paso */}
+          <div style={{ padding: '16px 24px' }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: '#374151', margin: '0 0 14px' }}>Conectar en 4 pasos</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {([
+                { n: 1, text: 'Entra a merchants.google.com e inicia sesión con tu cuenta de Google.' },
+                { n: 2, text: 'Ve a Productos → Fuentes de datos → Agregar fuente de datos.' },
+                { n: 3, text: 'Elige "Feed programado (URL)", pega la URL de arriba y selecciona frecuencia Diaria.' },
+                { n: 4, text: 'Google revisará el feed. En 24–48 h tus piezas aparecerán en Google Shopping.' },
+              ] as const).map(({ n, text }) => (
+                <div key={n} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                  <span style={{ width: 22, height: 22, borderRadius: '50%', background: '#eef3fc', color: '#2f5fdb', fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                    {n}
+                  </span>
+                  <p style={{ fontSize: 12.5, color: '#374151', margin: 0, lineHeight: 1.55 }}>{text}</p>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 16, padding: '10px 14px', borderRadius: 10, background: '#fffbeb', border: '1px solid #fde68a' }}>
+              <p style={{ fontSize: 12, color: '#92400e', margin: 0, lineHeight: 1.5 }}>
+                <strong>Tip:</strong> Cada pieza que publiques con foto, precio y marca aparecerá automáticamente en el feed. Sin foto no se muestra en Google Shopping.
+              </p>
+            </div>
+          </div>
+        </div>
+
       </div>
     </SellerLayout>
   )
