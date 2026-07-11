@@ -1,28 +1,19 @@
 /**
  * Webhook de WhatsApp para Componenta.
+ * Sin dependencia de IA — lógica de keywords + búsqueda directa en Supabase.
  *
- * Configuración requerida (agregar a netlify.toml y .env.local):
- *   TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
- *   TWILIO_AUTH_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
- *   TWILIO_WHATSAPP_FROM=whatsapp:+14155238886   (número Twilio sandbox o producción)
- *
- * En el panel de Twilio → Messaging → WhatsApp → Sandbox (o producción):
- *   Webhook URL (POST): https://tu-sitio.netlify.app/api/whatsapp
- *
- * Flujos que maneja:
- *   - Vendedor: "vendí el alternador" / "saca la pieza X" / "vendí ID abc123"
- *     → busca la pieza, la marca como no disponible y confirma
- *   - Cliente: cualquier otra consulta
- *     → busca piezas disponibles y responde con opciones
+ * Flujos:
+ *   - Vendedor: "vendí el alternador" / "saca la pieza 2" / "vendí ID abc123"
+ *     → identifica la pieza por número, nombre o ID, la marca como no disponible
+ *   - Comprador: cualquier consulta
+ *     → busca en Supabase y responde con las opciones encontradas
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { supabaseAdmin } from '@/lib/supabase-server'
 
-const anthropic = new Anthropic()
+// ── Helpers de respuesta ──────────────────────────────────────────────────────
 
-// Responde a Twilio con TwiML
 function twimlResponse(body: string) {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response><Message><Body>${body}</Body></Message></Response>`
@@ -31,7 +22,6 @@ function twimlResponse(body: string) {
   })
 }
 
-// Envía mensaje adicional vía Twilio REST (para mensajes largos en partes)
 async function sendTwilioMsg(to: string, body: string) {
   const sid   = process.env.TWILIO_ACCOUNT_SID!
   const token = process.env.TWILIO_AUTH_TOKEN!
@@ -47,20 +37,143 @@ async function sendTwilioMsg(to: string, body: string) {
   })
 }
 
+// ── Utilidades de texto ───────────────────────────────────────────────────────
+
+function normalize(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .trim()
+}
+
+const SELL_KEYWORDS = [
+  'vendi', 'vendio', 'vendida', 'vendido', 'vendo',
+  'saque', 'saca', 'sacar', 'saco',
+  'ya no esta', 'no disponible', 'marcar vendido', 'marcar como vendido',
+  'quitar', 'eliminar del catalogo', 'eliminar del catálogo',
+]
+
+function hasSellIntent(text: string): boolean {
+  const norm = normalize(text)
+  return SELL_KEYWORDS.some(kw => norm.includes(kw))
+}
+
+function findProductIndex(
+  text: string,
+  products: Array<{ id: string; pieza: string }>
+): number {
+  const norm = normalize(text)
+
+  // 1. Número explícito ("pieza 2", "el 3", "número 1")
+  const numMatch = text.match(/\b(\d+)\b/)
+  if (numMatch) {
+    const n = parseInt(numMatch[1], 10)
+    if (n >= 1 && n <= products.length) return n - 1
+  }
+
+  // 2. Short ID (primeros 8 chars del UUID)
+  const idIdx = products.findIndex(p =>
+    norm.includes(p.id.slice(0, 8).toLowerCase())
+  )
+  if (idIdx !== -1) return idIdx
+
+  // 3. Mejor match por palabras del nombre de la pieza
+  const words = norm.split(/\s+/).filter(w => w.length > 3)
+  let bestIdx = -1
+  let bestScore = 0
+  for (let i = 0; i < products.length; i++) {
+    const pNorm = normalize(products[i].pieza)
+    const score = words.filter(w => pNorm.includes(w)).length
+    if (score > bestScore) {
+      bestScore = score
+      bestIdx = i
+    }
+  }
+  if (bestScore > 0) return bestIdx
+
+  return -1
+}
+
+// ── Búsqueda de productos para comprador ─────────────────────────────────────
+
+type ProductResult = {
+  pieza: string
+  precio: number
+  seller_nombre: string | null
+  seller_telefono: string | null
+}
+
+async function searchProducts(query: string): Promise<ProductResult[]> {
+  const words = normalize(query).split(/\s+/).filter(w => w.length > 3)
+  if (words.length === 0) return []
+
+  // Intento 1: todas las palabras juntas
+  const { data: multi } = await supabaseAdmin
+    .from('products')
+    .select('pieza, precio, seller_nombre, seller_telefono')
+    .eq('disponible', true)
+    .ilike('pieza', `%${words.join(' ')}%`)
+    .limit(5)
+
+  if (multi && multi.length > 0) return multi as ProductResult[]
+
+  // Intento 2: primera palabra significativa
+  const { data: single } = await supabaseAdmin
+    .from('products')
+    .select('pieza, precio, seller_nombre, seller_telefono')
+    .eq('disponible', true)
+    .ilike('pieza', `%${words[0]}%`)
+    .limit(5)
+
+  return (single ?? []) as ProductResult[]
+}
+
+function buildBuyerReply(results: ProductResult[], query: string): string {
+  if (results.length === 0) {
+    return (
+      `No encontré "${query}" disponible en este momento.\n\n` +
+      `🔗 Ve el catálogo completo en:\ncomponenta.vercel.app/marketplace`
+    )
+  }
+
+  const lines = results.slice(0, 4).map(r => {
+    const precio = r.precio.toLocaleString('es-CL')
+    const nombre = r.seller_nombre ? ` · ${r.seller_nombre}` : ''
+    const tel    = r.seller_telefono ? `\n  📞 ${r.seller_telefono}` : ''
+    return `• ${r.pieza} — $${precio}${nombre}${tel}`
+  })
+
+  return (
+    `Encontré esto en Componenta:\n\n` +
+    lines.join('\n\n') +
+    `\n\n🔗 Ver más: componenta.vercel.app/marketplace`
+  )
+}
+
+// ── Handler principal ─────────────────────────────────────────────────────────
+
 export async function POST(req: NextRequest) {
-  const form = await req.formData()
+  const form    = await req.formData()
   const fromRaw = (form.get('From') as string | null) ?? ''
   const body    = ((form.get('Body') as string | null) ?? '').trim()
-  const fromNum = fromRaw.replace('whatsapp:', '')  // e.g. +56912345678
+  const fromNum = fromRaw.replace('whatsapp:', '')
 
-  if (!body) return twimlResponse('Hola 👋 Soy el asistente de Componenta. ¿En qué te ayudo?')
+  if (!body) {
+    return twimlResponse(
+      'Hola 👋 Soy el asistente de Componenta.\n\n' +
+      '• Si eres *comprador*, escríbeme qué pieza buscas.\n' +
+      '• Si eres *vendedor*, escribe "vendí [nombre de la pieza]" para sacarla del catálogo.\n\n' +
+      '🔗 componenta.vercel.app'
+    )
+  }
 
   try {
-    // ── 1. ¿Es un vendedor de Componenta? ──────────────────────────────
-    // Buscamos si hay alguna pieza con seller_telefono = fromNum
+    // ── 1. ¿Es vendedor? ───────────────────────────────────────────────────
     const { data: sellerProducts } = await supabaseAdmin
       .from('products')
-      .select('id, pieza, disponible, precio, user_id')
+      .select('id, pieza, disponible, precio')
       .eq('seller_telefono', fromNum)
       .eq('disponible', true)
       .order('created_at', { ascending: false })
@@ -68,109 +181,54 @@ export async function POST(req: NextRequest) {
     const isSeller = (sellerProducts?.length ?? 0) > 0
 
     if (isSeller && sellerProducts) {
-      // Usar Claude para entender el mensaje del vendedor
-      const systemSeller = `Eres un asistente de gestión de inventario para ${fromNum}.
-El vendedor tiene estas piezas disponibles en Componenta:
-${sellerProducts.map((p, i) => `${i + 1}. ID:${p.id.slice(0,8)} — ${p.pieza} ($${p.precio.toLocaleString('es-CL')})`).join('\n')}
+      // ¿Tiene intención de marcar como vendido?
+      if (hasSellIntent(body)) {
+        const idx = findProductIndex(body, sellerProducts)
 
-Responde SOLO con JSON:
-{
-  "accion": "vender" | "consultar" | "otro",
-  "piezaIdx": 0-based index de la pieza (o -1 si no está claro),
-  "respuesta": "texto para el vendedor en español chileno"
-}
+        if (idx === -1) {
+          // No pudo identificar cuál pieza — muestra la lista
+          const lista = sellerProducts
+            .map((p, i) => `${i + 1}. ${p.pieza}`)
+            .join('\n')
+          return twimlResponse(
+            `¿Cuál pieza vendiste? Responde con el número:\n\n${lista}`
+          )
+        }
 
-Si el mensaje dice "vendí", "saqué", "se vendió", "vendido", "ya no está" sobre alguna pieza, la acción es "vender".
-Si dice el nombre de la pieza, el índice, o el ID, úsalo para identificar cuál.
-Si no queda claro cuál pieza, la acción es "consultar" y pregunta cuál.`
-
-      const aiRes = await anthropic.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 256,
-        system: systemSeller,
-        messages: [{ role: 'user', content: body }],
-      })
-
-      let parsed: { accion: string; piezaIdx: number; respuesta: string } | null = null
-      try {
-        const txt = aiRes.content[0].type === 'text' ? aiRes.content[0].text : ''
-        const match = txt.match(/\{[\s\S]*\}/)
-        if (match) parsed = JSON.parse(match[0])
-      } catch { /* ignore */ }
-
-      if (parsed?.accion === 'vender' && parsed.piezaIdx >= 0 && parsed.piezaIdx < sellerProducts.length) {
-        const pieza = sellerProducts[parsed.piezaIdx]
+        const pieza = sellerProducts[idx]
         await supabaseAdmin
           .from('products')
           .update({ disponible: false })
           .eq('id', pieza.id)
 
         return twimlResponse(
-          `✅ Listo! "${pieza.pieza}" marcada como *vendida* y retirada del catálogo de Componenta.\n\nSi necesitas sacar otra pieza, escríbeme.`
+          `✅ Listo. *${pieza.pieza}* marcada como vendida y retirada del catálogo.\n\n` +
+          `Si vendiste otra pieza, escríbeme de nuevo.`
         )
       }
 
-      if (parsed?.accion === 'consultar' || (parsed?.accion === 'vender' && parsed.piezaIdx === -1)) {
-        const lista = sellerProducts.map((p, i) => `${i + 1}. ${p.pieza}`).join('\n')
-        return twimlResponse(
-          `¿Cuál pieza vendiste? Tus piezas disponibles:\n\n${lista}\n\nEscribe el número o el nombre de la pieza.`
-        )
-      }
-
-      return twimlResponse(parsed?.respuesta ?? '¿En qué te puedo ayudar con tu inventario?')
+      // Vendedor sin intención de vender — respuesta de ayuda
+      const lista = sellerProducts
+        .map((p, i) => `${i + 1}. ${p.pieza} — $${p.precio.toLocaleString('es-CL')}`)
+        .join('\n')
+      return twimlResponse(
+        `Hola 👋 Tienes ${sellerProducts.length} pieza(s) disponible(s):\n\n${lista}\n\n` +
+        `Para marcar una como vendida escribe: *"vendí el [nombre]"* o *"vendí la 1"*.`
+      )
     }
 
-    // ── 2. Es un comprador — responder como asistente de soporte ──────
-    // Buscar piezas disponibles relacionadas con el mensaje
-    const queryWords = body.toLowerCase().split(/\s+/).filter(w => w.length > 3)
-    let searchResults: { pieza: string; precio: number; seller_nombre: string | null; seller_telefono: string | null }[] = []
-
-    if (queryWords.length > 0) {
-      // Búsqueda simple por nombre de pieza
-      const searchTerm = queryWords.slice(0, 3).join(' ')
-      const { data } = await supabaseAdmin
-        .from('products')
-        .select('pieza, precio, seller_nombre, seller_telefono')
-        .eq('disponible', true)
-        .ilike('pieza', `%${searchTerm}%`)
-        .limit(5)
-
-      searchResults = data ?? []
-    }
-
-    // Usar Claude para responder al comprador
-    const systemBuyer = `Eres el asistente de Componenta, marketplace chileno de repuestos usados.
-Respondes consultas de compradores en español chileno, de forma breve y útil.
-
-${searchResults.length > 0
-    ? `Piezas disponibles relacionadas:\n${searchResults.map(r =>
-        `• ${r.pieza} — $${r.precio.toLocaleString('es-CL')} (${r.seller_nombre ?? 'Vendedor Componenta'})`
-      ).join('\n')}`
-    : 'No encontré piezas disponibles para esa consulta en este momento.'
-}
-
-Si hay resultados, ofrece los datos de contacto del vendedor si los tienes.
-Siempre sugiere visitar componenta.vercel.app para ver el catálogo completo.
-Mantén la respuesta en máximo 300 caracteres para WhatsApp.`
-
-    const buyerRes = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 200,
-      system: systemBuyer,
-      messages: [{ role: 'user', content: body }],
-    })
-
-    const answer = buyerRes.content[0].type === 'text' ? buyerRes.content[0].text : 'Gracias por contactar a Componenta. Visita componenta.vercel.app para ver nuestro catálogo.'
-
-    return twimlResponse(answer)
+    // ── 2. Es comprador — buscar piezas ───────────────────────────────────
+    const results = await searchProducts(body)
+    return twimlResponse(buildBuyerReply(results, body))
 
   } catch (err) {
     console.error('[whatsapp webhook]', err)
-    return twimlResponse('Hubo un error. Por favor intenta de nuevo o visita componenta.vercel.app')
+    return twimlResponse(
+      'Hubo un error. Intenta de nuevo o visita componenta.vercel.app'
+    )
   }
 }
 
-// Verificación GET para Twilio (no requerido pero útil para debugging)
 export async function GET() {
   return NextResponse.json({ status: 'WhatsApp webhook activo — Componenta' })
 }
