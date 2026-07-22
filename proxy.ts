@@ -2,11 +2,14 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 
 // Rutas del panel vendedor — requieren sesión iniciada
 const isSellerRoute = createRouteMatcher([
-  '/',
   '/inventario(.*)',
   '/pedidos(.*)',
   '/dashboard(.*)',
   '/planes(.*)',
+  '/mi-tienda(.*)',
+  '/mi-taller(.*)',
+  '/cuenta(.*)',
+  '/publicar(.*)',
 ])
 
 export default clerkMiddleware(async (auth, req) => {

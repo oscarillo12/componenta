@@ -11,6 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
+import { APP_URL } from '@/lib/config'
 
 // ── Helpers de respuesta ──────────────────────────────────────────────────────
 
@@ -134,7 +135,7 @@ function buildBuyerReply(results: ProductResult[], query: string): string {
   if (results.length === 0) {
     return (
       `No encontré "${query}" disponible en este momento.\n\n` +
-      `🔗 Ve el catálogo completo en:\ncomponenta.vercel.app/marketplace`
+      `🔗 Ve el catálogo completo en:\n${APP_URL}/marketplace`
     )
   }
 
@@ -148,7 +149,7 @@ function buildBuyerReply(results: ProductResult[], query: string): string {
   return (
     `Encontré esto en Componenta:\n\n` +
     lines.join('\n\n') +
-    `\n\n🔗 Ver más: componenta.vercel.app/marketplace`
+    `\n\n🔗 Ver más: ${APP_URL}/marketplace`
   )
 }
 
@@ -165,7 +166,7 @@ export async function POST(req: NextRequest) {
       'Hola 👋 Soy el asistente de Componenta.\n\n' +
       '• Si eres *comprador*, escríbeme qué pieza buscas.\n' +
       '• Si eres *vendedor*, escribe "vendí [nombre de la pieza]" para sacarla del catálogo.\n\n' +
-      '🔗 componenta.vercel.app'
+      `🔗 ${APP_URL}`
     )
   }
 
@@ -224,7 +225,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error('[whatsapp webhook]', err)
     return twimlResponse(
-      'Hubo un error. Intenta de nuevo o visita componenta.vercel.app'
+      `Hubo un error. Intenta de nuevo o visita ${APP_URL}`
     )
   }
 }

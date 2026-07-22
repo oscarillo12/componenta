@@ -149,3 +149,60 @@ CREATE POLICY "service_role_ml_tokens"
 CREATE OR REPLACE TRIGGER ml_tokens_updated_at
   BEFORE UPDATE ON ml_tokens
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ── Listings externos (scraping agentes) ─────────────────────────
+CREATE TABLE IF NOT EXISTS listings_externos (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  fuente          TEXT NOT NULL,
+  titulo          TEXT,
+  precio          INTEGER DEFAULT 0,
+  imagen          TEXT,
+  descripcion     TEXT,
+  url_original    TEXT UNIQUE NOT NULL,
+  categoria       TEXT,
+  marca           TEXT,
+  modelo          TEXT,
+  vendedor_nombre TEXT,
+  ubicacion       TEXT,
+  activo          BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ext_fuente  ON listings_externos(fuente);
+CREATE INDEX IF NOT EXISTS idx_ext_activo  ON listings_externos(activo);
+CREATE INDEX IF NOT EXISTS idx_ext_titulo  ON listings_externos USING gin(to_tsvector('spanish', coalesce(titulo, '')));
+
+ALTER TABLE listings_externos ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "ext_read_anon"      ON listings_externos;
+DROP POLICY IF EXISTS "ext_service_role"   ON listings_externos;
+
+CREATE POLICY "ext_read_anon"
+  ON listings_externos FOR SELECT TO anon USING (activo = true);
+
+CREATE POLICY "ext_service_role"
+  ON listings_externos FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+CREATE OR REPLACE TRIGGER ext_updated_at
+  BEFORE UPDATE ON listings_externos
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ── Solicitudes — email para alertas automáticas (2026-07-21) ─────────────
+-- Agregar columna buyer_email a la tabla solicitudes existente
+ALTER TABLE solicitudes ADD COLUMN IF NOT EXISTS buyer_email TEXT;
+
+-- Tabla solicitudes completa (referencia — ya debe existir):
+-- CREATE TABLE IF NOT EXISTS solicitudes (
+--   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+--   pieza       TEXT NOT NULL,
+--   marca       TEXT,
+--   modelo      TEXT,
+--   anio        TEXT,
+--   descripcion TEXT,
+--   buyer_name  TEXT NOT NULL,
+--   buyer_phone TEXT,
+--   buyer_email TEXT,
+--   activa      BOOLEAN NOT NULL DEFAULT TRUE,
+--   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+-- );

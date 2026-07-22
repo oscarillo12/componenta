@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react'
 import { Plus, LayoutGrid, BarChart2, Package, CreditCard, ShoppingBag, UserCircle, Store, MessageCircle, Search } from 'lucide-react'
 
 const navItems = [
-  { icon: Plus,          href: '/',           label: 'Nuevo ingreso' },
+  { icon: Plus,          href: '/publicar',   label: 'Nuevo ingreso' },
   { icon: LayoutGrid,    href: '/inventario', label: 'Inventario' },
   { icon: Package,       href: '/pedidos',    label: 'Pedidos' },
   { icon: BarChart2,     href: '/dashboard',  label: 'Dashboard' },
@@ -19,15 +19,15 @@ const navItems = [
 
 const bottomItems = [
   { icon: Search,      href: '/solicitudes', label: 'Solicitudes' },
-  { icon: ShoppingBag, href: '/marketplace', label: 'Marketplace' },
+  { icon: ShoppingBag, href: '/',            label: 'Vitrina' },
 ]
 
 const mobileItems = [
-  { icon: Plus,          href: '/',            label: 'Nuevo' },
+  { icon: Plus,          href: '/publicar',    label: 'Nuevo' },
   { icon: LayoutGrid,    href: '/inventario',  label: 'Inventario' },
   { icon: Package,       href: '/pedidos',     label: 'Pedidos' },
   { icon: MessageCircle, href: '/chat',        label: 'Chat' },
-  { icon: ShoppingBag,   href: '/marketplace', label: 'Market' },
+  { icon: ShoppingBag,   href: '/',            label: 'Vitrina' },
 ]
 
 export default function Sidebar() {
@@ -49,7 +49,7 @@ export default function Sidebar() {
   }, [user?.id])
 
   const isActive = (href: string) =>
-    href === '/' ? pathname === '/' : pathname.startsWith(href)
+    href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(href + '/')
 
   return (
     <>

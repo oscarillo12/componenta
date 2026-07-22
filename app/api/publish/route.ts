@@ -1,6 +1,8 @@
 ﻿import { auth, clerkClient } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
+import { sendMatchEmail } from '@/lib/email'
+import { sendWhatsApp } from '@/lib/twilio'
 
 const FREE_LIMIT = 5
 
@@ -97,10 +99,70 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // â”€â”€ Incrementar contador en Clerk â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Incrementar contador en Clerk ─────────────────────────────────────────
   await client.users.updateUser(userId, {
     publicMetadata: { ...meta, productsCount: count + 1 },
   })
+
+  // ── Notificar compradores con solicitudes que coincidan (fire-and-forget) ──
+  ;(async () => {
+    const piezaP  = (body.pieza ?? '').toLowerCase().trim()
+    const marcaP  = (body.marca ?? '').toLowerCase().trim()
+    const modeloP = (body.modelo ?? '').toLowerCase().trim()
+    if (!piezaP) return
+
+    const { data: solicitudes } = await supabaseAdmin
+      .from('solicitudes')
+      .select('pieza, marca, modelo, anio, buyer_name, buyer_email, buyer_phone')
+      .eq('activa', true)
+      .or('buyer_email.not.is.null,buyer_phone.not.is.null')
+
+    if (!solicitudes?.length) return
+
+    const matched = solicitudes.filter(s => {
+      const piezaS = (s.pieza ?? '').toLowerCase()
+      const keyP = piezaP.split(' ')[0]
+      const keyS = piezaS.split(' ')[0]
+      if (!piezaP.includes(keyS) && !piezaS.includes(keyP)) return false
+      if (s.marca && marcaP) {
+        const marcaS = s.marca.toLowerCase()
+        if (!marcaP.includes(marcaS) && !marcaS.includes(marcaP)) return false
+      }
+      if (s.modelo && modeloP) {
+        const modeloS = s.modelo.toLowerCase()
+        if (!modeloP.includes(modeloS) && !modeloS.includes(modeloP)) return false
+      }
+      return true
+    })
+
+    const auto = [body.marca, body.modelo].filter(Boolean).join(' ')
+    const waMsg =
+      `✅ Componenta: Encontramos tu ${body.pieza}${auto ? ` para ${auto}` : ''}.\n` +
+      `${sellerNombre} lo tiene disponible.` +
+      (sellerTelefono ? `\nContáctalo: wa.me/${sellerTelefono.replace(/\D/g, '')}` : '')
+
+    await Promise.allSettled(
+      matched.flatMap(s => {
+        const notifs: Promise<void>[] = []
+        if (s.buyer_email) {
+          notifs.push(sendMatchEmail({
+            buyerEmail: s.buyer_email,
+            buyerName:  s.buyer_name,
+            pieza:      s.pieza,
+            marca:      s.marca,
+            modelo:     s.modelo,
+            anio:       s.anio,
+            sellerNombre,
+            sellerTelefono,
+          }))
+        }
+        if (s.buyer_phone) {
+          notifs.push(sendWhatsApp(s.buyer_phone, waMsg))
+        }
+        return notifs
+      })
+    )
+  })().catch(() => {})
 
   return NextResponse.json({ ok: true, id: inserted?.id ?? null, productsCount: count + 1, limit: FREE_LIMIT })
 }

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
 import { createFlowPayment } from '@/lib/flow'
 import { sendWhatsApp } from '@/lib/twilio'
+import { APP_URL } from '@/lib/config'
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth()
@@ -95,7 +96,7 @@ export async function POST(req: NextRequest) {
         `Pieza: *${pieza}*\n` +
         `Total: $${total.toLocaleString('es-CL')}\n\n` +
         `El vendedor te contactará para coordinar la entrega.\n\n` +
-        `Sigue tu pedido aquí:\nhttps://componenta.vercel.app/mis-pedidos/${order.id}`
+        `Sigue tu pedido aquí:\n${APP_URL}/mis-pedidos/${order.id}`
       ).catch(() => {})
     }
 

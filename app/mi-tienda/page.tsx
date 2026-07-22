@@ -1,6 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://componenta.vercel.app'
+const FEED_URL = `${APP_URL}/api/merchant-feed`
 import SellerLayout from '@/components/SellerLayout'
 import { Check, Copy, ExternalLink, MapPin, Clock, Phone, MessageCircle, AlertCircle, Loader2, Sparkles, ArrowRight, ArrowLeft, Upload, Globe } from 'lucide-react'
 
@@ -393,11 +396,11 @@ export default function MiTiendaPage() {
             </label>
             <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
               <div style={{ flex: 1, background: '#f9fafb', border: '1.5px solid #ececea', borderRadius: 9, padding: '10px 12px', fontSize: 12, color: '#374151', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.6 }}>
-                https://componenta.vercel.app/api/merchant-feed
+                {FEED_URL}
               </div>
               <button
                 onPointerDown={() => {
-                  navigator.clipboard.writeText('https://componenta.vercel.app/api/merchant-feed')
+                  navigator.clipboard.writeText(FEED_URL)
                   setGmcCopied(true)
                   setTimeout(() => setGmcCopied(false), 2000)
                 }}
@@ -407,7 +410,7 @@ export default function MiTiendaPage() {
               </button>
             </div>
             <div style={{ display: 'flex', gap: 16, marginTop: 10 }}>
-              <a href="https://componenta.vercel.app/api/merchant-feed" target="_blank" rel="noopener noreferrer"
+              <a href={FEED_URL} target="_blank" rel="noopener noreferrer"
                 style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#2f5fdb', fontWeight: 600, textDecoration: 'none' }}>
                 <ExternalLink size={12} /> Ver feed
               </a>
@@ -492,10 +495,10 @@ export default function MiTiendaPage() {
               </label>
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 <div style={{ flex: 1, background: '#f9fafb', border: '1.5px solid #ececea', borderRadius: 9, padding: '10px 12px', fontSize: 12, color: '#374151', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  https://componenta.vercel.app/api/merchant-feed
+                  {FEED_URL}
                 </div>
                 <button
-                  onPointerDown={() => { navigator.clipboard.writeText('https://componenta.vercel.app/api/merchant-feed'); setMetaCopied(true); setTimeout(() => setMetaCopied(false), 2000) }}
+                  onPointerDown={() => { navigator.clipboard.writeText(FEED_URL); setMetaCopied(true); setTimeout(() => setMetaCopied(false), 2000) }}
                   style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderRadius: 9, border: '1.5px solid #ececea', background: '#fff', fontSize: 12, fontWeight: 600, color: '#374151', cursor: 'pointer', flexShrink: 0 }}>
                   {metaCopied ? <Check size={13} color="#2f5fdb" /> : <Copy size={13} color="#9aa0aa" />}
                   {metaCopied ? 'Copiada' : 'Copiar'}

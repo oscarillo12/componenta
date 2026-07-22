@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
 import { getFlowPaymentStatus } from '@/lib/flow'
 import { sendWhatsApp } from '@/lib/twilio'
+import { APP_URL } from '@/lib/config'
 
 // Flow llama a este endpoint con POST cuando el pago se procesa
 export async function POST(req: NextRequest) {
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest) {
     if (sellerProfile?.whatsapp) {
       notifs.push(sendWhatsApp(
         sellerProfile.whatsapp,
-        `🛒 *Nuevo pedido en Componenta*\n\nPieza: ${order.pieza}\nComprador: ${order.buyer_name}\nTotal: $${total}\n\nRevisa tu panel: https://componenta.vercel.app/pedidos`
+        `🛒 *Nuevo pedido en Componenta*\n\nPieza: ${order.pieza}\nComprador: ${order.buyer_name}\nTotal: $${total}\n\nRevisa tu panel: ${APP_URL}/pedidos`
       ))
     }
 
@@ -67,7 +68,7 @@ export async function POST(req: NextRequest) {
         `Pieza: *${order.pieza}*\n` +
         `Total pagado: $${total}\n\n` +
         `El vendedor preparará tu pedido y te contactará para coordinar la entrega.\n\n` +
-        `Sigue tu pedido aquí:\nhttps://componenta.vercel.app/mis-pedidos/${order.id}`
+        `Sigue tu pedido aquí:\n${APP_URL}/mis-pedidos/${order.id}`
       ))
     }
 

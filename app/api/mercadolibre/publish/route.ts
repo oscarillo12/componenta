@@ -82,13 +82,26 @@ export async function POST(req: Request) {
   if (title.length > 60) title = title.slice(0, 57) + '...'
 
   // Descripción
+  const estadoLabel: Record<string, string> = {
+    excelente: 'Excelente estado — como nuevo, sin detalles.',
+    bueno: 'Buen estado — uso normal, funciona perfectamente.',
+    'con-detalles': 'Con detalles menores — funciona bien.',
+    'para-reparar': 'Para reparar — requiere reparación.',
+  }
+  const fitment: { make: string; model: string; yearFrom: number; yearTo: number }[] =
+    Array.isArray(product.fitment) ? product.fitment : []
+
+  const compatLines = fitment.map(f =>
+    `• ${f.make} ${f.model} ${f.yearFrom === f.yearTo ? f.yearFrom : `${f.yearFrom}–${f.yearTo}`}`
+  )
+
   const descLines = [
+    estadoLabel[product.estado as string] ?? '',
     product.descripcion ?? '',
-    product.marca && product.modelo
-      ? `Compatible con ${product.marca} ${product.modelo}${product.anios ? ` (${product.anios})` : ''}.`
-      : '',
-    product.oem ? `N° de parte: ${product.oem}` : '',
-    'Pieza usada extraída de desarmaduria. Verificada antes de publicar.',
+    product.oem ? `N° de parte OEM: ${product.oem}` : '',
+    product.envio ? `Envío: ${product.envio}` : '',
+    compatLines.length > 0 ? `\nVehículos compatibles:\n${compatLines.join('\n')}` : '',
+    '\nPieza usada extraída de desarmaduria. Verificada antes de publicar.',
   ].filter(Boolean)
 
   // Subir imagen directamente a ML (más confiable que pasar URL externa)
@@ -134,6 +147,29 @@ export async function POST(req: Request) {
   if (product.marca) attributes.push({ id: 'BRAND', value_name: product.marca })
   if (product.oem)   attributes.push({ id: 'PART_NUMBER', value_name: product.oem })
 
+  // Compatibilidad de vehículos desde fitment
+  const marcasCompat = [...new Set(fitment.map(f => f.make).filter(Boolean))]
+  const modelosCompat = [...new Set(fitment.map(f => f.model).filter(Boolean))]
+  for (const m of marcasCompat)  attributes.push({ id: 'COMPATIBLE_BRANDS', value_name: m })
+  for (const m of modelosCompat) attributes.push({ id: 'COMPATIBLE_MODELS', value_name: m })
+
+  // Condición detallada
+  if (product.estado) {
+    const condMap: Record<string, string> = {
+      excelente: 'Excelente', bueno: 'Bueno', 'con-detalles': 'Con detalles', 'para-reparar': 'Para reparar',
+    }
+    const condLabel = condMap[product.estado as string]
+    if (condLabel) attributes.push({ id: 'ITEM_CONDITION', value_name: condLabel })
+  }
+
+  // Envío según opción elegida
+  const localPickup = (product.envio as string ?? '').includes('retiro')
+  const shipping = {
+    mode: localPickup ? 'not_specified' : 'me2',
+    local_pick_up: true,
+    free_shipping: false,
+  }
+
   const payload: Record<string, unknown> = {
     title,
     category_id,
@@ -143,6 +179,10 @@ export async function POST(req: Request) {
     condition:          'used',
     listing_type_id:    'free',
     description:        { plain_text: descLines.join('\n') },
+    sale_terms: [
+      { id: 'WARRANTY_TYPE', value_name: 'Sin garantía' },
+    ],
+    shipping,
     ...(attributes.length > 0 && { attributes }),
     ...(pictures.length > 0 && { pictures }),
   }

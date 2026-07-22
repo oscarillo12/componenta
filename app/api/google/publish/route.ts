@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
+import { APP_URL } from '@/lib/config'
 
 const CLIENT_ID     = process.env.GOOGLE_CLIENT_ID
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET
@@ -79,8 +80,8 @@ export async function POST(req: Request) {
     offerId,
     title,
     description: desc,
-    link:         `https://componenta.vercel.app/marketplace/${product.id}`,
-    imageLink:    product.imagen_url ?? 'https://componenta.vercel.app/og-image.png',
+    link:         `${APP_URL}/marketplace/${product.id}`,
+    imageLink:    product.imagen_url ?? `${APP_URL}/og-image.png`,
     contentLanguage:     'es',
     targetCountry:       'CL',
     channel:             'online',

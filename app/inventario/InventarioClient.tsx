@@ -1,8 +1,8 @@
 'use client'
 
-'use client'
-
 import { useState } from 'react'
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://componenta.vercel.app'
 import { Product } from '@/lib/supabase'
 import { Plus, Search, Package, Trash2, CheckCircle, RotateCcw, Loader2, ExternalLink, Eye, Pencil, X, Sparkles, Copy, Check, Globe } from 'lucide-react'
 import Link from 'next/link'
@@ -280,7 +280,7 @@ function InventoryRow({ item, mlConnected, gscConnected, onDelete, onToggleSold,
 Estado: ${estado}
 💵 $${item.precio.toLocaleString('es-CL')}
 ${item.descripcion ? `📝 ${item.descripcion.slice(0, 120)}\n` : ''}📸 Ver foto y contactar:
-componenta.vercel.app/marketplace/${item.id}
+${APP_URL}/marketplace/${item.id}
 
 ${tags}`
   }
@@ -589,7 +589,7 @@ export default function InventarioClient({
             {isDemo ? ' · demo' : ''}
           </p>
         </div>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px', background: '#2f5fdb', color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+        <Link href="/publicar" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px', background: '#2f5fdb', color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
           <Plus size={14} /> Nueva pieza
         </Link>
       </div>
@@ -617,7 +617,7 @@ export default function InventarioClient({
           </div>
           <p style={{ fontSize: 14, fontWeight: 600, color: '#16181d', margin: '0 0 6px' }}>Sin piezas publicadas aún</p>
           <p style={{ fontSize: 13, color: '#9aa0aa', margin: '0 0 20px' }}>Publica tu primera pieza y aparecerá aquí</p>
-          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 22px', background: '#2f5fdb', color: '#fff', borderRadius: 12, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+          <Link href="/publicar" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 22px', background: '#2f5fdb', color: '#fff', borderRadius: 12, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
             <Plus size={14} /> Publicar primera pieza
           </Link>
         </div>

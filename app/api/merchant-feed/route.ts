@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
+import { APP_URL } from '@/lib/config'
 
-const BASE = 'https://componenta.vercel.app'
+const BASE = APP_URL
 
 export async function GET() {
   const { data: products } = await supabaseAdmin

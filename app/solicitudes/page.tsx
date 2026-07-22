@@ -304,7 +304,7 @@ function SellerView({ solicitudes, misProductos, loading, refetch }: {
             <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: '0 0 2px' }}>¿Tienes piezas que no aparecen en tu inventario?</p>
             <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>Publícalas y aparecerán automáticamente cuando alguien busque esa pieza.</p>
           </div>
-          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 16px', background: '#1d4ed8', color: '#fff', borderRadius: 10, fontSize: 12, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+          <Link href="/publicar" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 16px', background: '#1d4ed8', color: '#fff', borderRadius: 10, fontSize: 12, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
             + Publicar pieza
           </Link>
         </div>
@@ -324,7 +324,7 @@ function PublicView({ solicitudes, loading }: { solicitudes: Solicitud[]; loadin
 
   const [form, setForm] = useState({
     pieza: '', marca: '', modelo: '', anio: '',
-    descripcion: '', buyer_name: '', buyer_phone: '',
+    descripcion: '', buyer_name: '', buyer_phone: '', buyer_email: '',
   })
 
   const inputStyle: React.CSSProperties = {
@@ -352,7 +352,7 @@ function PublicView({ solicitudes, loading }: { solicitudes: Solicitud[]; loadin
     }
     setEnviado(true)
     setEnviando(false)
-    setForm({ pieza: '', marca: '', modelo: '', anio: '', descripcion: '', buyer_name: '', buyer_phone: '' })
+    setForm({ pieza: '', marca: '', modelo: '', anio: '', descripcion: '', buyer_name: '', buyer_phone: '', buyer_email: '' })
     setStep(1)
   }
 
@@ -502,24 +502,31 @@ function PublicView({ solicitudes, loading }: { solicitudes: Solicitud[]; loadin
                     </button>
                   </div>
 
+                  <div>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: '#374151', display: 'block', marginBottom: 6 }}>
+                      Tu nombre <span style={{ color: '#b91c1c' }}>*</span>
+                    </label>
+                    <input style={inputStyle} placeholder="Juan Pérez" value={form.buyer_name} onChange={e => setForm(f => ({ ...f, buyer_name: e.target.value }))} required autoFocus />
+                  </div>
+
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <div>
-                      <label style={{ fontSize: 12, fontWeight: 700, color: '#374151', display: 'block', marginBottom: 6 }}>
-                        Tu nombre <span style={{ color: '#b91c1c' }}>*</span>
-                      </label>
-                      <input style={inputStyle} placeholder="Juan Pérez" value={form.buyer_name} onChange={e => setForm(f => ({ ...f, buyer_name: e.target.value }))} required autoFocus />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: 12, fontWeight: 700, color: '#374151', display: 'block', marginBottom: 6 }}>
-                        Tu WhatsApp <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 400 }}>(recomendado)</span>
+                      <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 5 }}>
+                        WhatsApp <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 400 }}>(recomendado)</span>
                       </label>
                       <input style={inputStyle} placeholder="+569 1234 5678" value={form.buyer_phone} onChange={e => setForm(f => ({ ...f, buyer_phone: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 5 }}>
+                        Email <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 400 }}>(para alertas automáticas)</span>
+                      </label>
+                      <input style={inputStyle} type="email" placeholder="tu@email.com" value={form.buyer_email} onChange={e => setForm(f => ({ ...f, buyer_email: e.target.value }))} />
                     </div>
                   </div>
 
                   <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 12, padding: '10px 14px' }}>
                     <p style={{ fontSize: 12, color: '#92400e', margin: 0 }}>
-                      📱 <strong>Sin WhatsApp</strong> los vendedores no podrán contactarte directamente. Al menos agrega uno para recibir ofertas.
+                      📱 <strong>WhatsApp</strong> → los vendedores te contactan directo. 📧 <strong>Email</strong> → te avisamos automáticamente cuando alguien publique tu pieza.
                     </p>
                   </div>
 

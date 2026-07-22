@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
+import { APP_URL } from '@/lib/config'
 
 const ESTADO: Record<string, string> = {
   excelente: 'Excelente',
@@ -36,7 +37,7 @@ export async function GET() {
       esc('Repuestos y accesorios para automóviles'),
       esc(ESTADO[p.estado] ?? 'Usado'),
       p.imagen_url ?? '',
-      `https://componenta.vercel.app/marketplace/${p.id}`,
+      `${APP_URL}/marketplace/${p.id}`,
     ].join(',')
   })
 

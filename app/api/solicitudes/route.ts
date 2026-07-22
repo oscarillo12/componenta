@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
 import { sendWhatsApp } from '@/lib/twilio'
+import { APP_URL } from '@/lib/config'
 
 // GET — lista solicitudes activas (más recientes primero)
 // Si el usuario está autenticado, incluye buyer_phone para que vendedores puedan contactar
 export async function GET() {
   const { userId } = await auth()
   const fields = userId
-    ? 'id, pieza, marca, modelo, anio, descripcion, buyer_name, buyer_phone, created_at'
+    ? 'id, pieza, marca, modelo, anio, descripcion, buyer_name, buyer_phone, buyer_email, created_at'
     : 'id, pieza, marca, modelo, anio, descripcion, buyer_name, created_at'
 
   const { data, error } = await supabaseAdmin
@@ -25,7 +26,7 @@ export async function GET() {
 // POST — nueva solicitud + WhatsApp a todos los vendedores
 export async function POST(req: NextRequest) {
   const body = await req.json()
-  const { pieza, marca, modelo, anio, descripcion, buyer_name, buyer_phone } = body
+  const { pieza, marca, modelo, anio, descripcion, buyer_name, buyer_phone, buyer_email } = body
 
   if (!pieza?.trim() || !buyer_name?.trim()) {
     return NextResponse.json({ error: 'Faltan campos obligatorios' }, { status: 400 })
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
   // Insertar solicitud
   const { data: nueva, error } = await supabaseAdmin
     .from('solicitudes')
-    .insert({ pieza: pieza.trim(), marca: marca?.trim() || null, modelo: modelo?.trim() || null, anio: anio?.trim() || null, descripcion: descripcion?.trim() || null, buyer_name: buyer_name.trim(), buyer_phone: buyer_phone?.trim() || null })
+    .insert({ pieza: pieza.trim(), marca: marca?.trim() || null, modelo: modelo?.trim() || null, anio: anio?.trim() || null, descripcion: descripcion?.trim() || null, buyer_name: buyer_name.trim(), buyer_phone: buyer_phone?.trim() || null, buyer_email: buyer_email?.trim() || null })
     .select('id')
     .single()
 
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
       `📦 *${pieza}*\n` +
       (detalle ? `${detalle}\n` : '') +
       (buyer_phone ? `\n¿Tienes esta pieza? Contacta al comprador:\n📞 ${buyer_phone}\n` : '') +
-      `\n🔗 Ver todas las búsquedas:\ncomponenta.vercel.app/solicitudes`
+      `\n🔗 Ver todas las búsquedas:\n${APP_URL}/solicitudes`
 
     await Promise.allSettled(telefonos.map(tel => sendWhatsApp(tel, msg)))
   })().catch(() => {})
