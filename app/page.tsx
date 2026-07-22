@@ -451,7 +451,7 @@ export default function Vitrina() {
               {[
                 { icon:'📸', title:'Sube una foto', desc:'Tomas una foto de la pieza desde tu celular o computador' },
                 { icon:'🤖', title:'IA la identifica', desc:'Gemini AI detecta automáticamente qué pieza es, marca y modelo compatible' },
-                { icon:'🚀', title:'Publicación multicanal', desc:'Se publica en Componenta, MercadoLibre y Google Shopping al mismo tiempo' },
+                { icon:'🚀', title:'Publicación multicanal', desc:'Se publica en Componenta, MercadoLibre, Google Shopping y Facebook Shopping al mismo tiempo' },
                 { icon:'📲', title:'Los compradores llegan', desc:'Te contactan por WhatsApp directamente cuando ven tu pieza' },
               ].map((s, i) => (
                 <div key={i} style={{ display:'flex', gap:12, marginBottom:i < 3 ? 16 : 0, alignItems:'flex-start' }}>
@@ -473,6 +473,32 @@ export default function Vitrina() {
             </div>
 
           </div>
+
+          {/* ── Canales ── */}
+          <div style={{ marginTop:28, textAlign:'center' }}>
+            <p style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,.3)', textTransform:'uppercase',
+              letterSpacing:1, margin:'0 0 16px' }}>Tus piezas aparecen en</p>
+            <div style={{ display:'flex', flexWrap:'wrap', justifyContent:'center', gap:12 }}>
+              {[
+                { label:'Componenta',        bg:'#2f5fdb', text:'#fff', icon:'C'  },
+                { label:'MercadoLibre',      bg:'#ffe600', text:'#333', icon:'ML' },
+                { label:'Google Shopping',   bg:'#fff',    text:'#333', icon:'G'  },
+                { label:'Facebook Shopping', bg:'#1877F2', text:'#fff', icon:'f'  },
+              ].map(c => (
+                <div key={c.label} style={{ display:'flex', alignItems:'center', gap:8,
+                  background:'rgba(255,255,255,.07)', border:'1px solid rgba(255,255,255,.12)',
+                  borderRadius:10, padding:'8px 14px' }}>
+                  <div style={{ width:24, height:24, borderRadius:6, background:c.bg,
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    fontSize:11, fontWeight:900, color:c.text, flexShrink:0 }}>
+                    {c.icon}
+                  </div>
+                  <span style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,.8)' }}>{c.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
       </div>
 
