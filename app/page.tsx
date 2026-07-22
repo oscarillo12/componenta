@@ -396,111 +396,99 @@ export default function Vitrina() {
       </div>
 
       {/* ══ ¿CÓMO FUNCIONA? ══ */}
-      <div style={{ background:'#16181d', marginTop:0, padding:'48px 20px 56px' }}>
-        <div style={{ maxWidth:900, margin:'0 auto' }}>
-          <p style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,.35)', textTransform:'uppercase',
-            letterSpacing:1.5, margin:'0 0 8px', textAlign:'center' }}>La plataforma</p>
-          <h2 style={{ fontSize:26, fontWeight:900, color:'#fff', margin:'0 0 4px', textAlign:'center', letterSpacing:-.5 }}>
-            ¿Cómo funciona Componenta?
+      <div style={{ background:'#16181d', padding:'52px 20px 60px' }}>
+        <div style={{ maxWidth:860, margin:'0 auto' }}>
+
+          <p style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,.3)', textTransform:'uppercase',
+            letterSpacing:1.5, margin:'0 0 10px', textAlign:'center' }}>Para desarmadurías</p>
+          <h2 style={{ fontSize:28, fontWeight:900, color:'#fff', margin:'0 0 6px', textAlign:'center', letterSpacing:-.5, lineHeight:1.2 }}>
+            Publica una pieza en 4 pasos
           </h2>
-          <p style={{ fontSize:14, color:'rgba(255,255,255,.45)', margin:'0 0 36px', textAlign:'center' }}>
-            Dos flujos distintos, una sola plataforma
+          <p style={{ fontSize:14, color:'rgba(255,255,255,.4)', margin:'0 0 44px', textAlign:'center' }}>
+            Sin computador, sin técnicos, sin complicaciones
           </p>
 
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:16 }}>
-
-            {/* ── Compradores ── */}
-            <div style={{ background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.1)',
-              borderRadius:16, padding:'24px 22px' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
-                <span style={{ fontSize:22 }}>🔍</span>
-                <div>
-                  <p style={{ fontSize:15, fontWeight:800, color:'#fff', margin:0 }}>Para compradores</p>
-                  <p style={{ fontSize:12, color:'rgba(255,255,255,.4)', margin:'2px 0 0' }}>Busca repuestos sin moverte</p>
-                </div>
-              </div>
-              {[
-                { icon:'🤖', title:'Agentes automáticos', desc:'Buscamos en MercadoLibre cada 6 horas, de forma automática' },
-                { icon:'💾', title:'Base de datos unificada', desc:'Todos los repuestos usados en un solo lugar, filtrados y organizados' },
-                { icon:'✅', title:'Resultados en tiempo real', desc:'Lo que ves aquí está actualizado con las últimas publicaciones scrapeadas' },
-                { icon:'💬', title:'Contacto directo', desc:'Hablas directamente con el vendedor por WhatsApp, sin intermediarios' },
-              ].map((s, i) => (
-                <div key={i} style={{ display:'flex', gap:12, marginBottom:i < 3 ? 16 : 0, alignItems:'flex-start' }}>
-                  <div style={{ width:34, height:34, borderRadius:9, background:'rgba(255,255,255,.08)',
-                    display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, flexShrink:0 }}>
+          {/* ── Pasos ── */}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:36 }} className="steps-grid">
+            {[
+              { n:1, icon:'📸', title:'Sacas una foto',       desc:'Con tu celular o cámara. Así nomás.' },
+              { n:2, icon:'🤖', title:'La IA lo identifica',  desc:'Componenta reconoce la pieza, la marca y el modelo compatible.' },
+              { n:3, icon:'💵', title:'Pones el precio',      desc:'Tú decides cuánto vale. Nosotros lo publicamos.' },
+              { n:4, icon:'🚀', title:'Aparece en 4 sitios',  desc:'Se publica sola. Compradores llegan a tu WhatsApp.' },
+            ].map((s, i) => (
+              <div key={i} style={{ position:'relative' }}>
+                {i < 3 && (
+                  <div style={{ position:'absolute', top:28, right:-14, fontSize:20,
+                    color:'rgba(255,255,255,.2)', zIndex:1, fontWeight:900 }} className="step-arrow">→</div>
+                )}
+                <div style={{ background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.1)',
+                  borderRadius:16, padding:'20px 16px', textAlign:'center', height:'100%', boxSizing:'border-box' }}>
+                  <div style={{ width:48, height:48, borderRadius:14, background:'rgba(47,95,219,.25)',
+                    border:'1.5px solid rgba(47,95,219,.4)', display:'flex', alignItems:'center',
+                    justifyContent:'center', fontSize:24, margin:'0 auto 12px' }}>
                     {s.icon}
                   </div>
-                  <div>
-                    <p style={{ fontSize:13, fontWeight:700, color:'#fff', margin:'0 0 2px' }}>{s.title}</p>
-                    <p style={{ fontSize:12, color:'rgba(255,255,255,.45)', margin:0, lineHeight:1.5 }}>{s.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* ── Vendedores ── */}
-            <div style={{ background:'rgba(47,95,219,.12)', border:'1px solid rgba(47,95,219,.3)',
-              borderRadius:16, padding:'24px 22px' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
-                <span style={{ fontSize:22 }}>🏪</span>
-                <div>
-                  <p style={{ fontSize:15, fontWeight:800, color:'#fff', margin:0 }}>Para desarmadurías</p>
-                  <p style={{ fontSize:12, color:'rgba(255,255,255,.4)', margin:'2px 0 0' }}>Publica en segundos con IA</p>
+                  <div style={{ display:'inline-flex', alignItems:'center', justifyContent:'center',
+                    width:20, height:20, borderRadius:'50%', background:'#2f5fdb',
+                    fontSize:10, fontWeight:900, color:'#fff', marginBottom:8 }}>{s.n}</div>
+                  <p style={{ fontSize:13, fontWeight:800, color:'#fff', margin:'0 0 6px', lineHeight:1.3 }}>{s.title}</p>
+                  <p style={{ fontSize:11.5, color:'rgba(255,255,255,.45)', margin:0, lineHeight:1.55 }}>{s.desc}</p>
                 </div>
               </div>
-              {[
-                { icon:'📸', title:'Sube una foto', desc:'Tomas una foto de la pieza desde tu celular o computador' },
-                { icon:'🤖', title:'IA la identifica', desc:'Gemini AI detecta automáticamente qué pieza es, marca y modelo compatible' },
-                { icon:'🚀', title:'Publicación multicanal', desc:'Se publica en Componenta, MercadoLibre, Google Shopping y Facebook Shopping al mismo tiempo' },
-                { icon:'📲', title:'Los compradores llegan', desc:'Te contactan por WhatsApp directamente cuando ven tu pieza' },
-              ].map((s, i) => (
-                <div key={i} style={{ display:'flex', gap:12, marginBottom:i < 3 ? 16 : 0, alignItems:'flex-start' }}>
-                  <div style={{ width:34, height:34, borderRadius:9, background:'rgba(47,95,219,.2)',
-                    display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, flexShrink:0 }}>
-                    {s.icon}
-                  </div>
-                  <div>
-                    <p style={{ fontSize:13, fontWeight:700, color:'#fff', margin:'0 0 2px' }}>{s.title}</p>
-                    <p style={{ fontSize:12, color:'rgba(255,255,255,.45)', margin:0, lineHeight:1.5 }}>{s.desc}</p>
-                  </div>
-                </div>
-              ))}
-              <a href="/inventario" style={{ display:'flex', alignItems:'center', justifyContent:'center',
-                gap:8, marginTop:20, padding:'11px', borderRadius:10, background:'#2f5fdb',
-                color:'#fff', fontWeight:700, fontSize:13, textDecoration:'none' }}>
-                Empezar a publicar →
-              </a>
-            </div>
-
+            ))}
           </div>
 
-          {/* ── Canales ── */}
-          <div style={{ marginTop:28, textAlign:'center' }}>
-            <p style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,.3)', textTransform:'uppercase',
-              letterSpacing:1, margin:'0 0 16px' }}>Tus piezas aparecen en</p>
-            <div style={{ display:'flex', flexWrap:'wrap', justifyContent:'center', gap:12 }}>
+          {/* ── Canales donde aparece ── */}
+          <div style={{ background:'rgba(255,255,255,.04)', border:'1px solid rgba(255,255,255,.08)',
+            borderRadius:16, padding:'20px 24px' }}>
+            <p style={{ fontSize:11, fontWeight:800, color:'rgba(255,255,255,.35)', textTransform:'uppercase',
+              letterSpacing:1, margin:'0 0 14px', textAlign:'center' }}>
+              Tu pieza aparece automáticamente en
+            </p>
+            <div style={{ display:'flex', flexWrap:'wrap', justifyContent:'center', gap:10 }}>
               {[
-                { label:'Componenta',        bg:'#2f5fdb', text:'#fff', icon:'C'  },
-                { label:'MercadoLibre',      bg:'#ffe600', text:'#333', icon:'ML' },
-                { label:'Google Shopping',   bg:'#fff',    text:'#333', icon:'G'  },
-                { label:'Facebook Shopping', bg:'#1877F2', text:'#fff', icon:'f'  },
+                { label:'Componenta',        bg:'#2f5fdb', text:'#fff',  icon:'C',  desc:'Tu tienda propia' },
+                { label:'MercadoLibre',      bg:'#FFE600', text:'#2D3277', icon:'ML', desc:'El marketplace más grande' },
+                { label:'Google Shopping',   bg:'#fff',    text:'#333',  icon:'G',  desc:'Apareces en Google' },
+                { label:'Facebook Shopping', bg:'#1877F2', text:'#fff',  icon:'f',  desc:'Compradores en FB' },
               ].map(c => (
-                <div key={c.label} style={{ display:'flex', alignItems:'center', gap:8,
-                  background:'rgba(255,255,255,.07)', border:'1px solid rgba(255,255,255,.12)',
-                  borderRadius:10, padding:'8px 14px' }}>
-                  <div style={{ width:24, height:24, borderRadius:6, background:c.bg,
+                <div key={c.label} style={{ display:'flex', alignItems:'center', gap:9,
+                  background:'rgba(255,255,255,.07)', border:'1px solid rgba(255,255,255,.1)',
+                  borderRadius:12, padding:'10px 14px', minWidth:170 }}>
+                  <div style={{ width:30, height:30, borderRadius:8, background:c.bg, flexShrink:0,
                     display:'flex', alignItems:'center', justifyContent:'center',
-                    fontSize:11, fontWeight:900, color:c.text, flexShrink:0 }}>
+                    fontSize:11, fontWeight:900, color:c.text }}>
                     {c.icon}
                   </div>
-                  <span style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,.8)' }}>{c.label}</span>
+                  <div>
+                    <p style={{ fontSize:12.5, fontWeight:700, color:'#fff', margin:0 }}>{c.label}</p>
+                    <p style={{ fontSize:10.5, color:'rgba(255,255,255,.4)', margin:0 }}>{c.desc}</p>
+                  </div>
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* ── CTA ── */}
+          <div style={{ textAlign:'center', marginTop:28 }}>
+            <a href="/inventario" style={{ display:'inline-flex', alignItems:'center', gap:8,
+              padding:'13px 28px', borderRadius:12, background:'#2f5fdb',
+              color:'#fff', fontWeight:800, fontSize:14, textDecoration:'none',
+              boxShadow:'0 4px 20px rgba(47,95,219,.4)' }}>
+              Empezar gratis →
+            </a>
+            <p style={{ fontSize:12, color:'rgba(255,255,255,.3)', margin:'10px 0 0' }}>Sin tarjeta. Sin contrato. Empiezas hoy.</p>
           </div>
 
         </div>
       </div>
+
+      <style dangerouslySetInnerHTML={{ __html:`
+        @media(max-width:640px){
+          .steps-grid { grid-template-columns:1fr 1fr !important; }
+          .step-arrow { display:none !important; }
+        }
+      `}} />
 
       {/* ══ MODAL FILTROS MOBILE ══ */}
       {showFiltros && (

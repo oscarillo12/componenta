@@ -411,6 +411,24 @@ ${tags}`
         </div>
       )}
 
+      {/* Fila Facebook Shopping — siempre visible si disponible */}
+      {item.disponible && (
+        <div style={{ padding: '10px 16px', borderTop: '1px solid #f1f2f4', background: '#f0f4ff', display: 'flex', alignItems: 'center', gap: 8 }}>
+          {item.imagen_url ? (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: '#1877F2' }}>
+              <span style={{ width: 16, height: 16, borderRadius: 4, background: '#1877F2', color: '#fff', fontSize: 9, fontWeight: 900, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>f</span>
+              Incluida en Facebook Shopping
+              <span style={{ fontSize: 10, fontWeight: 600, color: '#6b7280' }}>— via feed automático</span>
+            </span>
+          ) : (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 600, color: '#9aa0aa' }}>
+              <span style={{ width: 16, height: 16, borderRadius: 4, background: '#e5e7eb', color: '#9aa0aa', fontSize: 9, fontWeight: 900, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>f</span>
+              Agrega foto para aparecer en Facebook Shopping
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Fila Google Shopping — solo si conectado y disponible */}
       {gscConnected && item.disponible && (
         <div style={{ padding: '10px 16px', borderTop: '1px solid #f1f2f4', background: '#f8faff', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -532,6 +550,21 @@ export default function InventarioClient({
           </div>
         </div>
       )}
+
+      {/* Banner Facebook Shopping */}
+      <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 14, background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: 12, padding: '14px 16px', flexWrap: 'wrap' }}>
+        <div style={{ background: '#1877F2', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
+          <span style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>f</span>
+          <span style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Facebook Shopping</span>
+        </div>
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: '#1e40af', margin: '0 0 2px' }}>Tus piezas con foto aparecen en Facebook Shopping</p>
+          <p style={{ fontSize: 11, color: '#3b82f6', margin: 0 }}>Se sincronizan automáticamente via feed. Activa el canal en Mi Tienda para conectarlo a tu página de Facebook.</p>
+        </div>
+        <a href="/mi-tienda" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 16px', background: '#1877F2', color: '#fff', borderRadius: 9, fontSize: 12, fontWeight: 800, textDecoration: 'none', flexShrink: 0 }}>
+          Configurar →
+        </a>
+      </div>
 
       {!mlConnected && (
         <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 14, background: '#fffde7', border: '1.5px dashed #FFE600', borderRadius: 12, padding: '14px 16px', flexWrap: 'wrap' }}>

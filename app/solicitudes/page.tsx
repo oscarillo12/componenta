@@ -521,13 +521,26 @@ function PublicView({ solicitudes, loading }: { solicitudes: Solicitud[]; loadin
                         Email <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 400 }}>(para alertas automáticas)</span>
                       </label>
                       <input style={inputStyle} type="email" placeholder="tu@email.com" value={form.buyer_email} onChange={e => setForm(f => ({ ...f, buyer_email: e.target.value }))} />
+                      {form.buyer_email && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, padding: '7px 10px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8 }}>
+                          <span style={{ fontSize: 14 }}>✅</span>
+                          <p style={{ fontSize: 11.5, color: '#15803d', fontWeight: 600, margin: 0 }}>
+                            Te enviaremos un email a <strong>{form.buyer_email}</strong> cuando alguien publique esta pieza
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 12, padding: '10px 14px' }}>
-                    <p style={{ fontSize: 12, color: '#92400e', margin: 0 }}>
-                      📱 <strong>WhatsApp</strong> → los vendedores te contactan directo. 📧 <strong>Email</strong> → te avisamos automáticamente cuando alguien publique tu pieza.
-                    </p>
+                  <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 12, padding: '12px 14px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                    <span style={{ fontSize: 20, flexShrink: 0 }}>🔔</span>
+                    <div>
+                      <p style={{ fontSize: 12.5, fontWeight: 700, color: '#1e40af', margin: '0 0 3px' }}>Así funciona la alerta</p>
+                      <p style={{ fontSize: 12, color: '#3b82f6', margin: 0, lineHeight: 1.5 }}>
+                        📱 <strong>WhatsApp</strong> → los vendedores te contactan directo cuando quieran ofrecerte la pieza.<br/>
+                        📧 <strong>Email automático</strong> → Componenta te avisa al instante cuando alguien publique exactamente lo que buscas.
+                      </p>
+                    </div>
                   </div>
 
                   {error && <p style={{ fontSize: 12, color: '#b91c1c', margin: 0 }}>{error}</p>}
