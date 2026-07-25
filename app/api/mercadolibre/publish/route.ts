@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
+import sharp from 'sharp'
 
 const ML_APP_ID     = process.env.ML_APP_ID
 const ML_SECRET_KEY = process.env.ML_SECRET_KEY
@@ -76,11 +77,23 @@ async function subirImagen(imageUrl: string, token: string): Promise<{ id: strin
     const imgRes = await fetch(imageUrl)
     if (!imgRes.ok) return { err: `No se pudo descargar la imagen (HTTP ${imgRes.status})` }
 
-    const buffer      = await imgRes.arrayBuffer()
-    const contentType = imgRes.headers.get('content-type') ?? 'image/jpeg'
-    const ext         = contentType.includes('png') ? 'png' : 'jpg'
-    const formData    = new FormData()
-    formData.append('file', new Blob([buffer], { type: contentType }), `image.${ext}`)
+    const rawBuffer = Buffer.from(await imgRes.arrayBuffer())
+
+    // Redimensionar si algún lado tiene menos de 500px (requisito de ML)
+    const meta    = await sharp(rawBuffer).metadata()
+    const minSide = Math.min(meta.width ?? 0, meta.height ?? 0)
+    const imgBuffer = minSide < 500 && minSide > 0
+      ? await sharp(rawBuffer)
+          .resize(
+            Math.round((meta.width  ?? 500) * (500 / minSide)),
+            Math.round((meta.height ?? 500) * (500 / minSide)),
+          )
+          .jpeg({ quality: 88 })
+          .toBuffer()
+      : rawBuffer
+
+    const formData = new FormData()
+    formData.append('file', new Blob([imgBuffer], { type: 'image/jpeg' }), 'image.jpg')
 
     const mlRes = await fetch('https://api.mercadolibre.com/pictures/items/upload', {
       method: 'POST',
@@ -89,12 +102,7 @@ async function subirImagen(imageUrl: string, token: string): Promise<{ id: strin
     })
     if (!mlRes.ok) {
       const body = await mlRes.json().catch(() => ({}))
-      const msg: string = body?.message ?? `HTTP ${mlRes.status}`
-      // Detectar error de tamaño mínimo
-      if (msg.toLowerCase().includes('500') || msg.toLowerCase().includes('píxel') || msg.toLowerCase().includes('pixel')) {
-        return { err: 'La imagen es demasiado pequeña. MercadoLibre requiere mínimo 500×500 px. Sube una foto más grande para este producto.' }
-      }
-      return { err: msg }
+      return { err: body?.message ?? `HTTP ${mlRes.status}` }
     }
     const mlImg = await mlRes.json()
     return mlImg?.id ? { id: mlImg.id } : { err: 'ML no devolvió ID de imagen' }
