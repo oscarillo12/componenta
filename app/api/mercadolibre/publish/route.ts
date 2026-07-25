@@ -115,12 +115,14 @@ async function publicarConFallback(
     })
     const data = await res.json()
     if (res.ok) return { mlData: data, tipoUsado: tipo }
-    if (data.error !== 'not_eligible_for_listing_type') {
-      const causeMsg = Array.isArray(data.cause)
-        ? data.cause.map((c: { message?: string }) => c.message).filter(Boolean).join(' | ')
-        : null
-      throw new Error(causeMsg || data.message || `Error ML: ${data.error}`)
+    const causes: string[] = Array.isArray(data.cause)
+      ? data.cause.map((c: { message?: string }) => c.message ?? '').filter(Boolean)
+      : []
+    const needsPictures = causes.some(m => m.toLowerCase().includes('picture'))
+    if (data.error !== 'not_eligible_for_listing_type' && !needsPictures) {
+      throw new Error(causes.join(' | ') || data.message || `Error ML: ${data.error}`)
     }
+    // pictures mandatory o not_eligible → probar siguiente tipo
   }
 
   throw new Error('Cuenta ML no elegible para ningún tipo de publicación disponible')
@@ -210,11 +212,11 @@ export async function POST(req: Request) {
   for (const m of modelosCompat) attributes.push({ id: 'COMPATIBLE_MODELS', value_name: m })
 
   // ── Envío ─────────────────────────────────────────────────────────────────
-  const localPickup = (product.envio as string ?? '').toLowerCase().includes('retiro')
+  // ME1/ME2 requieren que la cuenta ML tenga esos modos activados; not_specified es seguro
   const shipping = {
-    mode: localPickup ? 'not_specified' : 'me2',
-    local_pick_up: true,
-    free_shipping: false,
+    mode:           'not_specified',
+    local_pick_up:  true,
+    free_shipping:  false,
   }
 
   const payload: Record<string, unknown> = {
