@@ -74,7 +74,10 @@ async function detectarCategoria(query: string): Promise<string> {
 async function subirImagen(imageUrl: string, token: string): Promise<{ id: string } | null> {
   try {
     const imgRes = await fetch(imageUrl)
-    if (!imgRes.ok) return null
+    if (!imgRes.ok) {
+      console.error('[ML subirImagen] fetch imagen falló:', imgRes.status, imageUrl.slice(0, 80))
+      return null
+    }
     const buffer = await imgRes.arrayBuffer()
     const contentType = imgRes.headers.get('content-type') ?? 'image/jpeg'
     const ext = contentType.includes('png') ? 'png' : 'jpg'
@@ -85,10 +88,15 @@ async function subirImagen(imageUrl: string, token: string): Promise<{ id: strin
       headers: { Authorization: `Bearer ${token}` },
       body: formData,
     })
-    if (!mlRes.ok) return null
+    if (!mlRes.ok) {
+      const errBody = await mlRes.text().catch(() => '')
+      console.error('[ML subirImagen] upload a ML falló:', mlRes.status, errBody.slice(0, 200))
+      return null
+    }
     const mlImg = await mlRes.json()
     return mlImg?.id ? { id: mlImg.id } : null
-  } catch {
+  } catch (e) {
+    console.error('[ML subirImagen] excepción:', e)
     return null
   }
 }
@@ -176,8 +184,20 @@ export async function POST(req: Request) {
 
   // ── Imágenes ──────────────────────────────────────────────────────────────
   const imageUrls = [product.imagen_url].filter(Boolean) as string[]
+  if (imageUrls.length === 0) {
+    return NextResponse.json(
+      { error: 'Este producto no tiene imagen. MercadoLibre requiere al menos una foto para publicar.' },
+      { status: 400 }
+    )
+  }
   const pictureResults = await Promise.all(imageUrls.map(url => subirImagen(url, token)))
   const pictures = pictureResults.filter((p): p is { id: string } => p !== null)
+  if (pictures.length === 0) {
+    return NextResponse.json(
+      { error: 'No se pudo subir la imagen a MercadoLibre. Verifica que la URL de la foto sea pública y accesible.' },
+      { status: 400 }
+    )
+  }
 
   // ── Descripción (se enviará también como paso separado post-creación) ─────
   const estadoLabel: Record<string, string> = {
