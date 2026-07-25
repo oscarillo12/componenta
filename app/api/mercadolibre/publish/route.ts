@@ -12,6 +12,8 @@ type MlTokenRow = {
   expires_at: string
 }
 
+type Fitment = { make: string; model: string; yearFrom: number; yearTo: number }
+
 async function getValidToken(userId: string): Promise<string | null> {
   const { data } = await supabaseAdmin
     .from('ml_tokens')
@@ -21,13 +23,12 @@ async function getValidToken(userId: string): Promise<string | null> {
 
   if (!data) return null
 
-  const expiresAt = new Date(data.expires_at)
-  if (expiresAt > new Date(Date.now() + 5 * 60 * 1000)) {
+  if (new Date(data.expires_at) > new Date(Date.now() + 5 * 60 * 1000)) {
     return data.access_token
   }
 
-  // Refrescar token
   if (!ML_APP_ID || !ML_SECRET_KEY) return null
+
   const res = await fetch('https://api.mercadolibre.com/oauth/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -39,7 +40,11 @@ async function getValidToken(userId: string): Promise<string | null> {
     }),
   })
 
-  if (!res.ok) return null
+  if (!res.ok) {
+    const errText = await res.text().catch(() => 'sin detalle')
+    console.error(`[ML] Refresh token falló para user ${userId}:`, res.status, errText)
+    return null
+  }
 
   const fresh = await res.json()
   await supabaseAdmin.from('ml_tokens').update({
@@ -51,15 +56,85 @@ async function getValidToken(userId: string): Promise<string | null> {
   return fresh.access_token
 }
 
+async function detectarCategoria(query: string): Promise<string> {
+  const FALLBACK = 'MLC174408' // Repuestos para Autos y Camionetas
+  try {
+    const res = await fetch(
+      `https://api.mercadolibre.com/sites/MLC/domain_discovery/search?q=${encodeURIComponent(query)}&limit=1`,
+      { headers: { Accept: 'application/json' } }
+    )
+    if (!res.ok) return FALLBACK
+    const data = await res.json()
+    return (Array.isArray(data) && data[0]?.category_id) ? data[0].category_id : FALLBACK
+  } catch {
+    return FALLBACK
+  }
+}
+
+async function subirImagen(imageUrl: string, token: string): Promise<{ id: string } | null> {
+  try {
+    const imgRes = await fetch(imageUrl)
+    if (!imgRes.ok) return null
+    const buffer = await imgRes.arrayBuffer()
+    const contentType = imgRes.headers.get('content-type') ?? 'image/jpeg'
+    const ext = contentType.includes('png') ? 'png' : 'jpg'
+    const formData = new FormData()
+    formData.append('file', new Blob([buffer], { type: contentType }), `image.${ext}`)
+    const mlRes = await fetch('https://api.mercadolibre.com/pictures/items/upload', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    })
+    if (!mlRes.ok) return null
+    const mlImg = await mlRes.json()
+    return mlImg?.id ? { id: mlImg.id } : null
+  } catch {
+    return null
+  }
+}
+
+// Intenta publicar degradando el tipo de publicación si la cuenta no es elegible
+async function publicarConFallback(
+  payload: Record<string, unknown>,
+  token: string,
+  tipoSolicitado: string,
+): Promise<{ mlData: Record<string, unknown>; tipoUsado: string }> {
+  const cola = [tipoSolicitado]
+  if (tipoSolicitado !== 'bronze') cola.push('bronze')
+  if (!cola.includes('free')) cola.push('free')
+
+  for (const tipo of cola) {
+    const res = await fetch('https://api.mercadolibre.com/items', {
+      method: 'POST',
+      headers: {
+        Authorization:  `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        Accept:         'application/json',
+      },
+      body: JSON.stringify({ ...payload, listing_type_id: tipo }),
+    })
+    const data = await res.json()
+    if (res.ok) return { mlData: data, tipoUsado: tipo }
+    // Si el error no es de elegibilidad, no tiene sentido probar otro tipo
+    if (data.error !== 'not_eligible_for_listing_type') {
+      throw new Error(data.message ?? `Error ML: ${data.error}`)
+    }
+  }
+
+  throw new Error('Cuenta ML no elegible para ningún tipo de publicación disponible')
+}
+
 export async function POST(req: Request) {
   const { userId } = await auth()
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json().catch(() => ({}))
-  const { product_id } = body as { product_id?: string }
+  const { product_id, listing_type = 'gold_special' } = body as {
+    product_id?: string
+    listing_type?: string
+  }
   if (!product_id) return NextResponse.json({ error: 'product_id requerido' }, { status: 400 })
 
-  // Verificar que la pieza pertenece al usuario
   const { data: product, error: prodErr } = await supabaseAdmin
     .from('products')
     .select('*')
@@ -76,94 +151,69 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'ml_not_connected' }, { status: 403 })
   }
 
-  // Construir título (ML máx 60 chars)
-  const titleParts = [product.pieza, product.marca, product.modelo].filter(Boolean)
-  let title = titleParts.join(' ')
+  const fitment: Fitment[] = Array.isArray(product.fitment) ? product.fitment : []
+
+  // ── Título (máx 60 chars) ─────────────────────────────────────────────────
+  const yearFrom = fitment.length > 0 ? Math.min(...fitment.map(f => f.yearFrom)) : null
+  const yearTo   = fitment.length > 0 ? Math.max(...fitment.map(f => f.yearTo))   : null
+  const yearStr  = yearFrom
+    ? (yearFrom === yearTo ? ` ${yearFrom}` : ` ${yearFrom}-${yearTo}`)
+    : ''
+  let title = [product.pieza, product.marca, product.modelo, yearStr]
+    .filter(Boolean).join(' ').trim()
   if (title.length > 60) title = title.slice(0, 57) + '...'
 
-  // Descripción
+  // ── Categoría ─────────────────────────────────────────────────────────────
+  const catQuery = [product.pieza, product.marca, product.modelo].filter(Boolean).join(' ')
+  const category_id = await detectarCategoria(catQuery)
+
+  // ── Imágenes ──────────────────────────────────────────────────────────────
+  const imageUrls = [product.imagen_url].filter(Boolean) as string[]
+  const pictureResults = await Promise.all(imageUrls.map(url => subirImagen(url, token)))
+  const pictures = pictureResults.filter((p): p is { id: string } => p !== null)
+
+  // ── Descripción (se enviará también como paso separado post-creación) ─────
   const estadoLabel: Record<string, string> = {
-    excelente: 'Excelente estado — como nuevo, sin detalles.',
-    bueno: 'Buen estado — uso normal, funciona perfectamente.',
+    excelente:      'Excelente estado — como nuevo, sin detalles.',
+    bueno:          'Buen estado — uso normal, funciona perfectamente.',
     'con-detalles': 'Con detalles menores — funciona bien.',
     'para-reparar': 'Para reparar — requiere reparación.',
   }
-  const fitment: { make: string; model: string; yearFrom: number; yearTo: number }[] =
-    Array.isArray(product.fitment) ? product.fitment : []
-
   const compatLines = fitment.map(f =>
     `• ${f.make} ${f.model} ${f.yearFrom === f.yearTo ? f.yearFrom : `${f.yearFrom}–${f.yearTo}`}`
   )
-
-  const descLines = [
+  const descripcion = [
     estadoLabel[product.estado as string] ?? '',
     product.descripcion ?? '',
-    product.oem ? `N° de parte OEM: ${product.oem}` : '',
-    product.envio ? `Envío: ${product.envio}` : '',
+    product.oem ? `Número de parte OEM: ${product.oem}` : '',
     compatLines.length > 0 ? `\nVehículos compatibles:\n${compatLines.join('\n')}` : '',
-    '\nPieza usada extraída de desarmaduria. Verificada antes de publicar.',
-  ].filter(Boolean)
+    product.envio ? `\nEnvío: ${product.envio}` : '',
+    '\nPieza extraída de desarmaduria. Verificada y probada antes de publicar.',
+    'Consultas sin compromiso.',
+  ].filter(Boolean).join('\n')
 
-  // Subir imagen directamente a ML (más confiable que pasar URL externa)
-  let pictures: { id: string }[] = []
-  if (product.imagen_url) {
-    try {
-      const imgRes = await fetch(product.imagen_url as string)
-      if (imgRes.ok) {
-        const imgBuffer = await imgRes.arrayBuffer()
-        const contentType = imgRes.headers.get('content-type') ?? 'image/jpeg'
-        const ext = contentType.includes('png') ? 'png' : 'jpg'
-        const formData = new FormData()
-        formData.append('file', new Blob([imgBuffer], { type: contentType }), `image.${ext}`)
-        const mlImgRes = await fetch('https://api.mercadolibre.com/pictures/items/upload', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData,
-        })
-        if (mlImgRes.ok) {
-          const mlImg = await mlImgRes.json()
-          if (mlImg?.id) pictures = [{ id: mlImg.id }]
-        }
-      }
-    } catch { /* sin foto si falla */ }
-  }
+  // ── Atributos ─────────────────────────────────────────────────────────────
+  // ML requiere value_id numérico para ITEM_CONDITION (no acepta value_name para este atributo)
+  // 2230284 = Usado, 2230581 = Nuevo
+  const ITEM_CONDITION_USED = '2230284'
 
-  // Buscar categoría hoja por título usando domain_discovery
-  let category_id = 'MLC174408' // fallback: Repuestos para Autos
-  try {
-    const catRes = await fetch(
-      `https://api.mercadolibre.com/sites/MLC/domain_discovery/search?q=${encodeURIComponent(title)}&limit=1`,
-      { headers: { Accept: 'application/json' } }
-    )
-    if (catRes.ok) {
-      const catData = await catRes.json()
-      if (Array.isArray(catData) && catData[0]?.category_id) {
-        category_id = catData[0].category_id
-      }
-    }
-  } catch { /* usa fallback */ }
+  type MlAttribute = { id: string; value_name?: string; value_id?: string }
+  const attributes: MlAttribute[] = []
+  attributes.push({ id: 'ITEM_CONDITION', value_id: ITEM_CONDITION_USED })
+  if (product.marca)  attributes.push({ id: 'BRAND',             value_name: product.marca })
+  if (product.modelo) attributes.push({ id: 'MODEL',             value_name: product.modelo })
+  if (product.oem)    attributes.push({ id: 'PART_NUMBER',       value_name: product.oem })
+  if (product.oem)    attributes.push({ id: 'SELLER_SKU',        value_name: product.oem })
+  if (yearFrom)       attributes.push({ id: 'VEHICLE_YEAR_FROM', value_name: String(yearFrom) })
+  if (yearTo)         attributes.push({ id: 'VEHICLE_YEAR_TO',   value_name: String(yearTo) })
 
-  const attributes: { id: string; value_name: string }[] = []
-  if (product.marca) attributes.push({ id: 'BRAND', value_name: product.marca })
-  if (product.oem)   attributes.push({ id: 'PART_NUMBER', value_name: product.oem })
-
-  // Compatibilidad de vehículos desde fitment
-  const marcasCompat = [...new Set(fitment.map(f => f.make).filter(Boolean))]
+  const marcasCompat  = [...new Set(fitment.map(f => f.make).filter(Boolean))]
   const modelosCompat = [...new Set(fitment.map(f => f.model).filter(Boolean))]
   for (const m of marcasCompat)  attributes.push({ id: 'COMPATIBLE_BRANDS', value_name: m })
   for (const m of modelosCompat) attributes.push({ id: 'COMPATIBLE_MODELS', value_name: m })
 
-  // Condición detallada
-  if (product.estado) {
-    const condMap: Record<string, string> = {
-      excelente: 'Excelente', bueno: 'Bueno', 'con-detalles': 'Con detalles', 'para-reparar': 'Para reparar',
-    }
-    const condLabel = condMap[product.estado as string]
-    if (condLabel) attributes.push({ id: 'ITEM_CONDITION', value_name: condLabel })
-  }
-
-  // Envío según opción elegida
-  const localPickup = (product.envio as string ?? '').includes('retiro')
+  // ── Envío ─────────────────────────────────────────────────────────────────
+  const localPickup = (product.envio as string ?? '').toLowerCase().includes('retiro')
   const shipping = {
     mode: localPickup ? 'not_specified' : 'me2',
     local_pick_up: true,
@@ -177,59 +227,45 @@ export async function POST(req: Request) {
     currency_id:        'CLP',
     available_quantity: 1,
     condition:          'used',
-    listing_type_id:    'free',
-    description:        { plain_text: descLines.join('\n') },
-    sale_terms: [
-      { id: 'WARRANTY_TYPE', value_name: 'Sin garantía' },
-    ],
+    sale_terms: [{ id: 'WARRANTY_TYPE', value_name: 'Sin garantía' }],
     shipping,
     ...(attributes.length > 0 && { attributes }),
-    ...(pictures.length > 0 && { pictures }),
+    ...(pictures.length > 0   && { pictures }),
   }
 
-  const mlRes = await fetch('https://api.mercadolibre.com/items', {
-    method: 'POST',
-    headers: {
-      Authorization:  `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      Accept:         'application/json',
-    },
-    body: JSON.stringify(payload),
-  })
-
-  const mlData = await mlRes.json()
-
-  if (!mlRes.ok) {
-    // Intentar con listing_type_id: free si gold_special falla
-    if (mlData.error === 'not_eligible_for_listing_type') {
-      payload.listing_type_id = 'free'
-      const retryRes = await fetch('https://api.mercadolibre.com/items', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      if (!retryRes.ok) {
-        const retryData = await retryRes.json()
-        return NextResponse.json({ error: retryData.message ?? 'Error al publicar en ML', details: retryData }, { status: 400 })
-      }
-      const retryData = await retryRes.json()
-      await supabaseAdmin.from('products').update({
-        ml_item_id:  retryData.id,
-        ml_permalink: retryData.permalink,
-        canales: [...new Set([...(product.canales ?? []), 'mercadolibre'])],
-      }).eq('id', product_id)
-      return NextResponse.json({ ml_item_id: retryData.id, permalink: retryData.permalink })
-    }
-
-    return NextResponse.json({ error: mlData.message ?? 'Error al publicar en ML', details: mlData }, { status: 400 })
+  // ── Publicar con fallback gold_special → bronze → free ───────────────────
+  let mlData: Record<string, unknown>
+  let tipoUsado: string
+  try {
+    ;({ mlData, tipoUsado } = await publicarConFallback(payload, token, listing_type))
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Error al publicar en MercadoLibre'
+    return NextResponse.json({ error: msg }, { status: 400 })
   }
 
-  // Guardar el ID y permalink de ML en la pieza
+  // ── Descripción como paso separado (más confiable por categoría) ──────────
+  if (mlData.id) {
+    await fetch(`https://api.mercadolibre.com/items/${mlData.id}/description`, {
+      method: 'POST',
+      headers: {
+        Authorization:  `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        Accept:         'application/json',
+      },
+      body: JSON.stringify({ plain_text: descripcion }),
+    }).catch(() => {})
+  }
+
+  // ── Guardar resultado en Supabase ─────────────────────────────────────────
   await supabaseAdmin.from('products').update({
     ml_item_id:   mlData.id,
     ml_permalink: mlData.permalink,
     canales: [...new Set([...(product.canales ?? []), 'mercadolibre'])],
   }).eq('id', product_id)
 
-  return NextResponse.json({ ml_item_id: mlData.id, permalink: mlData.permalink })
+  return NextResponse.json({
+    ml_item_id:   mlData.id,
+    permalink:    mlData.permalink,
+    listing_type: tipoUsado,
+  })
 }
