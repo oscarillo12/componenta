@@ -72,46 +72,32 @@ async function detectarCategoria(query: string): Promise<string> {
 }
 
 async function subirImagen(imageUrl: string, token: string): Promise<{ id: string } | { err: string }> {
-  // Intento 1: ML baja la imagen directamente desde la URL
   try {
-    const res1 = await fetch('https://api.mercadolibre.com/pictures/items/upload', {
-      method: 'POST',
-      headers: {
-        Authorization:  `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        Accept:         'application/json',
-      },
-      body: JSON.stringify({ url: imageUrl }),
-    })
-    if (res1.ok) {
-      const img1 = await res1.json()
-      if (img1?.id) return { id: img1.id }
-    }
-    const err1body = await res1.text().catch(() => '')
-    const err1 = `URL→ML ${res1.status}: ${err1body.slice(0, 150)}`
-
-    // Intento 2: descargar y subir como multipart
     const imgRes = await fetch(imageUrl)
-    if (!imgRes.ok) {
-      return { err: `fetch imagen ${imgRes.status} | ${err1}` }
-    }
+    if (!imgRes.ok) return { err: `No se pudo descargar la imagen (HTTP ${imgRes.status})` }
+
     const buffer      = await imgRes.arrayBuffer()
     const contentType = imgRes.headers.get('content-type') ?? 'image/jpeg'
     const ext         = contentType.includes('png') ? 'png' : 'jpg'
     const formData    = new FormData()
     formData.append('file', new Blob([buffer], { type: contentType }), `image.${ext}`)
-    const res2 = await fetch('https://api.mercadolibre.com/pictures/items/upload', {
+
+    const mlRes = await fetch('https://api.mercadolibre.com/pictures/items/upload', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
       body: formData,
     })
-    if (!res2.ok) {
-      const err2body = await res2.text().catch(() => '')
-      return { err: `multipart ${res2.status}: ${err2body.slice(0, 150)} | ${err1}` }
+    if (!mlRes.ok) {
+      const body = await mlRes.json().catch(() => ({}))
+      const msg: string = body?.message ?? `HTTP ${mlRes.status}`
+      // Detectar error de tamaño mínimo
+      if (msg.toLowerCase().includes('500') || msg.toLowerCase().includes('píxel') || msg.toLowerCase().includes('pixel')) {
+        return { err: 'La imagen es demasiado pequeña. MercadoLibre requiere mínimo 500×500 px. Sube una foto más grande para este producto.' }
+      }
+      return { err: msg }
     }
-    const img2 = await res2.json()
-    if (img2?.id) return { id: img2.id }
-    return { err: `sin id en respuesta | ${err1}` }
+    const mlImg = await mlRes.json()
+    return mlImg?.id ? { id: mlImg.id } : { err: 'ML no devolvió ID de imagen' }
   } catch (e) {
     return { err: String(e) }
   }
