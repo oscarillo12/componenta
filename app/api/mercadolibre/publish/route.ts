@@ -103,6 +103,8 @@ async function publicarConFallback(
   if (tipoSolicitado !== 'bronze') cola.push('bronze')
   if (!cola.includes('free')) cola.push('free')
 
+  const intentos: string[] = []
+
   for (const tipo of cola) {
     const res = await fetch('https://api.mercadolibre.com/items', {
       method: 'POST',
@@ -122,10 +124,11 @@ async function publicarConFallback(
     if (data.error !== 'not_eligible_for_listing_type' && !needsPictures) {
       throw new Error(causes.join(' | ') || data.message || `Error ML: ${data.error}`)
     }
-    // pictures mandatory o not_eligible → probar siguiente tipo
+    const razon = needsPictures ? 'fotos requeridas' : (causes[0] ?? data.error ?? 'inelegible')
+    intentos.push(`${tipo}: ${razon}`)
   }
 
-  throw new Error('Cuenta ML no elegible para ningún tipo de publicación disponible')
+  throw new Error(`Sin tipo disponible — ${intentos.join(' | ')}`)
 }
 
 export async function POST(req: Request) {
