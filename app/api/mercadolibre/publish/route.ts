@@ -115,9 +115,11 @@ async function publicarConFallback(
     })
     const data = await res.json()
     if (res.ok) return { mlData: data, tipoUsado: tipo }
-    // Si el error no es de elegibilidad, no tiene sentido probar otro tipo
     if (data.error !== 'not_eligible_for_listing_type') {
-      throw new Error(data.message ?? `Error ML: ${data.error}`)
+      const causeMsg = Array.isArray(data.cause)
+        ? data.cause.map((c: { message?: string }) => c.message).filter(Boolean).join(' | ')
+        : null
+      throw new Error(causeMsg || data.message || `Error ML: ${data.error}`)
     }
   }
 
