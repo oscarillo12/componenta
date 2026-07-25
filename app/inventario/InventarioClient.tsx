@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://componenta.vercel.app'
 import { Product } from '@/lib/supabase'
@@ -280,7 +280,7 @@ function InventoryRow({ item, mlConnected, gscConnected, onDelete, onToggleSold,
 Estado: ${estado}
 💵 $${item.precio.toLocaleString('es-CL')}
 ${item.descripcion ? `📝 ${item.descripcion.slice(0, 120)}\n` : ''}📸 Ver foto y contactar:
-${APP_URL}/marketplace/${item.id}
+${APP_URL}/p/${item.id}
 
 ${tags}`
   }
@@ -310,7 +310,8 @@ ${tags}`
       const result = await onPublishML(item.id)
       if (result) setMlResult(result)
     } catch (e: unknown) {
-      setMlError(e instanceof Error ? e.message : 'Error al publicar. Intenta de nuevo.')
+      const msg = e instanceof Error ? e.message : 'Error al publicar. Intenta de nuevo.'
+      setMlError(msg === 'ml_not_connected' ? '__ml_not_connected__' : msg)
     }
     setLoadingML(false)
   }
@@ -394,10 +395,18 @@ ${tags}`
       {mlConnected && item.disponible && (
         <div style={{ padding: '10px 16px', borderTop: '1px solid #f1f2f4', background: '#fafafa' }}>
           {isPublishedOnML ? (
-            <a href={mlResult!.permalink} target="_blank" rel="noopener noreferrer"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, textDecoration: 'none', color: '#2D3277' }}>
-              <MlIcon size={12} /> Publicado en MercadoLibre <ExternalLink size={10} />
-            </a>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <a href={mlResult!.permalink} target="_blank" rel="noopener noreferrer"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, textDecoration: 'none', color: '#2D3277' }}>
+                <MlIcon size={12} /> Publicado en MercadoLibre <ExternalLink size={10} />
+              </a>
+              <button onClick={async () => {
+                await fetch(`/api/products/${item.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ml_item_id: null, ml_permalink: null }) })
+                setMlResult(null)
+              }} style={{ fontSize: 10, color: '#9aa0aa', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
+                desconectar
+              </button>
+            </div>
           ) : (
             <>
               <button onClick={handlePublishML} disabled={loadingML}
@@ -405,7 +414,14 @@ ${tags}`
                 {loadingML ? <Loader2 size={11} className="animate-spin" /> : <MlIcon size={11} />}
                 {loadingML ? 'Publicando…' : 'Publicar en MercadoLibre'}
               </button>
-              {mlError && <p style={{ fontSize: 10, color: '#b91c1c', margin: '4px 0 0' }}>{mlError}</p>}
+              {mlError && mlError === '__ml_not_connected__' ? (
+                <p style={{ fontSize: 10, margin: '4px 0 0' }}>
+                  <span style={{ color: '#b91c1c' }}>Sesión de MercadoLibre expirada. </span>
+                  <a href="/api/mercadolibre/connect" style={{ color: '#2D3277', fontWeight: 700, textDecoration: 'underline' }}>Reconectar →</a>
+                </p>
+              ) : mlError ? (
+                <p style={{ fontSize: 10, color: '#b91c1c', margin: '4px 0 0' }}>{mlError}</p>
+              ) : null}
             </>
           )}
         </div>
@@ -469,9 +485,16 @@ export default function InventarioClient({
   const [search,       setSearch]       = useState('')
   const [filtro,       setFiltro]       = useState<Filtro>('todos')
   const [editingItem,  setEditingItem]  = useState<Product | null>(null)
-  const [mlToast,      setMlToast]      = useState(
-    typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('ml_connected') === '1'
-  )
+  const [mlToast,      setMlToast]      = useState(false)
+  const [mlErrorToast,  setMlErrorToast]  = useState<string | null>(null)
+  const [mlErrorDetail, setMlErrorDetail] = useState<string | null>(null)
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('ml_connected') === '1') setMlToast(true)
+    if (params.get('ml_error'))  setMlErrorToast(params.get('ml_error'))
+    if (params.get('ml_detail')) setMlErrorDetail(params.get('ml_detail'))
+  }, [])
   const [gscToast, setGscToast] = useState(
     typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('gsc_connected') === '1'
   )
@@ -527,6 +550,25 @@ export default function InventarioClient({
 
   return (
     <>
+      {mlErrorToast && (
+        <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10, background: '#fef2f2', border: '1.5px solid #fca5a5', borderRadius: 12, padding: '12px 16px' }}>
+          <span style={{ fontSize: 18 }}>⚠️</span>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#b91c1c', margin: '0 0 2px' }}>Error al conectar MercadoLibre</p>
+            <p style={{ fontSize: 12, color: '#7f1d1d', margin: 0 }}>
+              {mlErrorToast === 'cancelled' && 'MercadoLibre rechazó la autorización.'}
+              {mlErrorToast === 'token' && 'MercadoLibre rechazó el intercambio de código. Verifica que la URL de redirección en tu app ML coincida exactamente.'}
+              {mlErrorToast === 'config' && 'Faltan variables de entorno ML_APP_ID o ML_REDIRECT_URI en Vercel.'}
+              {!['cancelled','token','config'].includes(mlErrorToast ?? '') && `Error: ${mlErrorToast}`}
+              {mlErrorDetail && <> — <code style={{ background: '#fee2e2', padding: '1px 4px', borderRadius: 4 }}>{mlErrorDetail}</code></>}
+              {' '}
+              <a href="/api/mercadolibre/connect" style={{ color: '#b91c1c', fontWeight: 700 }}>Intentar de nuevo →</a>
+            </p>
+          </div>
+          <button onClick={() => setMlErrorToast(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#b91c1c', fontSize: 16 }}>✕</button>
+        </div>
+      )}
+
       {mlToast && (
         <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10, background: '#fffde7', border: '1.5px solid #FFE600', borderRadius: 12, padding: '12px 16px' }}>
           <MlIcon size={20} />
@@ -558,11 +600,11 @@ export default function InventarioClient({
           <span style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Facebook Shopping</span>
         </div>
         <div style={{ flex: 1, minWidth: 200 }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: '#1e40af', margin: '0 0 2px' }}>Tus piezas con foto aparecen en Facebook Shopping</p>
-          <p style={{ fontSize: 11, color: '#3b82f6', margin: 0 }}>Se sincronizan automáticamente via feed. Activa el canal en Mi Tienda para conectarlo a tu página de Facebook.</p>
+          <p style={{ fontSize: 13, fontWeight: 700, color: '#1e40af', margin: '0 0 2px' }}>Feed activo — piezas enviadas a Meta automáticamente</p>
+          <p style={{ fontSize: 11, color: '#3b82f6', margin: 0 }}>Cada pieza con foto se sincroniza a tu catálogo de Meta. Vélas en el panel de Marketing.</p>
         </div>
-        <a href="/mi-tienda" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 16px', background: '#1877F2', color: '#fff', borderRadius: 9, fontSize: 12, fontWeight: 800, textDecoration: 'none', flexShrink: 0 }}>
-          Configurar →
+        <a href="/marketing" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 16px', background: '#1877F2', color: '#fff', borderRadius: 9, fontSize: 12, fontWeight: 800, textDecoration: 'none', flexShrink: 0 }}>
+          Ver Marketing →
         </a>
       </div>
 
