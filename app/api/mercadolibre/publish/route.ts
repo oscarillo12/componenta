@@ -193,13 +193,8 @@ export async function POST(req: Request) {
   ].filter(Boolean).join('\n')
 
   // ── Atributos ─────────────────────────────────────────────────────────────
-  // ML requiere value_id numérico para ITEM_CONDITION (no acepta value_name para este atributo)
-  // 2230284 = Usado, 2230581 = Nuevo
-  const ITEM_CONDITION_USED = '2230284'
-
   type MlAttribute = { id: string; value_name?: string; value_id?: string }
   const attributes: MlAttribute[] = []
-  attributes.push({ id: 'ITEM_CONDITION', value_id: ITEM_CONDITION_USED })
   if (product.marca)  attributes.push({ id: 'BRAND',             value_name: product.marca })
   if (product.modelo) attributes.push({ id: 'MODEL',             value_name: product.modelo })
   if (product.oem)    attributes.push({ id: 'PART_NUMBER',       value_name: product.oem })
