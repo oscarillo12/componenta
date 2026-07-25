@@ -93,7 +93,7 @@ async function subirImagen(imageUrl: string, token: string): Promise<{ id: strin
       : rawBuffer
 
     const formData = new FormData()
-    formData.append('file', new Blob([imgBuffer], { type: 'image/jpeg' }), 'image.jpg')
+    formData.append('file', new Blob([new Uint8Array(imgBuffer)], { type: 'image/jpeg' }), 'image.jpg')
 
     const mlRes = await fetch('https://api.mercadolibre.com/pictures/items/upload', {
       method: 'POST',
