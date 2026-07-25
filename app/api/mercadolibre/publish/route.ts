@@ -71,8 +71,8 @@ async function detectarCategoria(query: string): Promise<string> {
   }
 }
 
-async function subirImagen(imageUrl: string, token: string): Promise<{ id: string } | null> {
-  // Intento 1: ML baja la imagen directamente desde la URL (más rápido, evita intermediarios)
+async function subirImagen(imageUrl: string, token: string): Promise<{ id: string } | { err: string }> {
+  // Intento 1: ML baja la imagen directamente desde la URL
   try {
     const res1 = await fetch('https://api.mercadolibre.com/pictures/items/upload', {
       method: 'POST',
@@ -87,18 +87,13 @@ async function subirImagen(imageUrl: string, token: string): Promise<{ id: strin
       const img1 = await res1.json()
       if (img1?.id) return { id: img1.id }
     }
-    const err1 = await res1.text().catch(() => '')
-    console.error('[ML subirImagen] URL upload falló:', res1.status, err1.slice(0, 200))
-  } catch (e) {
-    console.error('[ML subirImagen] URL upload excepción:', e)
-  }
+    const err1body = await res1.text().catch(() => '')
+    const err1 = `URL→ML ${res1.status}: ${err1body.slice(0, 150)}`
 
-  // Intento 2: descargar y subir como multipart
-  try {
+    // Intento 2: descargar y subir como multipart
     const imgRes = await fetch(imageUrl)
     if (!imgRes.ok) {
-      console.error('[ML subirImagen] fetch imagen falló:', imgRes.status, imageUrl.slice(0, 80))
-      return null
+      return { err: `fetch imagen ${imgRes.status} | ${err1}` }
     }
     const buffer      = await imgRes.arrayBuffer()
     const contentType = imgRes.headers.get('content-type') ?? 'image/jpeg'
@@ -111,15 +106,14 @@ async function subirImagen(imageUrl: string, token: string): Promise<{ id: strin
       body: formData,
     })
     if (!res2.ok) {
-      const err2 = await res2.text().catch(() => '')
-      console.error('[ML subirImagen] multipart falló:', res2.status, err2.slice(0, 200))
-      return null
+      const err2body = await res2.text().catch(() => '')
+      return { err: `multipart ${res2.status}: ${err2body.slice(0, 150)} | ${err1}` }
     }
     const img2 = await res2.json()
-    return img2?.id ? { id: img2.id } : null
+    if (img2?.id) return { id: img2.id }
+    return { err: `sin id en respuesta | ${err1}` }
   } catch (e) {
-    console.error('[ML subirImagen] multipart excepción:', e)
-    return null
+    return { err: String(e) }
   }
 }
 
@@ -213,10 +207,11 @@ export async function POST(req: Request) {
     )
   }
   const pictureResults = await Promise.all(imageUrls.map(url => subirImagen(url, token)))
-  const pictures = pictureResults.filter((p): p is { id: string } => p !== null)
+  const pictures = pictureResults.filter((r): r is { id: string } => 'id' in r)
   if (pictures.length === 0) {
+    const errDetail = (pictureResults[0] as { err: string } | undefined)?.err ?? 'error desconocido'
     return NextResponse.json(
-      { error: 'No se pudo subir la imagen a MercadoLibre. Verifica que la URL de la foto sea pública y accesible.' },
+      { error: `No se pudo subir la imagen a MercadoLibre: ${errDetail}` },
       { status: 400 }
     )
   }
