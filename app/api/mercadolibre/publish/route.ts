@@ -72,31 +72,53 @@ async function detectarCategoria(query: string): Promise<string> {
 }
 
 async function subirImagen(imageUrl: string, token: string): Promise<{ id: string } | null> {
+  // Intento 1: ML baja la imagen directamente desde la URL (más rápido, evita intermediarios)
+  try {
+    const res1 = await fetch('https://api.mercadolibre.com/pictures/items/upload', {
+      method: 'POST',
+      headers: {
+        Authorization:  `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        Accept:         'application/json',
+      },
+      body: JSON.stringify({ url: imageUrl }),
+    })
+    if (res1.ok) {
+      const img1 = await res1.json()
+      if (img1?.id) return { id: img1.id }
+    }
+    const err1 = await res1.text().catch(() => '')
+    console.error('[ML subirImagen] URL upload falló:', res1.status, err1.slice(0, 200))
+  } catch (e) {
+    console.error('[ML subirImagen] URL upload excepción:', e)
+  }
+
+  // Intento 2: descargar y subir como multipart
   try {
     const imgRes = await fetch(imageUrl)
     if (!imgRes.ok) {
       console.error('[ML subirImagen] fetch imagen falló:', imgRes.status, imageUrl.slice(0, 80))
       return null
     }
-    const buffer = await imgRes.arrayBuffer()
+    const buffer      = await imgRes.arrayBuffer()
     const contentType = imgRes.headers.get('content-type') ?? 'image/jpeg'
-    const ext = contentType.includes('png') ? 'png' : 'jpg'
-    const formData = new FormData()
+    const ext         = contentType.includes('png') ? 'png' : 'jpg'
+    const formData    = new FormData()
     formData.append('file', new Blob([buffer], { type: contentType }), `image.${ext}`)
-    const mlRes = await fetch('https://api.mercadolibre.com/pictures/items/upload', {
+    const res2 = await fetch('https://api.mercadolibre.com/pictures/items/upload', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
       body: formData,
     })
-    if (!mlRes.ok) {
-      const errBody = await mlRes.text().catch(() => '')
-      console.error('[ML subirImagen] upload a ML falló:', mlRes.status, errBody.slice(0, 200))
+    if (!res2.ok) {
+      const err2 = await res2.text().catch(() => '')
+      console.error('[ML subirImagen] multipart falló:', res2.status, err2.slice(0, 200))
       return null
     }
-    const mlImg = await mlRes.json()
-    return mlImg?.id ? { id: mlImg.id } : null
+    const img2 = await res2.json()
+    return img2?.id ? { id: img2.id } : null
   } catch (e) {
-    console.error('[ML subirImagen] excepción:', e)
+    console.error('[ML subirImagen] multipart excepción:', e)
     return null
   }
 }
