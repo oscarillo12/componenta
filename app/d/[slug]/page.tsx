@@ -64,13 +64,13 @@ export default function DesarmaduriaPage({ params }: { params: Promise<{ slug: s
   if (!profile) return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, background: '#f7f7f5' }}>
       <p style={{ fontSize: 16, fontWeight: 700, color: '#374151' }}>Tienda no encontrada</p>
-      <Link href="/marketplace" style={{ color: '#2f5fdb', fontWeight: 600, textDecoration: 'none' }}>← Volver al marketplace</Link>
+      <Link href="/" style={{ color: '#2f5fdb', fontWeight: 600, textDecoration: 'none' }}>← Ver todos los repuestos</Link>
     </div>
   )
 
   return (
     <PublicProfile
-      backHref="/marketplace"
+      backHref="/"
       isOwner={isOwner}
       editHref="/mi-tienda"
       profile={{

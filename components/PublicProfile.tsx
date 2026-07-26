@@ -175,7 +175,7 @@ export default function PublicProfile({
                   {filteredProducts.map(p => (
                     <ProductCard key={p.id} item={p} sellerNombre={profile.nombre} sellerColor={color}
                       waLink={`${waBase}?text=${encodeURIComponent(`Hola, vi la pieza "${p.pieza}" en Componenta. ¿Está disponible?`)}`}
-                      onClick={() => window.location.href = `/marketplace/${p.id}`} />
+                      onClick={() => window.location.href = `/p/${p.id}`} />
                   ))}
                 </div>}
           </>

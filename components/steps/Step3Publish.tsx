@@ -33,6 +33,16 @@ const CANAL_CONFIG = {
     preview: 'Se publicará en MercadoLibre con descripción y foto generadas automáticamente',
     badge: null,
   },
+  facebook: {
+    icon: (
+      <div style={{ width: 24, height: 24, borderRadius: 6, background: '#1877F2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <span style={{ fontWeight: 900, fontSize: 14, color: '#fff', lineHeight: 1 }}>f</span>
+      </div>
+    ),
+    color: '#1877F2', bg: '#eff6ff', border: '#93c5fd',
+    preview: 'El agente publicará automáticamente en Facebook Marketplace Temuco (hasta 5 publicaciones por corrida)',
+    badge: 'Automático',
+  },
 }
 
 const ESTADOS = [
@@ -543,7 +553,9 @@ export default function Step3Publish({ photoPreview, partData, onPublished }: St
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                     <p style={{ fontWeight: 700, fontSize: 14, color: '#16181d', margin: 0 }}>{channel.name}</p>
                     {cfg.badge && (
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: channel.id === 'componenta' ? '#2f5fdb' : '#e5e7eb', color: channel.id === 'componenta' ? '#fff' : '#6b7280' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+                        background: channel.id === 'componenta' ? '#2f5fdb' : channel.id === 'facebook' ? '#1877F2' : '#e5e7eb',
+                        color: channel.id === 'componenta' || channel.id === 'facebook' ? '#fff' : '#6b7280' }}>
                         {cfg.badge}
                       </span>
                     )}

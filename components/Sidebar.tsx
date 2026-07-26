@@ -4,13 +4,14 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
 import { useState, useEffect } from 'react'
-import { Plus, LayoutGrid, BarChart2, Package, CreditCard, ShoppingBag, UserCircle, Store, MessageCircle, Search } from 'lucide-react'
+import { Plus, LayoutGrid, BarChart2, Package, CreditCard, ShoppingBag, UserCircle, Store, MessageCircle, Search, Megaphone } from 'lucide-react'
 
 const navItems = [
   { icon: Plus,          href: '/publicar',   label: 'Nuevo ingreso' },
   { icon: LayoutGrid,    href: '/inventario', label: 'Inventario' },
   { icon: Package,       href: '/pedidos',    label: 'Pedidos' },
   { icon: BarChart2,     href: '/dashboard',  label: 'Dashboard' },
+  { icon: Megaphone,     href: '/marketing',  label: 'Marketing' },
   { icon: MessageCircle, href: '/chat',       label: 'Chat' },
   { icon: CreditCard,    href: '/planes',     label: 'Planes' },
   { icon: UserCircle,    href: '/cuenta',     label: 'Mi cuenta' },
@@ -25,8 +26,8 @@ const bottomItems = [
 const mobileItems = [
   { icon: Plus,          href: '/publicar',    label: 'Nuevo' },
   { icon: LayoutGrid,    href: '/inventario',  label: 'Inventario' },
+  { icon: Megaphone,     href: '/marketing',   label: 'Marketing' },
   { icon: Package,       href: '/pedidos',     label: 'Pedidos' },
-  { icon: MessageCircle, href: '/chat',        label: 'Chat' },
   { icon: ShoppingBag,   href: '/',            label: 'Vitrina' },
 ]
 

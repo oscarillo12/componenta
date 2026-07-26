@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
-const client = new Anthropic()
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
 const SYSTEM = `Eres el asistente de soporte oficial de Componenta, una plataforma chilena de compra y venta de repuestos usados para autos.
 
@@ -16,28 +16,30 @@ Conoces en detalle cómo funciona la plataforma:
 
 Responde siempre en español chileno, de forma concisa, amigable y útil. Si no puedes resolver algo, indica que el equipo de Componenta puede ayudar por WhatsApp o email. No inventes precios ni datos que no conozcas.`
 
+type Message = { role: string; content: string }
+
 export async function POST(req: NextRequest) {
-  const { messages } = await req.json()
+  const { messages }: { messages: Message[] } = await req.json()
+  if (!messages?.length) return NextResponse.json({ error: 'Sin mensajes' }, { status: 400 })
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return NextResponse.json({ error: 'ANTHROPIC_API_KEY no configurada' }, { status: 500 })
-  }
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash', systemInstruction: SYSTEM })
 
-  const stream = await client.messages.stream({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 1024,
-    system: SYSTEM,
-    messages,
-  })
+  // Convertir historial: Anthropic usa 'assistant', Gemini usa 'model'
+  const history = messages.slice(0, -1).map(m => ({
+    role: m.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: m.content }],
+  }))
+  const lastMsg = messages[messages.length - 1].content
+
+  const chat = model.startChat({ history })
+  const streamResult = await chat.sendMessageStream(lastMsg)
 
   const encoder = new TextEncoder()
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        for await (const chunk of stream) {
-          if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-            controller.enqueue(encoder.encode(chunk.delta.text))
-          }
+        for await (const chunk of streamResult.stream) {
+          controller.enqueue(encoder.encode(chunk.text()))
         }
       } finally {
         controller.close()

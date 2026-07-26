@@ -30,4 +30,6 @@ export type Product = {
   image_hash:   string | null
   ml_item_id:   string | null
   ml_permalink: string | null
+  fb_item_id:   string | null
+  fb_permalink: string | null
 }

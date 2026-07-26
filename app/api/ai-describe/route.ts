@@ -1,8 +1,8 @@
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
-const anthropic = new Anthropic()
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth()
@@ -24,12 +24,8 @@ La descripción debe:
 
 Responde SOLO con el texto de la descripción, sin comillas ni explicaciones.`
 
-  const msg = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 200,
-    messages: [{ role: 'user', content: prompt }],
-  })
-
-  const text = msg.content[0].type === 'text' ? msg.content[0].text.trim() : ''
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+  const result = await model.generateContent(prompt)
+  const text = result.response.text().trim()
   return NextResponse.json({ descripcion: text })
 }

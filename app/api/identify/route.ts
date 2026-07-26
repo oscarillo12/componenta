@@ -16,7 +16,7 @@ ${contextLine}
 Analiza esta imagen de una pieza usada de automóvil. Responde ÚNICAMENTE con un JSON válido, sin markdown ni explicaciones:
 
 {
-  "pieza": "nombre exacto en español (ej: Cuerpo de aceleración, Bomba de agua, Alternador)",
+  "pieza": "nombre específico en español — incluye el tipo exacto y subcategoría cuando aplique (ej: 'Motor Completo 1.6 VVT-i', 'Caja de Cambios Manual 5ta', 'Bomba de Agua Original', 'Alternador 90A', 'Culata Motor 1.5'). Para motores y cajas siempre agrega la cilindrada o tipo si es visible o inferible del vehículo. NUNCA uses solo 'Motor Completo' o 'Caja de Cambios' sin más detalle.",
   "marca": "${vehicleHint?.marca ?? 'fabricante del vehículo al que pertenece'}",
   "oem": "CÓDIGO OEM del fabricante para esta pieza${vehicleHint ? ` en el ${vehicleHint.marca} ${vehicleHint.modelo} ${vehicleHint.anio}` : ''}. Usa tu conocimiento de catálogos OEM — si reconoces la pieza y el vehículo, proporciona el código aunque no sea visible en la foto. Formato sin guiones extra, ej: ZJ3813640, 27060-21050, 25182341. null solo si genuinamente desconoces el código.",
   "compatibilidad": [

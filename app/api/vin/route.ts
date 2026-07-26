@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
-const anthropic = new Anthropic()
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
 // Decodifica el WMI (primeros 3 caracteres del VIN) para identificar fabricante
 // Incluye códigos comunes en el mercado chileno/latinoamericano
@@ -94,33 +94,17 @@ export async function GET(req: NextRequest) {
   }
   const anioLocal = ANIO_MAP[anioChar] ?? null
 
-  // ── 3. Fallback AI: Claude decodifica el VIN ──────────────────────
-  if (!process.env.ANTHROPIC_API_KEY) {
-    if (marcaLocal) {
-      return NextResponse.json({
-        marca:  marcaLocal,
-        modelo: null,
-        anio:   anioLocal?.toString() ?? null,
-        fuente: 'wmi_local',
-        nota:   'Modelo no disponible — VIN no encontrado en base de datos internacional',
-      })
-    }
-    return NextResponse.json({ error: 'VIN no encontrado. Intenta ingresar el vehículo manualmente.' }, { status: 404 })
-  }
-
+  // ── 3. Fallback AI: Gemini decodifica el VIN ─────────────────────
   try {
-    const aiRes = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 200,
-      system: `Eres un experto en decodificación de VINs automotrices, con énfasis en el mercado chileno y latinoamericano.
-Decodifica el VIN y responde SOLO con JSON válido, sin explicaciones:
-{"marca":"string","modelo":"string o null","anio":"string o null","motor":"string o null","tipo":"string o null","confianza":0-100}
-Si no puedes identificar algún campo, usa null. Confianza según qué tan seguro estás.`,
-      messages: [{ role: 'user', content: `Decodifica este VIN: ${vin}. WMI prefix: ${vin.slice(0,3)}. Fabricante conocido: ${marcaLocal ?? 'desconocido'}. Año estimado: ${anioLocal ?? 'desconocido'}.` }],
-    })
-
-    const txt    = aiRes.content[0].type === 'text' ? aiRes.content[0].text : ''
-    const match  = txt.match(/\{[\s\S]*\}/)
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+    const result = await model.generateContent(
+      `Eres un experto en decodificación de VINs automotrices, énfasis en mercado chileno/latinoamericano.
+Decodifica este VIN: ${vin}. WMI prefix: ${vin.slice(0,3)}. Fabricante conocido: ${marcaLocal ?? 'desconocido'}. Año estimado: ${anioLocal ?? 'desconocido'}.
+Responde SOLO con JSON válido, sin explicaciones:
+{"marca":"string","modelo":"string o null","anio":"string o null","motor":"string o null","tipo":"string o null","confianza":0}`
+    )
+    const txt = result.response.text()
+    const match = txt.match(/\{[\s\S]*\}/)
     if (match) {
       const parsed = JSON.parse(match[0])
       return NextResponse.json({ ...parsed, fuente: 'ai' })

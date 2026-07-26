@@ -1,11 +1,9 @@
 import { auth } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
-const anthropic = new Anthropic()
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
-// Sugiere un código OEM a partir de los datos de texto ya cargados en el
-// formulario de edición (sin foto) — para cuando el vendedor no lo tiene a mano.
 export async function POST(req: NextRequest) {
   const { userId } = await auth()
   if (!userId) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
@@ -15,26 +13,49 @@ export async function POST(req: NextRequest) {
 
   const vehiculo = [marca, modelo, anios].filter(Boolean).join(' ')
 
-  const prompt = `Eres un experto en catálogos OEM de repuestos automotrices. Trabajas para Componenta, un marketplace chileno de piezas usadas.
+  const prompt = `Eres un experto en catálogos OEM de repuestos automotrices para Componenta, marketplace chileno de piezas usadas.
 
 Pieza: "${pieza}"${vehiculo ? `\nVehículo: ${vehiculo}` : ''}
 
-Responde ÚNICAMENTE con un JSON válido, sin markdown ni explicaciones:
-{"oem": "código OEM más probable del fabricante para esta pieza y vehículo, formato tal cual el fabricante (ej: 27060-21050, ZJ3813640). null si genuinamente no puedes estimarlo con confianza razonable.", "confianza": 0-100}`
+Responde ÚNICAMENTE con JSON puro (sin markdown, sin explicaciones, sin bloques de código):
+{"oem":"27060-21050","confianza":85}
 
-  try {
-    const msg = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 150,
-      messages: [{ role: 'user', content: prompt }],
-    })
-    const text = msg.content[0].type === 'text' ? msg.content[0].text.trim() : ''
-    const jsonMatch = text.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) return NextResponse.json({ oem: null, confianza: 0 })
-    const parsed = JSON.parse(jsonMatch[0])
-    return NextResponse.json({ oem: parsed.oem ?? null, confianza: parsed.confianza ?? 0 })
-  } catch (err) {
-    console.error('Error en suggest-oem:', err)
-    return NextResponse.json({ error: 'No se pudo sugerir un código. Intenta de nuevo.' }, { status: 500 })
+Donde:
+- "oem": el código OEM más probable (formato exacto del fabricante). Usa null si no puedes estimarlo con confianza razonable.
+- "confianza": número entero del 0 al 100 indicando tu nivel de certeza.`
+
+  const MODELS = ['gemini-2.0-flash', 'gemini-2.5-flash']
+
+  for (const modelName of MODELS) {
+    try {
+      const model = genAI.getGenerativeModel({ model: modelName })
+      const result = await model.generateContent(prompt)
+
+      const candidate = result.response.candidates?.[0]
+      const text = (candidate?.content?.parts?.[0]?.text ?? result.response.text()).trim()
+
+      const jsonMatch = text.match(/\{[\s\S]*?\}/)
+      if (!jsonMatch) {
+        console.warn(`suggest-oem [${modelName}]: no JSON found in response:`, text.slice(0, 200))
+        return NextResponse.json({ oem: null, confianza: 0 })
+      }
+
+      let parsed: { oem?: string | null; confianza?: number }
+      try {
+        parsed = JSON.parse(jsonMatch[0])
+      } catch {
+        console.warn(`suggest-oem [${modelName}]: JSON parse failed:`, jsonMatch[0])
+        return NextResponse.json({ oem: null, confianza: 0 })
+      }
+
+      return NextResponse.json({ oem: parsed.oem ?? null, confianza: parsed.confianza ?? 0 })
+    } catch (err) {
+      console.error(`suggest-oem [${modelName}] error:`, err instanceof Error ? err.message : err)
+      if (modelName === MODELS[MODELS.length - 1]) {
+        return NextResponse.json({ error: 'No se pudo sugerir un código. Intenta de nuevo.' }, { status: 500 })
+      }
+    }
   }
+
+  return NextResponse.json({ oem: null, confianza: 0 })
 }

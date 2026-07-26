@@ -80,7 +80,7 @@ export async function POST(req: Request) {
     offerId,
     title,
     description: desc,
-    link:         `${APP_URL}/marketplace/${product.id}`,
+    link:         `${APP_URL}/p/${product.id}`,
     imageLink:    product.imagen_url ?? `${APP_URL}/og-image.png`,
     contentLanguage:     'es',
     targetCountry:       'CL',

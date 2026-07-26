@@ -37,7 +37,7 @@ export async function GET() {
       esc('Repuestos y accesorios para automóviles'),
       esc(ESTADO[p.estado] ?? 'Usado'),
       p.imagen_url ?? '',
-      `${APP_URL}/marketplace/${p.id}`,
+      `${APP_URL}/p/${p.id}`,
     ].join(',')
   })
 

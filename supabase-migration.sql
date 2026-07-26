@@ -130,6 +130,10 @@ ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS ml_item_id   TEXT;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS ml_permalink TEXT;
 
+-- Columnas Facebook Marketplace en la tabla products (si no existen)
+ALTER TABLE products ADD COLUMN IF NOT EXISTS fb_item_id   TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS fb_permalink TEXT;
+
 -- Tokens OAuth de MercadoLibre por usuario
 CREATE TABLE IF NOT EXISTS ml_tokens (
   user_id       TEXT PRIMARY KEY,

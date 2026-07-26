@@ -32,6 +32,8 @@ function mockToProduct(item: typeof mockInventory[0], userId: string): Product {
     image_hash:      null,
     ml_item_id:      null,
     ml_permalink:    null,
+    fb_item_id:      null,
+    fb_permalink:    null,
   }
 }
 

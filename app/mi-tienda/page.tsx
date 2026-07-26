@@ -71,18 +71,20 @@ export default function MiTiendaPage() {
   const [error,    setError]    = useState('')
   const [specInput, setSpecInput] = useState('')
   const [copied,   setCopied]   = useState(false)
-  const [gmcCopied, setGmcCopied] = useState(false)
-  const [activeChannel, setActiveChannel] = useState<'meta' | 'gadw' | 'wacatalog'>('meta')
   const [metaCopied, setMetaCopied] = useState(false)
   const [aiLoading, setAiLoading] = useState(false)
+  const [view, setView] = useState<'summary' | 'edit'>('edit')
   const [step, setStep] = useState(0)
   const [uploadingBanner, setUploadingBanner] = useState(false)
   const bannerInputRef = useRef<HTMLInputElement>(null)
-
+  const [mlConnected,     setMlConnected]     = useState<boolean|null>(null)
   useEffect(() => {
     fetch('/api/mi-tienda').then(r => r.json()).then(d => {
       setProfile(d); setForm(d)
+      if (d.profileSaved) setView('summary')
     }).catch(() => setError('Error cargando perfil')).finally(() => setLoading(false))
+
+    fetch('/api/mercadolibre/status').then(r => r.json()).then(d => setMlConnected(d.connected ?? false)).catch(() => setMlConnected(false))
   }, [])
 
   const set = useCallback(<K extends keyof Profile>(key: K, val: Profile[K]) => {
@@ -138,7 +140,7 @@ export default function MiTiendaPage() {
       const r = await fetch('/api/mi-tienda', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
       const d = await r.json()
       if (!r.ok) { setError(d.error || 'Error al guardar'); return }
-      setProfile(form); setSaved(true); setTimeout(() => setSaved(false), 3000)
+      setProfile(form); setSaved(true); setTimeout(() => { setSaved(false); setView('summary') }, 1500)
     } catch { setError('Error de conexión') } finally { setSaving(false) }
   }
 
@@ -165,24 +167,6 @@ export default function MiTiendaPage() {
     <SellerLayout section="mi-tienda">
       <div style={{ maxWidth: 640, margin: '0 auto', padding: '24px 20px 60px' }}>
 
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
-          <div>
-            <h1 style={{ fontWeight: 900, fontSize: 20, color: '#16181d', margin: 0 }}>Personaliza tu tienda</h1>
-            <p style={{ color: '#9aa0aa', fontSize: 13, margin: '4px 0 0' }}>Así te ven los compradores en el marketplace</p>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onPointerDown={copyUrl}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 9, border: '1.5px solid #ececea', background: '#fff', fontSize: 12, fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
-              {copied ? <Check size={13} color="#2f5fdb" /> : <Copy size={13} color="#9aa0aa" />}
-              {copied ? 'Copiado' : 'Copiar URL'}
-            </button>
-            <a href={`/d/${form.slug}`} target="_blank" rel="noopener noreferrer"
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 9, border: '1.5px solid #ececea', background: '#fff', fontSize: 12, fontWeight: 600, color: '#374151', textDecoration: 'none' }}>
-              <ExternalLink size={13} color="#9aa0aa" /> Ver publicada
-            </a>
-          </div>
-        </div>
-
         {error && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fff5f5', border: '1px solid #fca5a5', borderRadius: 10, padding: '12px 16px', marginBottom: 16 }}>
             <AlertCircle size={15} color="#b91c1c" />
@@ -190,6 +174,32 @@ export default function MiTiendaPage() {
           </div>
         )}
 
+        {/* ── Vista resumen (perfil ya configurado) ── */}
+        {view === 'summary' && (
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #ececea', padding: '20px 24px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ width: 52, height: 52, borderRadius: 14, background: form.color, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 18, color: '#fff' }}>
+              {form.nombre.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'MT'}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontSize: 16, fontWeight: 900, color: '#16181d', margin: '0 0 2px' }}>{form.nombre}</p>
+              <p style={{ fontSize: 12, color: '#9aa0aa', margin: 0 }}>{form.ciudad}{form.tagline ? ` · ${form.tagline}` : ''}</p>
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <a href={`/d/${form.slug}`} target="_blank" rel="noopener noreferrer"
+                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '8px 12px', borderRadius: 9, border: '1.5px solid #ececea', background: '#fff', fontSize: 12, fontWeight: 600, color: '#374151', textDecoration: 'none' }}>
+                <ExternalLink size={12} color="#9aa0aa" /> Ver
+              </a>
+              <button onPointerDown={() => { setStep(0); setView('edit') }}
+                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '8px 14px', borderRadius: 9, border: 'none', background: '#16181d', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                Editar tienda
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Wizard edición ── */}
+        {view === 'edit' && (
+        <>
         {/* Progreso de pasos */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
           {STEPS.map((label, i) => (
@@ -370,245 +380,124 @@ export default function MiTiendaPage() {
             )}
           </div>
         </div>
+        </> )}
 
-        {/* ── Google Merchant Center ── */}
-        <div style={{ marginTop: 20, background: '#fff', borderRadius: 16, border: '1px solid #ececea', overflow: 'hidden' }}>
-
-          {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '18px 24px', borderBottom: '1px solid #f1f2f4' }}>
-            <div style={{ width: 40, height: 40, borderRadius: 10, background: '#eef3fc', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Globe size={18} color="#2f5fdb" />
+        {/* ── Tu catálogo público ── */}
+        <div style={{ marginTop: 20, background: '#fff', borderRadius: 16, border: '1px solid #ececea', padding: '20px 24px' }}>
+          <h2 style={{ fontSize: 15, fontWeight: 800, color: '#16181d', margin: '0 0 4px' }}>Tu catálogo público</h2>
+          <p style={{ fontSize: 12, color: '#9aa0aa', margin: '0 0 14px' }}>Comparte este enlace con tus clientes — ven todos tus repuestos con tu marca</p>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
+            <div style={{ flex: 1, background: '#f9fafb', border: '1.5px solid #ececea', borderRadius: 9, padding: '10px 12px', fontSize: 12.5, color: '#374151', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.6 }}>
+              {APP_URL}/d/{form?.slug}
             </div>
-            <div style={{ flex: 1 }}>
-              <h2 style={{ fontSize: 15, fontWeight: 800, color: '#16181d', margin: 0 }}>Google Shopping</h2>
-              <p style={{ fontSize: 12, color: '#9aa0aa', margin: '2px 0 0' }}>Muestra tus repuestos en búsquedas de Google</p>
-            </div>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 20, background: '#f0fdf4', border: '1px solid #bbf7d0', fontSize: 11, fontWeight: 700, color: '#16a34a', flexShrink: 0 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
-              Feed activo
-            </span>
-          </div>
-
-          {/* Feed URL */}
-          <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f2f4' }}>
-            <label style={{ display: 'block', fontSize: 10.5, fontWeight: 700, color: '#9aa0aa', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.6px' }}>
-              URL de tu feed de productos
-            </label>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
-              <div style={{ flex: 1, background: '#f9fafb', border: '1.5px solid #ececea', borderRadius: 9, padding: '10px 12px', fontSize: 12, color: '#374151', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.6 }}>
-                {FEED_URL}
-              </div>
-              <button
-                onPointerDown={() => {
-                  navigator.clipboard.writeText(FEED_URL)
-                  setGmcCopied(true)
-                  setTimeout(() => setGmcCopied(false), 2000)
-                }}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderRadius: 9, border: '1.5px solid #ececea', background: '#fff', fontSize: 12, fontWeight: 600, color: '#374151', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                {gmcCopied ? <Check size={13} color="#2f5fdb" /> : <Copy size={13} color="#9aa0aa" />}
-                {gmcCopied ? 'Copiada' : 'Copiar URL'}
-              </button>
-            </div>
-            <div style={{ display: 'flex', gap: 16, marginTop: 10 }}>
-              <a href={FEED_URL} target="_blank" rel="noopener noreferrer"
-                style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#2f5fdb', fontWeight: 600, textDecoration: 'none' }}>
-                <ExternalLink size={12} /> Ver feed
-              </a>
-              <a href="https://merchants.google.com" target="_blank" rel="noopener noreferrer"
-                style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#374151', fontWeight: 600, textDecoration: 'none' }}>
-                <ExternalLink size={12} /> Abrir Google Merchant Center
-              </a>
-            </div>
-          </div>
-
-          {/* Instrucciones paso a paso */}
-          <div style={{ padding: '16px 24px' }}>
-            <p style={{ fontSize: 12, fontWeight: 700, color: '#374151', margin: '0 0 14px' }}>Conectar en 4 pasos</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {([
-                { n: 1, text: 'Entra a merchants.google.com e inicia sesión con tu cuenta de Google.' },
-                { n: 2, text: 'Ve a Productos → Fuentes de datos → Agregar fuente de datos.' },
-                { n: 3, text: 'Elige "Feed programado (URL)", pega la URL de arriba y selecciona frecuencia Diaria.' },
-                { n: 4, text: 'Google revisará el feed. En 24–48 h tus piezas aparecerán en Google Shopping.' },
-              ] as const).map(({ n, text }) => (
-                <div key={n} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                  <span style={{ width: 22, height: 22, borderRadius: '50%', background: '#eef3fc', color: '#2f5fdb', fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
-                    {n}
-                  </span>
-                  <p style={{ fontSize: 12.5, color: '#374151', margin: 0, lineHeight: 1.55 }}>{text}</p>
-                </div>
-              ))}
-            </div>
-            <div style={{ marginTop: 16, padding: '10px 14px', borderRadius: 10, background: '#fffbeb', border: '1px solid #fde68a' }}>
-              <p style={{ fontSize: 12, color: '#92400e', margin: 0, lineHeight: 1.5 }}>
-                <strong>Tip:</strong> Cada pieza que publiques con foto, precio y marca aparecerá automáticamente en el feed. Sin foto no se muestra en Google Shopping.
-              </p>
-            </div>
+            <button onPointerDown={copyUrl}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderRadius: 9, border: '1.5px solid #ececea', background: '#fff', fontSize: 12, fontWeight: 600, color: '#374151', cursor: 'pointer', flexShrink: 0 }}>
+              {copied ? <Check size={13} color="#2f5fdb" /> : <Copy size={13} color="#9aa0aa" />}
+              {copied ? 'Copiado' : 'Copiar'}
+            </button>
+            <a href={`/d/${form?.slug}`} target="_blank" rel="noopener noreferrer"
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderRadius: 9, border: '1.5px solid #ececea', background: '#fff', fontSize: 12, fontWeight: 600, color: '#374151', textDecoration: 'none', flexShrink: 0 }}>
+              <ExternalLink size={13} color="#9aa0aa" /> Ver
+            </a>
           </div>
         </div>
 
-        {/* ── Más canales de distribución ── */}
+        {/* ── Canales activos ── */}
         <div style={{ marginTop: 20, background: '#fff', borderRadius: 16, border: '1px solid #ececea', overflow: 'hidden' }}>
-
-          {/* Header */}
           <div style={{ padding: '18px 24px', borderBottom: '1px solid #f1f2f4' }}>
-            <h2 style={{ fontSize: 15, fontWeight: 800, color: '#16181d', margin: '0 0 4px' }}>Más canales de venta</h2>
-            <p style={{ fontSize: 12, color: '#9aa0aa', margin: 0 }}>Llega a más compradores publicando en múltiples plataformas</p>
+            <h2 style={{ fontSize: 15, fontWeight: 800, color: '#16181d', margin: '0 0 4px' }}>Canales activos</h2>
+            <p style={{ fontSize: 12, color: '#9aa0aa', margin: 0 }}>Cada pieza que publicas aparece automáticamente en estos canales</p>
           </div>
 
-          {/* Tabs */}
-          <div style={{ display: 'flex', borderBottom: '1px solid #f1f2f4', padding: '0 24px', overflowX: 'auto' }}>
-            {([
-              { id: 'meta',   label: 'Facebook + Instagram' },
-              { id: 'gadw',   label: 'Google Ads' },
-              { id: 'wacatalog', label: 'WhatsApp Catalog' },
-            ] as const).map(tab => (
-              <button key={tab.id} onPointerDown={() => setActiveChannel(tab.id as typeof activeChannel)}
-                style={{ padding: '12px 16px', fontSize: 12.5, fontWeight: activeChannel === tab.id ? 800 : 600, color: activeChannel === tab.id ? '#2f5fdb' : '#9aa0aa', background: 'none', border: 'none', borderBottom: activeChannel === tab.id ? '2px solid #2f5fdb' : '2px solid transparent', cursor: 'pointer', marginBottom: -1, whiteSpace: 'nowrap' }}>
-                {tab.label}
-              </button>
-            ))}
+          {/* Componenta */}
+          <div style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 24px', borderBottom:'1px solid #f9fafb' }}>
+            <div style={{ width:34, height:34, borderRadius:9, background:'#2f5fdb', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <span style={{ fontWeight:900, fontSize:13, color:'#fff' }}>C</span>
+            </div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <p style={{ fontSize:13, fontWeight:700, color:'#16181d', margin:'0 0 1px' }}>Componenta</p>
+              <p style={{ fontSize:11.5, color:'#9aa0aa', margin:0 }}>Tu tienda en componenta.vercel.app/d/{form?.slug}</p>
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
+              <span style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 10px', borderRadius:20, fontSize:11, fontWeight:700, background:'#f0fdf4', border:'1px solid #bbf7d0', color:'#16a34a' }}><span style={{ width:6, height:6, borderRadius:'50%', background:'#22c55e', display:'inline-block' }} />Activo</span>
+              <a href={`/d/${form?.slug}`} target="_blank" rel="noopener noreferrer" style={{ fontSize:12, fontWeight:700, color:'#2f5fdb', textDecoration:'none', display:'flex', alignItems:'center', gap:4 }}>Ver <ExternalLink size={11} /></a>
+            </div>
           </div>
 
-          {/* Contenido Facebook + Instagram */}
-          {activeChannel === 'meta' && (
-            <div style={{ padding: '20px 24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                <div style={{ display: 'flex', gap: 4 }}>
-                  {/* Facebook icon */}
-                  <div style={{ width: 32, height: 32, borderRadius: 8, background: '#1877F2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ color: '#fff', fontWeight: 900, fontSize: 16, lineHeight: 1 }}>f</span>
-                  </div>
-                  {/* Instagram icon */}
-                  <div style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid #fff' }} />
-                  </div>
-                </div>
-                <div>
-                  <p style={{ fontSize: 13, fontWeight: 800, color: '#16181d', margin: 0 }}>Meta Commerce Manager</p>
-                  <p style={{ fontSize: 11, color: '#9aa0aa', margin: '2px 0 0' }}>Publica en Facebook Shopping e Instagram Shopping al mismo tiempo</p>
-                </div>
-              </div>
+          {/* Google Shopping */}
+          <div style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 24px', borderBottom:'1px solid #f9fafb' }}>
+            <div style={{ width:34, height:34, borderRadius:9, background:'#fff', border:'1.5px solid #e5e7eb', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <span style={{ fontWeight:900, fontSize:12, color:'#333' }}>G</span>
+            </div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <p style={{ fontSize:13, fontWeight:700, color:'#16181d', margin:'0 0 1px' }}>Google Shopping</p>
+              <p style={{ fontSize:11.5, color:'#9aa0aa', margin:0 }}>Feed XML enviándose — aprobación de productos depende de Google Merchant Center</p>
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
+              <span style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 10px', borderRadius:20, fontSize:11, fontWeight:700, background:'#fffbeb', border:'1px solid #fde68a', color:'#92400e' }}><span style={{ width:6, height:6, borderRadius:'50%', background:'#f59e0b', display:'inline-block' }} />Feed activo</span>
+              <a href={FEED_URL} target="_blank" rel="noopener noreferrer" style={{ fontSize:12, fontWeight:700, color:'#374151', textDecoration:'none', display:'flex', alignItems:'center', gap:4 }}>Feed <ExternalLink size={11} /></a>
+            </div>
+          </div>
 
-              <label style={{ display: 'block', fontSize: 10.5, fontWeight: 700, color: '#9aa0aa', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.6px' }}>
-                Usa el mismo feed que Google (Meta lo acepta)
-              </label>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                <div style={{ flex: 1, background: '#f9fafb', border: '1.5px solid #ececea', borderRadius: 9, padding: '10px 12px', fontSize: 12, color: '#374151', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {FEED_URL}
-                </div>
-                <button
-                  onPointerDown={() => { navigator.clipboard.writeText(FEED_URL); setMetaCopied(true); setTimeout(() => setMetaCopied(false), 2000) }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', borderRadius: 9, border: '1.5px solid #ececea', background: '#fff', fontSize: 12, fontWeight: 600, color: '#374151', cursor: 'pointer', flexShrink: 0 }}>
-                  {metaCopied ? <Check size={13} color="#2f5fdb" /> : <Copy size={13} color="#9aa0aa" />}
-                  {metaCopied ? 'Copiada' : 'Copiar'}
+          {/* Facebook + Instagram Shopping */}
+          <div style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 24px', borderBottom:'1px solid #f9fafb' }}>
+            <div style={{ width:34, height:34, borderRadius:9, background:'#1877F2', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <span style={{ fontWeight:900, fontSize:14, color:'#fff' }}>f</span>
+            </div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <p style={{ fontSize:13, fontWeight:700, color:'#16181d', margin:'0 0 1px' }}>Facebook + Instagram Shopping</p>
+              <p style={{ fontSize:11.5, color:'#9aa0aa', margin:0 }}>Piezas enviadas al catálogo de Meta — visibles cuando conectes a tu página de Facebook</p>
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
+              <span style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 10px', borderRadius:20, fontSize:11, fontWeight:700, background:'#fffbeb', border:'1px solid #fde68a', color:'#92400e' }}><span style={{ width:6, height:6, borderRadius:'50%', background:'#f59e0b', display:'inline-block' }} />Catálogo listo</span>
+              <a href="https://business.facebook.com/commerce" target="_blank" rel="noopener noreferrer" style={{ fontSize:12, fontWeight:700, color:'#1877F2', textDecoration:'none', display:'flex', alignItems:'center', gap:4 }}>Commerce <ExternalLink size={11} /></a>
+            </div>
+          </div>
+
+          {/* MercadoLibre */}
+          <div style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 24px', borderBottom:'1px solid #f9fafb' }}>
+            <div style={{ width:34, height:34, borderRadius:9, background:'#FFE600', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <span style={{ fontWeight:900, fontSize:10, color:'#2D3277' }}>ML</span>
+            </div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <p style={{ fontSize:13, fontWeight:700, color:'#16181d', margin:'0 0 1px' }}>MercadoLibre</p>
+              <p style={{ fontSize:11.5, color:'#9aa0aa', margin:0 }}>
+                {mlConnected ? 'Publicas cada pieza con un clic desde tu inventario' : 'Conecta tu cuenta para publicar en MercadoLibre'}
+              </p>
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
+              {mlConnected === null
+                ? <span style={{ fontSize:11, color:'#9aa0aa' }}>…</span>
+                : <span style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 10px', borderRadius:20, fontSize:11, fontWeight:700, background: mlConnected ? '#f0fdf4' : '#fff5f5', border: mlConnected ? '1px solid #bbf7d0' : '1px solid #fca5a5', color: mlConnected ? '#16a34a' : '#b91c1c' }}><span style={{ width:6, height:6, borderRadius:'50%', background: mlConnected ? '#22c55e' : '#f87171', display:'inline-block' }} />{mlConnected ? 'Activo' : 'Sin conectar'}</span>
+              }
+              {mlConnected === false && (
+                <a href="/api/mercadolibre/connect" style={{ fontSize:12, fontWeight:700, color:'#2f5fdb', textDecoration:'none', padding:'5px 12px', borderRadius:8, border:'1.5px solid #d7e3f7', background:'#eef3fc' }}>
+                  Conectar
+                </a>
+              )}
+            </div>
+          </div>
+
+          {/* WhatsApp */}
+          <div style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 24px' }}>
+            <div style={{ width:34, height:34, borderRadius:9, background:'#25D366', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <MessageCircle size={14} color="#fff" />
+            </div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <p style={{ fontSize:13, fontWeight:700, color:'#16181d', margin:'0 0 1px' }}>WhatsApp</p>
+              <p style={{ fontSize:11.5, color:'#9aa0aa', margin:0 }}>
+                {form?.whatsapp ? `Compradores te contactan al ${form.whatsapp}` : 'Agrega tu número para recibir consultas'}
+              </p>
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
+              <span style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 10px', borderRadius:20, fontSize:11, fontWeight:700, background: form?.whatsapp ? '#f0fdf4' : '#fff5f5', border: form?.whatsapp ? '1px solid #bbf7d0' : '1px solid #fca5a5', color: form?.whatsapp ? '#16a34a' : '#b91c1c' }}><span style={{ width:6, height:6, borderRadius:'50%', background: form?.whatsapp ? '#22c55e' : '#f87171', display:'inline-block' }} />{form?.whatsapp ? 'Activo' : 'Sin conectar'}</span>
+              {!form?.whatsapp && (
+                <button onPointerDown={() => setStep(2)} style={{ fontSize:12, fontWeight:700, color:'#2f5fdb', cursor:'pointer', background:'none', border:'none', padding:0 }}>
+                  Agregar →
                 </button>
-              </div>
-
-              <p style={{ fontSize: 12, fontWeight: 700, color: '#374151', margin: '0 0 10px' }}>Configurar en 4 pasos</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {([
-                  'Entra a business.facebook.com y crea o abre tu cuenta Business.',
-                  'Ve a Commerce Manager → Catálogos → Crear catálogo → Productos de comercio electrónico.',
-                  'En Fuentes de datos, elige "Fuente de datos programada" y pega la URL del feed.',
-                  'Conecta el catálogo a tu página de Facebook y/o cuenta de Instagram para activar Shopping.',
-                ]).map((text, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                    <span style={{ width: 20, height: 20, borderRadius: '50%', background: '#eef3fc', color: '#2f5fdb', fontSize: 10, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
-                    <p style={{ fontSize: 12, color: '#374151', margin: 0, lineHeight: 1.5 }}>{text}</p>
-                  </div>
-                ))}
-              </div>
-              <a href="https://business.facebook.com/commerce" target="_blank" rel="noopener noreferrer"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 14, fontSize: 12, color: '#1877F2', fontWeight: 700, textDecoration: 'none' }}>
-                <ExternalLink size={12} /> Abrir Meta Commerce Manager
-              </a>
+              )}
             </div>
-          )}
-
-          {/* Contenido Google Ads */}
-          {activeChannel === 'gadw' && (
-            <div style={{ padding: '20px 24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: '#fff', border: '1.5px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <span style={{ fontSize: 13, fontWeight: 900 }}>G</span>
-                </div>
-                <div>
-                  <p style={{ fontSize: 13, fontWeight: 800, color: '#16181d', margin: 0 }}>Google Ads — Performance Max</p>
-                  <p style={{ fontSize: 11, color: '#9aa0aa', margin: '2px 0 0' }}>Muestra anuncios automáticos de tus piezas en Search, YouTube, Gmail y Maps</p>
-                </div>
-              </div>
-
-              <p style={{ fontSize: 12.5, color: '#374151', margin: '0 0 14px', lineHeight: 1.5 }}>
-                Una vez que tu catálogo esté en Google Merchant Center, puedes crear una campaña <strong>Performance Max</strong> en Google Ads. Google usa tus productos y genera anuncios automáticamente en todos sus canales.
-              </p>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
-                {([
-                  'Conecta tu cuenta de Google Merchant Center (sección anterior de esta página).',
-                  'Abre ads.google.com → Nueva campaña → Performance Max.',
-                  'Selecciona tu catálogo de Componenta como fuente de productos.',
-                  'Google genera los anuncios automáticamente y los optimiza solo.',
-                ]).map((text, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                    <span style={{ width: 20, height: 20, borderRadius: '50%', background: '#f0fdf4', color: '#16a34a', fontSize: 10, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
-                    <p style={{ fontSize: 12, color: '#374151', margin: 0, lineHeight: 1.5 }}>{text}</p>
-                  </div>
-                ))}
-              </div>
-
-              <a href="https://ads.google.com" target="_blank" rel="noopener noreferrer"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 10, border: '1.5px solid #4285F4', color: '#4285F4', fontWeight: 700, fontSize: 12, textDecoration: 'none' }}>
-                <ExternalLink size={12} /> Abrir Google Ads
-              </a>
-
-              <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 10, background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
-                <p style={{ fontSize: 12, color: '#166534', margin: 0 }}>
-                  <strong>Ventaja clave:</strong> Performance Max usa IA para mostrar tus piezas a personas que están buscando exactamente eso en Google ahora mismo. Sin elegir keywords manualmente.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Contenido WhatsApp Business Catalog */}
-          {activeChannel === 'wacatalog' && (
-            <div style={{ padding: '20px 24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <MessageCircle size={16} color="#fff" />
-                </div>
-                <div>
-                  <p style={{ fontSize: 13, fontWeight: 800, color: '#16181d', margin: 0 }}>WhatsApp Business Catalog</p>
-                  <p style={{ fontSize: 11, color: '#9aa0aa', margin: '2px 0 0' }}>Catálogo oficial de productos dentro de WhatsApp Business</p>
-                </div>
-              </div>
-
-              <p style={{ fontSize: 12.5, color: '#374151', margin: '0 0 14px', lineHeight: 1.5 }}>
-                Con WhatsApp Business (app gratuita) puedes crear un catálogo de piezas que los compradores ven directo en el chat. Al chatear contigo, verán tus productos sin salir de WhatsApp.
-              </p>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
-                {([
-                  'Descarga WhatsApp Business (app gratuita, diferente a WhatsApp normal).',
-                  'Ve a Configuración → Herramientas para empresas → Catálogo.',
-                  'Agrega cada pieza: foto, nombre, precio y enlace a tu publicación en Componenta.',
-                  'Cuando alguien te escribe, puede ver y compartir tu catálogo directamente.',
-                ]).map((text, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                    <span style={{ width: 20, height: 20, borderRadius: '50%', background: '#f0fdf4', color: '#16a34a', fontSize: 10, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
-                    <p style={{ fontSize: 12, color: '#374151', margin: 0, lineHeight: 1.5 }}>{text}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ padding: '10px 14px', borderRadius: 10, background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
-                <p style={{ fontSize: 12, color: '#166534', margin: 0 }}>
-                  <strong>Próximamente en Componenta:</strong> Sincronización automática de tu inventario con WhatsApp Business Catalog vía la API oficial de Meta.
-                </p>
-              </div>
-            </div>
-          )}
-
+          </div>
         </div>
 
       </div>

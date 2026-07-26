@@ -10,6 +10,8 @@ const isSellerRoute = createRouteMatcher([
   '/mi-taller(.*)',
   '/cuenta(.*)',
   '/publicar(.*)',
+  '/marketing(.*)',
+  '/chat(.*)',
 ])
 
 export default clerkMiddleware(async (auth, req) => {

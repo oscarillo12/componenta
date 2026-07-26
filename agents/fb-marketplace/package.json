@@ -1,0 +1,14 @@
+{
+  "name": "componenta-fb-marketplace-agent",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "login": "node index.js --login",
+    "run": "node index.js",
+    "test": "node index.js --dry-run"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0",
+    "dotenv": "^16.4.5"
+  }
+}

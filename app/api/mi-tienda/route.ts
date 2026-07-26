@@ -34,6 +34,7 @@ export async function GET() {
     horario:     data?.horario     ?? '',
     ciudad:      data?.ciudad      ?? 'Chile',
     especialidades: data?.especialidades ?? [],
+    profileSaved: !!data,
   })
 }
 

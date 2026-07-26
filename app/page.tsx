@@ -9,7 +9,7 @@ const MARCAS = [
   'Toyota','Hyundai','Chevrolet','Ford','Nissan','Suzuki','Kia','Mazda',
   'Honda','Volkswagen','Renault','Fiat','Peugeot','Citroën','Mercedes',
   'BMW','Subaru','Mitsubishi','Jeep','Chery','BYD','Haval','JAC','Volvo',
-  'Audi','Opel','Peugeot','Isuzu','Dacia','Skoda','Seat','Dodge',
+  'Audi','Opel','Isuzu','Dacia','Skoda','Seat','Dodge',
 ]
 
 const CATEGORIAS = [
@@ -32,23 +32,70 @@ const RANGOS_PRECIO = [
   { label:'Más de $400.000',       min:400000, max:Infinity},
 ]
 
+/* Modelos conocidos por marca — usados para detectar modelo desde el título
+   y para el verificador de compatibilidad cruzada */
+const MODELOS_POR_MARCA: Record<string, string[]> = {
+  Toyota:     ['Hilux','Corolla','RAV4','Yaris'],
+  Hyundai:    ['Accent','Tucson','Santa Fe','i10'],
+  Chevrolet:  ['Sail','Spark','Aveo'],
+  Ford:       ['Ranger','Fiesta','Focus'],
+  Nissan:     ['NP300','Versa','Sentra'],
+  Suzuki:     ['Alto','Swift'],
+  Kia:        ['Rio','Sportage'],
+  Mazda:      ['3','2','CX-5'],
+  Honda:      ['Civic','CR-V'],
+  Volkswagen: ['Gol','Amarok'],
+  Renault:    ['Duster','Logan'],
+}
+
+/* Piezas compatibles entre plataformas compartidas (rebadge / joint venture) */
+const COMPATIBILIDAD_CRUZADA: Record<string, string[]> = {
+  'Suzuki Alto':      ['Chevrolet Spark'],
+  'Chevrolet Spark':  ['Suzuki Alto'],
+  'Hyundai Accent':   ['Kia Rio'],
+  'Kia Rio':          ['Hyundai Accent'],
+  'Nissan Versa':     ['Renault Duster'],
+  'Renault Duster':   ['Nissan Versa'],
+}
+
 /* ─── Tipo ────────────────────────────────────────────────────── */
 type Listing = {
   id: string; fuente: 'facebook'|'mercadolibre'
   titulo: string|null; precio: number; imagen: string|null
   url_original: string; ubicacion: string|null; vendedor_nombre: string|null
+  marca: string|null; categoria: string|null
 }
 
 /* ─── Helpers de detección ────────────────────────────────────── */
-function detectarMarca(titulo: string|null) {
+function detectarMarcaTitulo(titulo: string|null) {
   if (!titulo) return null
   const t = titulo.toLowerCase()
   return MARCAS.find(m => t.includes(m.toLowerCase())) ?? null
 }
-function detectarCategoria(titulo: string|null) {
+function detectarCategoriaTitulo(titulo: string|null) {
   if (!titulo) return null
   const t = titulo.toLowerCase()
   return CATEGORIAS.find(c => c.kw.some(kw => t.includes(kw)))?.id ?? null
+}
+function detectarModeloTitulo(titulo: string|null, marca: string|null) {
+  if (!titulo || !marca) return null
+  const t = titulo.toLowerCase()
+  const modelos = MODELOS_POR_MARCA[marca]
+  if (!modelos) return null
+  return modelos.find(mo => t.includes(mo.toLowerCase())) ?? null
+}
+
+const CATEGORIA_IDS = new Set(CATEGORIAS.map(c => c.id))
+
+function resolverMarca(item: Listing) {
+  return item.marca || detectarMarcaTitulo(item.titulo)
+}
+function resolverCategoria(item: Listing) {
+  if (item.categoria && CATEGORIA_IDS.has(item.categoria)) return item.categoria
+  return detectarCategoriaTitulo(item.titulo)
+}
+function resolverModelo(item: Listing, marca: string|null) {
+  return detectarModeloTitulo(item.titulo, marca)
 }
 
 /* ─── Tarjeta de repuesto ─────────────────────────────────────── */
@@ -125,6 +172,11 @@ export default function Vitrina() {
   const [orden,        setOrden]        = useState<'reciente'|'precio_asc'|'precio_desc'>('reciente')
   const [showFiltros,  setShowFiltros]  = useState(false)
 
+  /* Verificador de compatibilidad */
+  const [compatMarca,   setCompatMarca]   = useState('')
+  const [compatModelo,  setCompatModelo]  = useState('')
+  const [compatChecked, setCompatChecked] = useState(false)
+
   useEffect(() => {
     fetch('/api/marketplace')
       .then(r => r.json())
@@ -141,7 +193,7 @@ export default function Vitrina() {
   const marcasPresentes = useMemo(() => {
     const conteo: Record<string, number> = {}
     for (const item of listings) {
-      const m = detectarMarca(item.titulo)
+      const m = resolverMarca(item)
       if (m) conteo[m] = (conteo[m]||0) + 1
     }
     return Object.entries(conteo).sort((a,b)=>b[1]-a[1]).slice(0,15)
@@ -151,7 +203,7 @@ export default function Vitrina() {
   const categoriasPresentes = useMemo(() => {
     const conteo: Record<string, number> = {}
     for (const item of listings) {
-      const c = detectarCategoria(item.titulo)
+      const c = resolverCategoria(item)
       if (c) conteo[c] = (conteo[c]||0) + 1
     }
     return CATEGORIAS.filter(c => conteo[c.id]).map(c=>({ ...c, total: conteo[c.id] }))
@@ -164,8 +216,8 @@ export default function Vitrina() {
 
     let list = listings
       .filter(i => !q || (i.titulo??'').toLowerCase().includes(q))
-      .filter(i => !marca    || detectarMarca(i.titulo) === marca)
-      .filter(i => !categoria || detectarCategoria(i.titulo) === categoria)
+      .filter(i => !marca    || resolverMarca(i) === marca)
+      .filter(i => !categoria || resolverCategoria(i) === categoria)
       .filter(i => !rango    || (i.precio >= rango.min && i.precio <= rango.max))
 
     if (orden === 'precio_asc')  list = [...list].sort((a,b)=>(a.precio||Infinity)-(b.precio||Infinity))
@@ -178,6 +230,32 @@ export default function Vitrina() {
   const limpiarTodo = useCallback(()=>{
     setBusqueda(''); setMarca(null); setCategoria(null); setRangoIdx(null)
   }, [])
+
+  /* Modelos disponibles para la marca elegida en el verificador */
+  const modelosCompat = compatMarca ? (MODELOS_POR_MARCA[compatMarca] ?? []) : []
+
+  /* Resultados del verificador: ajuste exacto + compatibles cruzados */
+  const compatResultados = useMemo(() => {
+    if (!compatChecked || !compatMarca || !compatModelo) return []
+    const key = `${compatMarca} ${compatModelo}`
+    const equivalentes = COMPATIBILIDAD_CRUZADA[key] ?? []
+
+    const exactos = listings.filter(i => {
+      const m = resolverMarca(i)
+      return m === compatMarca && resolverModelo(i, m) === compatModelo
+    })
+    const compatibles = listings.filter(i => {
+      const m = resolverMarca(i)
+      if (m === compatMarca && resolverModelo(i, m) === compatModelo) return false
+      const mo = resolverModelo(i, m)
+      return !!m && !!mo && equivalentes.includes(`${m} ${mo}`)
+    })
+
+    return [
+      ...exactos.map(i => ({ item:i, tag:'Ajuste exacto', tagBg:'#e8f7ee', tagColor:'#1a7a42' })),
+      ...compatibles.map(i => ({ item:i, tag:'También compatible', tagBg:'#eef3fc', tagColor:'#2f5fdb' })),
+    ]
+  }, [listings, compatMarca, compatModelo, compatChecked])
 
   /* ── Panel de filtros (reutilizado en sidebar y modal) ── */
   const PanelFiltros = () => (
@@ -256,20 +334,96 @@ export default function Vitrina() {
   return (
     <div style={{ minHeight:'100vh', background:'#f7f7f5', fontFamily:'system-ui,sans-serif', color:'#16181d' }}>
 
+      {/* ══ HERO — fusión de canales ══ */}
+      <div style={{ background:'#0f1115', padding:'36px 20px 34px', textAlign:'center',
+        borderBottom:'1px solid rgba(255,255,255,.08)', position:'relative', overflow:'hidden' }}>
+
+        <div style={{ position:'absolute', left:-30, bottom:10, width:150, height:56, opacity:.09 }} aria-hidden="true">
+          <div style={{ position:'absolute', left:20, bottom:20, width:110, height:26, background:'#fff', borderRadius:'8px 8px 3px 3px' }} />
+          <div style={{ position:'absolute', left:42, bottom:38, width:62, height:20, background:'#fff', borderRadius:'10px 10px 0 0' }} />
+          <div style={{ position:'absolute', left:30, bottom:6, width:22, height:22, background:'#fff', borderRadius:'50%' }} />
+          <div style={{ position:'absolute', left:98, bottom:6, width:22, height:22, background:'#fff', borderRadius:'50%' }} />
+        </div>
+        <div style={{ position:'absolute', right:-30, top:14, width:150, height:56, opacity:.09, transform:'scaleX(-1)' }} aria-hidden="true">
+          <div style={{ position:'absolute', left:20, bottom:20, width:110, height:26, background:'#fff', borderRadius:'8px 8px 3px 3px' }} />
+          <div style={{ position:'absolute', left:42, bottom:38, width:62, height:20, background:'#fff', borderRadius:'10px 10px 0 0' }} />
+          <div style={{ position:'absolute', left:30, bottom:6, width:22, height:22, background:'#fff', borderRadius:'50%' }} />
+          <div style={{ position:'absolute', left:98, bottom:6, width:22, height:22, background:'#fff', borderRadius:'50%' }} />
+        </div>
+        <div style={{ position:'absolute', left:0, right:0, bottom:0, height:2,
+          backgroundImage:'repeating-linear-gradient(90deg, rgba(255,255,255,.15) 0 20px, transparent 20px 36px)' }} />
+
+        <div style={{ maxWidth:760, margin:'0 auto', position:'relative' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, flexWrap:'wrap', marginBottom:18 }}>
+            <span style={{ display:'inline-flex', alignItems:'center', gap:7, background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.12)', padding:'6px 14px 6px 6px', borderRadius:9 }}>
+              <span style={{ width:20, height:20, borderRadius:5, background:'#FFE600', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:900, color:'#2D3277' }}>ML</span>
+              <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,.85)' }}>MercadoLibre</span>
+            </span>
+            <span style={{ color:'rgba(255,255,255,.25)', fontSize:15, fontWeight:600 }}>+</span>
+            <span style={{ display:'inline-flex', alignItems:'center', gap:7, background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.12)', padding:'6px 14px 6px 6px', borderRadius:9 }}>
+              <span style={{ width:20, height:20, borderRadius:5, background:'#1877F2', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:900, color:'#fff' }}>f</span>
+              <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,.85)' }}>Facebook</span>
+            </span>
+            <span style={{ color:'rgba(255,255,255,.25)', fontSize:15, fontWeight:600 }}>+</span>
+            <span style={{ display:'inline-flex', alignItems:'center', gap:7, background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.12)', padding:'6px 14px 6px 6px', borderRadius:9 }}>
+              <span style={{ width:20, height:20, borderRadius:5, background:'#2f5fdb', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:900, color:'#fff' }}>D</span>
+              <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,.85)' }}>Desarmadurías</span>
+            </span>
+          </div>
+
+          <h1 style={{ fontSize:30, fontWeight:900, color:'#fff', margin:'0 0 10px', letterSpacing:-.6, lineHeight:1.15 }}>
+            Todos los repuestos usados de Temuco, en un solo lugar
+          </h1>
+          <p style={{ fontSize:14.5, color:'rgba(255,255,255,.5)', margin:'0 0 26px', lineHeight:1.5 }}>
+            Componenta junta lo que hoy está repartido entre MercadoLibre, Facebook y las desarmadurías de la zona.
+            Tú solo buscas el repuesto — nosotros hacemos el resto.
+          </p>
+
+          <div style={{ maxWidth:560, margin:'0 auto 26px', display:'flex', alignItems:'center', background:'#fff',
+            borderRadius:12, padding:5, boxShadow:'0 10px 30px rgba(0,0,0,.25)' }}>
+            <span style={{ padding:'0 12px', fontSize:16, color:'#9ca3af' }}>🔍</span>
+            <input type="text" placeholder="Busca tu repuesto, marca o modelo…"
+              value={busqueda} onChange={e=>setBusqueda(e.target.value)}
+              style={{ flex:1, padding:'12px 0', fontSize:14.5, border:'none', outline:'none', background:'transparent', color:'#16181d' }} />
+            <button style={{ flexShrink:0, padding:'11px 20px', borderRadius:9, border:'none',
+              background:'#2f5fdb', color:'#fff', fontSize:13, fontWeight:800, cursor:'pointer' }}>Buscar</button>
+          </div>
+
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:0, flexWrap:'wrap' }}>
+            <div style={{ padding:'0 22px', textAlign:'center' }}>
+              <p style={{ fontSize:22, fontWeight:900, color:'#fff', margin:0, letterSpacing:-.4 }}>+500</p>
+              <p style={{ fontSize:11, color:'rgba(255,255,255,.4)', margin:'2px 0 0', textTransform:'uppercase', letterSpacing:.4 }}>Repuestos publicados</p>
+            </div>
+            <div style={{ width:1, height:32, background:'rgba(255,255,255,.12)' }} />
+            <div style={{ padding:'0 22px', textAlign:'center' }}>
+              <p style={{ fontSize:22, fontWeight:900, color:'#fff', margin:0, letterSpacing:-.4 }}>12+</p>
+              <p style={{ fontSize:11, color:'rgba(255,255,255,.4)', margin:'2px 0 0', textTransform:'uppercase', letterSpacing:.4 }}>Desarmadurías aliadas</p>
+            </div>
+            <div style={{ width:1, height:32, background:'rgba(255,255,255,.12)' }} />
+            <div style={{ padding:'0 22px', textAlign:'center' }}>
+              <p style={{ fontSize:22, fontWeight:900, color:'#fff', margin:0, letterSpacing:-.4 }}>30–60%</p>
+              <p style={{ fontSize:11, color:'rgba(255,255,255,.4)', margin:'2px 0 0', textTransform:'uppercase', letterSpacing:.4 }}>Más barato que nuevo</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* ══ HEADER ══ */}
       <header style={{ background:'#16181d', position:'sticky', top:0, zIndex:50,
         boxShadow:'0 1px 12px rgba(0,0,0,.3)' }}>
         <div style={{ maxWidth:1280, margin:'0 auto', padding:'0 20px', height:62,
           display:'flex', alignItems:'center', gap:14 }}>
 
-          <div style={{ display:'flex', alignItems:'center', gap:9, flexShrink:0 }}>
-            <div style={{ width:34, height:34, background:'linear-gradient(135deg,#1d4ed8,#3b82f6)',
-              borderRadius:9, display:'flex', alignItems:'center', justifyContent:'center',
-              fontWeight:900, fontSize:17, color:'#fff' }}>C</div>
-            <div>
-              <p style={{ fontWeight:900, fontSize:15, color:'#fff', margin:0, letterSpacing:-.3 }}>Componenta</p>
-              <p style={{ fontSize:9, color:'rgba(255,255,255,.4)', margin:0, textTransform:'uppercase', letterSpacing:.5 }}>Repuestos Temuco</p>
+          <div style={{ display:'flex', flexDirection:'column', gap:2, flexShrink:0 }}>
+            <div style={{ display:'flex', alignItems:'center' }}>
+              <span style={{ fontWeight:900, fontSize:19, color:'#fff', letterSpacing:-.6 }}>comp</span>
+              <span style={{ position:'relative', width:15, height:15, margin:'0 1px', flexShrink:0 }}>
+                <span style={{ position:'absolute', inset:0, borderRadius:'50%', background:'linear-gradient(135deg,#1d4ed8,#3b82f6)' }} />
+                <span style={{ position:'absolute', top:'50%', left:'50%', width:5, height:5, margin:'-2.5px 0 0 -2.5px', borderRadius:'50%', background:'#0f1115' }} />
+              </span>
+              <span style={{ fontWeight:900, fontSize:19, color:'#fff', letterSpacing:-.6 }}>nenta</span>
             </div>
+            <p style={{ fontSize:9, color:'rgba(255,255,255,.4)', margin:0, textTransform:'uppercase', letterSpacing:1 }}>Repuestos Temuco</p>
           </div>
 
           {/* Buscador */}
@@ -325,6 +479,63 @@ export default function Vitrina() {
               </button>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* ══ VERIFICADOR DE COMPATIBILIDAD ══ */}
+      <div style={{ maxWidth:1280, margin:'20px auto 0', padding:'0 20px' }}>
+        <div style={{ background:'#fff', border:'1px solid #e5e7eb', borderRadius:16, padding:'22px 24px',
+          display:'flex', flexDirection:'column', gap:16 }}>
+          <div>
+            <p style={{ fontSize:15, fontWeight:800, color:'#111827', margin:'0 0 4px' }}>¿No aparece tu repuesto exacto?</p>
+            <p style={{ fontSize:13, color:'#6b7280', margin:0 }}>
+              Dinos tu vehículo y te mostramos piezas que también son compatibles, aunque no sean del mismo modelo.
+            </p>
+          </div>
+          <div style={{ display:'flex', flexWrap:'wrap', alignItems:'center', gap:10 }}>
+            <select value={compatMarca}
+              onChange={e=>{ setCompatMarca(e.target.value); setCompatModelo(''); setCompatChecked(false) }}
+              style={{ padding:'10px 12px', borderRadius:9, border:'1.5px solid #e5e7eb', background:'#fff',
+                fontSize:13, fontWeight:600, color:'#374151', minWidth:150 }}>
+              <option value="">Marca del auto</option>
+              {Object.keys(MODELOS_POR_MARCA).map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+            <select value={compatModelo} disabled={modelosCompat.length===0}
+              onChange={e=>{ setCompatModelo(e.target.value); setCompatChecked(false) }}
+              style={{ padding:'10px 12px', borderRadius:9, border:'1.5px solid #e5e7eb', background:'#fff',
+                fontSize:13, fontWeight:600, color:'#374151', minWidth:150 }}>
+              <option value="">Modelo</option>
+              {modelosCompat.map(mo => <option key={mo} value={mo}>{mo}</option>)}
+            </select>
+            <button onClick={()=>setCompatChecked(true)} disabled={!compatMarca || !compatModelo}
+              style={{ padding:'10px 20px', borderRadius:9, border:'none', background:'#111827', color:'#fff',
+                fontSize:13, fontWeight:700, cursor:'pointer' }}>
+              Verificar compatibilidad
+            </button>
+          </div>
+
+          {compatResultados.length > 0 && (
+            <div style={{ display:'flex', flexDirection:'column', gap:8, paddingTop:6, borderTop:'1px solid #f1f2f4' }}>
+              {compatResultados.map(({ item, tag, tagBg, tagColor }) => (
+                <div key={item.id} style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
+                  gap:12, padding:'10px 12px', background:'#f9fafb', borderRadius:10 }}>
+                  <span style={{ fontSize:13, color:'#111827', fontWeight:600 }}>{item.titulo ?? 'Sin título'}</span>
+                  <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
+                    <span style={{ fontSize:10.5, fontWeight:700, padding:'3px 9px', borderRadius:20, background:tagBg, color:tagColor }}>{tag}</span>
+                    <span style={{ fontSize:13, fontWeight:800, color:'#111827' }}>
+                      {item.precio>0 ? `$${item.precio.toLocaleString('es-CL')}` : 'Consultar precio'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {compatChecked && compatMarca && compatModelo && compatResultados.length===0 && (
+            <p style={{ fontSize:13, color:'#9ca3af', margin:0, paddingTop:6, borderTop:'1px solid #f1f2f4' }}>
+              Aún no tenemos piezas compatibles para ese vehículo — vuelve pronto, sumamos repuestos todos los días.
+            </p>
+          )}
         </div>
       </div>
 

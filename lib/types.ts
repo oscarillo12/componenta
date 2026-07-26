@@ -46,6 +46,12 @@ export const CHANNELS: PublishChannel[] = [
     description: 'Publicación automática con descripción generada por Componenta',
     icon: '🛒',
   },
+  {
+    id: 'facebook',
+    name: 'Facebook Marketplace',
+    description: 'El agente publica automáticamente en Facebook Marketplace Temuco',
+    icon: '📘',
+  },
 ]
 
 export type EstadoPieza = 'excelente' | 'bueno' | 'con-detalles' | 'para-reparar'

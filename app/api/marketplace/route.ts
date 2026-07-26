@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
   let fbQuery = supabaseAdmin
     .from('listings_externos')
-    .select('id, fuente, titulo, precio, imagen, url_original, ubicacion, vendedor_nombre')
+    .select('id, fuente, titulo, precio, imagen, url_original, ubicacion, vendedor_nombre, marca, categoria')
     .eq('activo', true)
     .eq('fuente', 'facebook')
     .order('created_at', { ascending: false })
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
   let meliQuery = supabaseAdmin
     .from('listings_externos')
-    .select('id, fuente, titulo, precio, imagen, url_original, ubicacion, vendedor_nombre')
+    .select('id, fuente, titulo, precio, imagen, url_original, ubicacion, vendedor_nombre, marca, categoria')
     .eq('activo', true)
     .eq('fuente', 'mercadolibre')
     .order('created_at', { ascending: false })

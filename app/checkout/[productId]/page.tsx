@@ -113,7 +113,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ productId: 
     <div style={{ minHeight: '100vh', background: '#0D1117', fontFamily: 'system-ui,sans-serif' }}>
       {/* Header */}
       <div style={{ background: '#161B22', borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12, position: 'sticky', top: 0, zIndex: 40 }}>
-        <Link href={`/marketplace/${productId}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 10, background: '#21262D', textDecoration: 'none' }}>
+        <Link href={`/p/${productId}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 10, background: '#21262D', textDecoration: 'none' }}>
           <ArrowLeft size={18} color="#CDD9E5" />
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
