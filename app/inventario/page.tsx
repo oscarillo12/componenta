@@ -53,20 +53,16 @@ export default async function InventarioPage() {
     ? mockInventory.slice(0, 8).map(i => mockToProduct(i, userId))
     : (realProducts ?? [])
 
-  // Verificar si el usuario tiene ML conectado
-  let mlConnected  = false
-  let gscConnected = false
+  // ML: cuenta individual por vendedor
+  // GSC + FB Shopping: cuenta central de Componenta — siempre activo para todos
+  let mlConnected = false
   try {
-    const [{ data: mlToken }, { data: gscToken }] = await Promise.all([
-      supabaseAdmin.from('ml_tokens').select('expires_at').eq('user_id', userId).single(),
-      supabaseAdmin.from('google_tokens').select('expires_at').eq('user_id', userId).single(),
-    ])
-    mlConnected  = !!mlToken
-    gscConnected = !!gscToken
+    const { data: mlToken } = await supabaseAdmin.from('ml_tokens').select('expires_at').eq('user_id', userId).single()
+    mlConnected = !!mlToken
   } catch {
-    mlConnected  = false
-    gscConnected = false
+    mlConnected = false
   }
+  const gscConnected = true // Google Merchant es cuenta central de la plataforma
 
   return (
     <SellerLayout section="inventario">

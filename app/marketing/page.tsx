@@ -285,7 +285,7 @@ export default function MarketingPage() {
                   <p style={{ fontSize: 11, color: '#9aa0aa', fontWeight: 700, margin: 0, textTransform: 'uppercase', letterSpacing: '.5px' }}>Canales activos</p>
                 </div>
                 <p style={{ fontSize: 26, fontWeight: 900, color: '#16181d', margin: 0 }}>{stats.activeChannels}</p>
-                <p style={{ fontSize: 11, color: '#9aa0aa', margin: '3px 0 0' }}>de 4 disponibles</p>
+                <p style={{ fontSize: 11, color: '#9aa0aa', margin: '3px 0 0' }}>Componenta · ML · GSC · FB</p>
               </div>
             </div>
 
@@ -413,23 +413,23 @@ export default function MarketingPage() {
             <ChannelCard variant={ch!.google.active ? 'feed' : 'inactive'}
               logo={<div style={{ width: 38, height: 38, borderRadius: 10, background: '#fff', border: '1.5px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><span style={{ fontWeight: 900, fontSize: 14 }}>G</span></div>}
               name="Google Shopping"
-              badge={<StatusBadge variant="feed" label="Pendiente aprobación" />}>
+              badge={<StatusBadge variant="feed" label="Cuenta central" />}>
               <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: 200 }}>
                   <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                     <MetricBox label="En feed" value={ch!.google.count} sub="enviados" />
-                    <MetricBox label="Vistas" value="—" sub="requiere GMC" />
+                    <MetricBox label="Vistas" value="—" sub="ver en GMC" />
                   </div>
-                  <div style={{ padding: '10px 12px', borderRadius: 9, background: '#fffbeb', border: '1px solid #fde68a', marginBottom: 10 }}>
-                    <p style={{ fontSize: 11, color: '#92400e', margin: '0 0 4px', fontWeight: 700 }}>Feed enviado — aprobación pendiente</p>
-                    <p style={{ fontSize: 11, color: '#92400e', margin: 0, lineHeight: 1.5 }}>
-                      Google revisa cada producto antes de mostrarlo. Los productos rechazados o no aprobados no son visibles. Verifica el estado real en Merchant Center.
+                  <div style={{ padding: '10px 12px', borderRadius: 9, background: '#f0f4ff', border: '1px solid #c7d7fd', marginBottom: 10 }}>
+                    <p style={{ fontSize: 11, color: '#1e3a8a', margin: '0 0 3px', fontWeight: 700 }}>Cuenta central de Componenta — no requiere conexión individual</p>
+                    <p style={{ fontSize: 11, color: '#3b82f6', margin: 0, lineHeight: 1.5 }}>
+                      Tus piezas se publican automáticamente en Google Shopping bajo la cuenta de la plataforma. Verifica el estado en Merchant Center.
                     </p>
                   </div>
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                     <a href="https://merchants.google.com" target="_blank" rel="noopener noreferrer"
                       style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 12px', borderRadius: 8, background: '#4285F4', color: '#fff', fontSize: 11, fontWeight: 700, textDecoration: 'none' }}>
-                      Gestionar en Merchant Center <ExternalLink size={10} />
+                      Ver en Merchant Center <ExternalLink size={10} />
                     </a>
                     {ch!.google.latestProduct && (
                       <a href={`https://www.google.com/search?tbm=shop&q=${encodeURIComponent([ch!.google.latestProduct.pieza, ch!.google.latestProduct.marca].filter(Boolean).join(' '))}`}

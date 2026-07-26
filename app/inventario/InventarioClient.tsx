@@ -624,18 +624,43 @@ export default function InventarioClient({
         </div>
       )}
 
-      {/* Banner Facebook Marketplace */}
-      <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 14, background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: 12, padding: '14px 16px', flexWrap: 'wrap' }}>
-        <div style={{ background: '#1877F2', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
-          <span style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>f</span>
-          <span style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Facebook Marketplace</span>
+      {/* Banners canales centrales */}
+      <div style={{ marginBottom: 8, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        {/* Google Shopping — central */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#f0f4ff', border: '1.5px solid #c7d7fd', borderRadius: 12, padding: '12px 14px' }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: '#4285F4', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Globe size={16} color="#fff" />
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ fontSize: 12, fontWeight: 800, color: '#1e3a8a', margin: '0 0 1px' }}>Google Shopping</p>
+            <p style={{ fontSize: 10, color: '#3b82f6', margin: 0 }}>Cuenta central de Componenta</p>
+          </div>
+          <CheckCircle size={14} color="#16a34a" style={{ flexShrink: 0 }} />
         </div>
-        <div style={{ flex: 1, minWidth: 200 }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: '#1e40af', margin: '0 0 2px' }}>El agente publica automáticamente en Temuco</p>
-          <p style={{ fontSize: 11, color: '#3b82f6', margin: 0 }}>Activa el canal en cada pieza con el botón azul y el agente la publicará en la próxima corrida.</p>
+        {/* Facebook Shopping — central */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: 12, padding: '12px 14px' }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: '#1877F2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <span style={{ fontSize: 16, fontWeight: 900, color: '#fff', lineHeight: 1 }}>f</span>
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ fontSize: 12, fontWeight: 800, color: '#1e40af', margin: '0 0 1px' }}>Facebook Shopping</p>
+            <p style={{ fontSize: 10, color: '#3b82f6', margin: 0 }}>Cuenta central de Componenta</p>
+          </div>
+          <CheckCircle size={14} color="#16a34a" style={{ flexShrink: 0 }} />
         </div>
-        <a href="/marketing" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 16px', background: '#1877F2', color: '#fff', borderRadius: 9, fontSize: 12, fontWeight: 800, textDecoration: 'none', flexShrink: 0 }}>
-          Ver Marketing →
+      </div>
+      {/* Facebook Marketplace — individual */}
+      <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 14, background: '#f0f4ff', border: '1.5px solid #93c5fd', borderRadius: 12, padding: '12px 16px', flexWrap: 'wrap' }}>
+        <div style={{ background: '#1877F2', borderRadius: 10, padding: '7px 11px', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          <span style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>f</span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: '#fff' }}>Marketplace</span>
+        </div>
+        <div style={{ flex: 1, minWidth: 160 }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: '#1e40af', margin: '0 0 1px' }}>Facebook Marketplace — cuenta propia por desarmaduria</p>
+          <p style={{ fontSize: 10, color: '#3b82f6', margin: 0 }}>Activa el canal en cada pieza y el agente la publicará en la próxima corrida.</p>
+        </div>
+        <a href="/marketing" style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 13px', background: '#1877F2', color: '#fff', borderRadius: 8, fontSize: 11, fontWeight: 800, textDecoration: 'none', flexShrink: 0 }}>
+          Ver estado →
         </a>
       </div>
 
@@ -667,22 +692,6 @@ export default function InventarioClient({
         </div>
       )}
 
-      {!gscConnected && (
-        <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 14, background: '#f0f4ff', border: '1.5px dashed #4285F4', borderRadius: 12, padding: '14px 16px', flexWrap: 'wrap' }}>
-          <div style={{ background: '#4285F4', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
-            <Globe size={18} color="#fff" />
-            <span style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Google Shopping</span>
-          </div>
-          <div style={{ flex: 1, minWidth: 200 }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: '#1a3a8f', margin: '0 0 2px' }}>Publica en Google Shopping con un clic</p>
-            <p style={{ fontSize: 11, color: '#555', margin: 0 }}>Conecta tu cuenta de Google Merchant Center y aparece en búsquedas de Google.</p>
-          </div>
-          <a href="/api/google/connect"
-            style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 16px', background: '#4285F4', color: '#fff', borderRadius: 9, fontSize: 12, fontWeight: 800, textDecoration: 'none', flexShrink: 0 }}>
-            Conectar cuenta →
-          </a>
-        </div>
-      )}
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
