@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
 import { useState, useEffect } from 'react'
 import { Plus, LayoutGrid, BarChart2, Package, CreditCard, ShoppingBag, UserCircle, Store, MessageCircle, Search, Megaphone } from 'lucide-react'
+import { CompLogo } from './Logo'
 
 const navItems = [
   { icon: Plus,          href: '/publicar',   label: 'Nuevo ingreso' },
@@ -59,12 +60,8 @@ export default function Sidebar() {
         style={{ background: '#fff', borderRight: '1px solid #e5e7eb' }}
         className="hidden sm:flex w-16 min-h-screen flex-col items-center pt-4 pb-6 fixed left-0 top-0 z-50"
       >
-        <Link
-          href="/"
-          style={{ background: 'linear-gradient(135deg,#1d4ed8,#3b82f6)' }}
-          className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-sm select-none"
-        >
-          C
+        <Link href="/" className="select-none">
+          <CompLogo variant="icon" size="md" />
         </Link>
 
         <nav className="flex flex-col items-center gap-1 mt-6 flex-1">

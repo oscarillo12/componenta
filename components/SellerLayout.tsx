@@ -6,6 +6,7 @@ import { useUser } from '@clerk/nextjs'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import Sidebar from './Sidebar'
+import { CompLogo } from './Logo'
 
 interface SellerLayoutProps {
   children: React.ReactNode
@@ -47,11 +48,12 @@ export default function SellerLayout({ children, section }: SellerLayoutProps) {
           zIndex: 30,
           boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 28, height: 28, background: 'linear-gradient(135deg,#1d4ed8,#3b82f6)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 900, fontSize: 13 }}>C</div>
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>Componenta</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Link href="/" style={{ textDecoration: 'none' }}>
+              <CompLogo variant="full" size="sm" bg="#fff" />
+            </Link>
             <span style={{ color: '#e5e7eb' }}>·</span>
-            <span style={{ fontSize: 14, color: '#9ca3af', textTransform: 'capitalize' }}>{section}</span>
+            <span style={{ fontSize: 13, color: '#9ca3af', textTransform: 'capitalize' }}>{section}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Link
