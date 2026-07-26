@@ -17,9 +17,9 @@ type Producto = {
 type Stats = {
   totalViews: number; totalProducts: number; activeChannels: number
   channels: {
-    componenta:   { active: boolean; count: number; views: number; latestProduct: Producto | null }
+    componenta:   { active: boolean; count: number; views: number; items: Producto[]; latestProduct: Producto | null }
     mercadolibre: { active: boolean; count: number; activeCount: number; views: number; sold: number; conversion: number; items: Producto[]; latestProduct: Producto | null }
-    google:       { active: boolean; count: number; latestProduct: Producto | null }
+    google:       { active: boolean; count: number; items: Producto[]; latestProduct: Producto | null }
     facebook:     { active: boolean; count: number; items: Producto[]; latestProduct: Producto | null }
   }
 }
@@ -222,6 +222,10 @@ export default function MarketingPage() {
   const [stats, setStats]   = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [expandComp, setExpandComp] = useState(false)
+  const [expandML,   setExpandML]   = useState(false)
+  const [expandFB,   setExpandFB]   = useState(false)
+  const [expandGSC,  setExpandGSC]  = useState(false)
 
   const load = () => {
     setRefreshing(true)
@@ -331,24 +335,47 @@ export default function MarketingPage() {
             <ChannelCard variant={ch!.componenta.active ? 'active' : 'inactive'}
               logo={<div style={{ width: 38, height: 38, borderRadius: 10, background: '#2f5fdb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><span style={{ fontWeight: 900, fontSize: 14, color: '#fff' }}>C</span></div>}
               name="Componenta">
-              <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-                <div style={{ flex: 1, minWidth: 200 }}>
-                  <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-                    <MetricBox label="Vistas" value={ch!.componenta.views.toLocaleString('es-CL')} sub="totales" />
-                    <MetricBox label="Piezas" value={ch!.componenta.count} sub="publicadas" />
-                  </div>
-                  {ch!.componenta.count === 0 && (
-                    <p style={{ fontSize: 12, color: '#9aa0aa' }}>Aún no tienes piezas publicadas. <a href="/publicar" style={{ color: '#2f5fdb', fontWeight: 700 }}>Publicar ahora →</a></p>
-                  )}
-                  <a href="/" target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: '#2f5fdb', textDecoration: 'none', marginTop: 4 }}>
-                    Ver marketplace <ExternalLink size={11} />
-                  </a>
-                </div>
-                {ch!.componenta.latestProduct && (
-                  <ComponentaPreview p={ch!.componenta.latestProduct} />
-                )}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
+                <MetricBox label="Vistas" value={ch!.componenta.views.toLocaleString('es-CL')} sub="totales" />
+                <MetricBox label="Piezas" value={ch!.componenta.count} sub="publicadas" />
               </div>
+              {ch!.componenta.count === 0 ? (
+                <p style={{ fontSize: 12, color: '#9aa0aa' }}>Aún no tienes piezas publicadas. <a href="/publicar" style={{ color: '#2f5fdb', fontWeight: 700 }}>Publicar ahora →</a></p>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 10 }}>
+                    {(expandComp ? ch!.componenta.items : ch!.componenta.items.slice(0, 4)).map(item => (
+                      <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', background: '#f9fafb', borderRadius: 8, border: '1px solid #f1f2f4' }}>
+                        <div style={{ width: 28, height: 28, borderRadius: 5, background: item.imagen_url ? undefined : '#e5e7eb', overflow: 'hidden', flexShrink: 0 }}>
+                          {item.imagen_url && <img src={item.imagen_url} alt={item.pieza} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: 11, fontWeight: 700, color: '#16181d', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {item.pieza}{item.marca ? ` · ${item.marca}` : ''}
+                          </p>
+                          <p style={{ fontSize: 10, color: '#9aa0aa', margin: 0 }}>{fmtPrice(item.precio)} · <Eye size={9} style={{ display: 'inline', verticalAlign: 'middle' }} /> {item.vistas ?? 0} vistas</p>
+                        </div>
+                        <a href={`/p/${item.id}`} target="_blank" rel="noopener noreferrer"
+                          style={{ fontSize: 10, color: '#2f5fdb', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+                          Ver <ExternalLink size={9} />
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    {ch!.componenta.items.length > 4 && (
+                      <button onClick={() => setExpandComp(v => !v)}
+                        style={{ fontSize: 11, fontWeight: 700, color: '#2f5fdb', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                        {expandComp ? 'Ver menos ↑' : `Ver todas (${ch!.componenta.count}) ↓`}
+                      </button>
+                    )}
+                    <a href="/" target="_blank" rel="noopener noreferrer"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: '#2f5fdb', textDecoration: 'none', marginLeft: 'auto' }}>
+                      Ver marketplace <ExternalLink size={10} />
+                    </a>
+                  </div>
+                </>
+              )}
             </ChannelCard>
 
             {/* ── MercadoLibre ── */}
@@ -368,7 +395,7 @@ export default function MarketingPage() {
                     <div style={{ marginBottom: 10 }}>
                       <p style={{ fontSize: 10, fontWeight: 700, color: '#9aa0aa', textTransform: 'uppercase', letterSpacing: '.5px', margin: '0 0 8px' }}>Tus publicaciones en ML</p>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        {ch!.mercadolibre.items.map(item => (
+                        {(expandML ? ch!.mercadolibre.items : ch!.mercadolibre.items.slice(0, 4)).map(item => (
                           <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', background: '#f9fafb', borderRadius: 8, border: '1px solid #f1f2f4' }}>
                             <div style={{ width: 28, height: 28, borderRadius: 5, background: item.imagen_url ? undefined : '#e5e7eb', overflow: 'hidden', flexShrink: 0 }}>
                               {item.imagen_url && <img src={item.imagen_url} alt={item.pieza} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
@@ -396,6 +423,12 @@ export default function MarketingPage() {
                           </div>
                         ))}
                       </div>
+                      {ch!.mercadolibre.items.length > 4 && (
+                        <button onClick={() => setExpandML(v => !v)}
+                          style={{ fontSize: 11, fontWeight: 700, color: '#f59e0b', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 0 0', display: 'block' }}>
+                          {expandML ? 'Ver menos ↑' : `Ver todas (${ch!.mercadolibre.count}) ↓`}
+                        </button>
+                      )}
                     </div>
                   )}
 
@@ -420,6 +453,32 @@ export default function MarketingPage() {
                     <MetricBox label="En feed" value={ch!.google.count} sub="enviados" />
                     <MetricBox label="Vistas" value="—" sub="ver en GMC" />
                   </div>
+                  {ch!.google.items.length > 0 && (
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                        {(expandGSC ? ch!.google.items : ch!.google.items.slice(0, 4)).map(item => (
+                          <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: '#f9fafb', borderRadius: 8, border: '1px solid #f1f2f4' }}>
+                            <div style={{ width: 26, height: 26, borderRadius: 5, overflow: 'hidden', flexShrink: 0, background: '#e5e7eb' }}>
+                              {item.imagen_url && <img src={item.imagen_url} alt={item.pieza} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{ fontSize: 11, fontWeight: 700, color: '#16181d', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {item.pieza}{item.marca ? ` · ${item.marca}` : ''}
+                              </p>
+                              <p style={{ fontSize: 10, color: '#9aa0aa', margin: 0 }}>{fmtPrice(item.precio)}</p>
+                            </div>
+                            <CheckCircle size={11} color="#16a34a" style={{ flexShrink: 0 }} />
+                          </div>
+                        ))}
+                      </div>
+                      {ch!.google.items.length > 4 && (
+                        <button onClick={() => setExpandGSC(v => !v)}
+                          style={{ fontSize: 11, fontWeight: 700, color: '#4285F4', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 0 0', display: 'block' }}>
+                          {expandGSC ? 'Ver menos ↑' : `Ver todas (${ch!.google.count}) ↓`}
+                        </button>
+                      )}
+                    </div>
+                  )}
                   <div style={{ padding: '10px 12px', borderRadius: 9, background: '#f0f4ff', border: '1px solid #c7d7fd', marginBottom: 10 }}>
                     <p style={{ fontSize: 11, color: '#1e3a8a', margin: '0 0 3px', fontWeight: 700 }}>Cuenta central de Componenta — no requiere conexión individual</p>
                     <p style={{ fontSize: 11, color: '#3b82f6', margin: 0, lineHeight: 1.5 }}>
@@ -462,7 +521,7 @@ export default function MarketingPage() {
                     <div style={{ marginBottom: 10 }}>
                       <p style={{ fontSize: 10, fontWeight: 700, color: '#9aa0aa', textTransform: 'uppercase', letterSpacing: '.5px', margin: '0 0 8px' }}>Tus publicaciones en Marketplace</p>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        {ch!.facebook.items.map(item => (
+                        {(expandFB ? ch!.facebook.items : ch!.facebook.items.slice(0, 4)).map(item => (
                           <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', background: '#f9fafb', borderRadius: 8, border: '1px solid #f1f2f4' }}>
                             <div style={{ width: 28, height: 28, borderRadius: 5, background: item.imagen_url ? undefined : '#e5e7eb', overflow: 'hidden', flexShrink: 0 }}>
                               {item.imagen_url && <img src={item.imagen_url} alt={item.pieza} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
@@ -485,6 +544,12 @@ export default function MarketingPage() {
                           </div>
                         ))}
                       </div>
+                      {ch!.facebook.items.length > 4 && (
+                        <button onClick={() => setExpandFB(v => !v)}
+                          style={{ fontSize: 11, fontWeight: 700, color: '#1877F2', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 0 0', display: 'block' }}>
+                          {expandFB ? 'Ver menos ↑' : `Ver todas (${ch!.facebook.count}) ↓`}
+                        </button>
+                      )}
                     </div>
                   )}
 

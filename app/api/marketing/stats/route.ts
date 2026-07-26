@@ -39,7 +39,7 @@ export async function GET() {
     } catch { /* silent — show cached data */ }
   }
 
-  const mlEnriched = mlItems.slice(0, 5).map(p => ({
+  const mlEnriched = mlItems.slice(0, 20).map(p => ({
     id:           p.id,
     pieza:        p.pieza,
     marca:        p.marca,
@@ -72,6 +72,16 @@ export async function GET() {
         active:        all.length > 0,
         count:         all.length,
         views:         totalViews,
+        items:         all.slice(0, 50).map(p => ({
+          id:        p.id,
+          pieza:     p.pieza,
+          marca:     p.marca,
+          modelo:    p.modelo,
+          precio:    p.precio,
+          imagen_url: p.imagen_url,
+          vistas:    p.vistas,
+          estado:    p.estado,
+        })),
         latestProduct: latestAll,
       },
       mercadolibre: {
@@ -87,6 +97,13 @@ export async function GET() {
       google: {
         active:        withImage.length > 0,
         count:         withImage.length,
+        items:         withImage.slice(0, 20).map(p => ({
+          id:        p.id,
+          pieza:     p.pieza,
+          marca:     p.marca,
+          precio:    p.precio,
+          imagen_url: p.imagen_url,
+        })),
         latestProduct: latestImg,
       },
       facebook: {
