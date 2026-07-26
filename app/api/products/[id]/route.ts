@@ -73,7 +73,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
   const { id } = await params
   const body = await req.json()
 
-  const allowed = ['disponible', 'pieza', 'marca', 'modelo', 'anios', 'oem', 'estado', 'precio', 'envio', 'descripcion']
+  const allowed = ['disponible', 'pieza', 'marca', 'modelo', 'anios', 'oem', 'estado', 'precio', 'envio', 'descripcion', 'canales', 'ml_item_id', 'ml_permalink', 'fb_item_id', 'fb_permalink']
   const update: Record<string, unknown> = {}
   for (const key of allowed) {
     if (key in body) update[key] = body[key]
