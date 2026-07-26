@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import SellerLayout from '@/components/SellerLayout'
 import { ExternalLink, Eye, Package, Zap, TrendingUp, RefreshCw, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { CompLogo } from '@/components/Logo'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://componenta.vercel.app'
 
@@ -333,7 +334,7 @@ export default function MarketingPage() {
 
             {/* ── Componenta ── */}
             <ChannelCard variant={ch!.componenta.active ? 'active' : 'inactive'}
-              logo={<div style={{ width: 38, height: 38, borderRadius: 10, background: '#2f5fdb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><span style={{ fontWeight: 900, fontSize: 14, color: '#fff' }}>C</span></div>}
+              logo={<CompLogo variant="icon" size="md" />}
               name="Componenta">
               <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
                 <MetricBox label="Vistas" value={ch!.componenta.views.toLocaleString('es-CL')} sub="totales" />
