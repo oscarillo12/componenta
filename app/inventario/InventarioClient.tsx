@@ -232,7 +232,7 @@ function EditModal({ item, onClose, onSave }: {
   )
 }
 
-function InventoryRow({ item, mlConnected, gscConnected, onDelete, onToggleSold, onPublishML, onEdit }: {
+function InventoryRow({ item, mlConnected, gscConnected, onDelete, onToggleSold, onPublishML, onEdit, onAddFB }: {
   item: Product
   mlConnected: boolean
   gscConnected: boolean
@@ -240,6 +240,7 @@ function InventoryRow({ item, mlConnected, gscConnected, onDelete, onToggleSold,
   onToggleSold: (id: string, disponible: boolean) => Promise<void>
   onPublishML: (id: string) => Promise<{ ml_item_id: string; permalink: string } | null>
   onEdit: (item: Product) => void
+  onAddFB: (id: string) => Promise<void>
 }) {
   const [loadingSold,   setLoadingSold]   = useState(false)
   const [loadingDelete, setLoadingDelete] = useState(false)
@@ -250,6 +251,8 @@ function InventoryRow({ item, mlConnected, gscConnected, onDelete, onToggleSold,
     item.ml_item_id && item.ml_permalink ? { ml_item_id: item.ml_item_id, permalink: item.ml_permalink } : null
   )
   const [fbCopied,    setFbCopied]    = useState(false)
+  const [fbLoading,   setFbLoading]   = useState(false)
+  const [fbScheduled, setFbScheduled] = useState((item.canales ?? []).includes('facebook'))
   const [gscLoading,  setGscLoading]  = useState(false)
   const [gscError,    setGscError]    = useState<string | null>(null)
   const [gscPublished, setGscPublished] = useState((item.canales ?? []).includes('google_shopping'))
@@ -427,20 +430,36 @@ ${tags}`
         </div>
       )}
 
-      {/* Fila Facebook Shopping — siempre visible si disponible */}
+      {/* Fila Facebook Marketplace — siempre visible si disponible */}
       {item.disponible && (
         <div style={{ padding: '10px 16px', borderTop: '1px solid #f1f2f4', background: '#f0f4ff', display: 'flex', alignItems: 'center', gap: 8 }}>
-          {item.imagen_url ? (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: '#1877F2' }}>
+          {item.fb_item_id ? (
+            <a href={item.fb_permalink ?? `https://www.facebook.com/marketplace/item/${item.fb_item_id}/`}
+              target="_blank" rel="noopener noreferrer"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: '#1877F2', textDecoration: 'none' }}>
               <span style={{ width: 16, height: 16, borderRadius: 4, background: '#1877F2', color: '#fff', fontSize: 9, fontWeight: 900, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>f</span>
-              Incluida en Facebook Shopping
-              <span style={{ fontSize: 10, fontWeight: 600, color: '#6b7280' }}>— via feed automático</span>
+              Publicado en Facebook Marketplace <ExternalLink size={10} />
+            </a>
+          ) : fbScheduled ? (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 600, color: '#7c6f00' }}>
+              <span style={{ width: 16, height: 16, borderRadius: 4, background: '#fde68a', color: '#7c6f00', fontSize: 9, fontWeight: 900, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>f</span>
+              Programado — el agente lo publicará en la próxima corrida
             </span>
           ) : (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 600, color: '#9aa0aa' }}>
-              <span style={{ width: 16, height: 16, borderRadius: 4, background: '#e5e7eb', color: '#9aa0aa', fontSize: 9, fontWeight: 900, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>f</span>
-              Agrega foto para aparecer en Facebook Shopping
-            </span>
+            <button
+              onClick={async () => {
+                setFbLoading(true)
+                await onAddFB(item.id)
+                setFbScheduled(true)
+                setFbLoading(false)
+              }}
+              disabled={fbLoading}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: fbLoading ? 'default' : 'pointer', border: '1.5px solid #93c5fd', background: '#dbeafe', color: '#1e40af' }}>
+              {fbLoading
+                ? <><Loader2 size={11} className="animate-spin" /> Programando…</>
+                : <><span style={{ width: 14, height: 14, borderRadius: 3, background: '#1877F2', color: '#fff', fontSize: 8, fontWeight: 900, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>f</span> Publicar en Facebook Marketplace</>
+              }
+            </button>
           )}
         </div>
       )}
@@ -518,6 +537,18 @@ export default function InventarioClient({
     if (res.ok) setProducts(prev => prev.map(p => p.id === id ? { ...p, disponible } : p))
   }
 
+  async function handleAddFB(id: string) {
+    const product = products.find(p => p.id === id)
+    if (!product) return
+    const canales = [...new Set([...(product.canales ?? []), 'facebook'])]
+    const res = await fetch(`/api/products/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ canales }),
+    })
+    if (res.ok) setProducts(prev => prev.map(p => p.id === id ? { ...p, canales } : p))
+  }
+
   async function handlePublishML(id: string) {
     const res = await fetch('/api/mercadolibre/publish', {
       method: 'POST',
@@ -593,15 +624,15 @@ export default function InventarioClient({
         </div>
       )}
 
-      {/* Banner Facebook Shopping */}
+      {/* Banner Facebook Marketplace */}
       <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 14, background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: 12, padding: '14px 16px', flexWrap: 'wrap' }}>
         <div style={{ background: '#1877F2', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
           <span style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>f</span>
-          <span style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Facebook Shopping</span>
+          <span style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>Facebook Marketplace</span>
         </div>
         <div style={{ flex: 1, minWidth: 200 }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: '#1e40af', margin: '0 0 2px' }}>Feed activo — piezas enviadas a Meta automáticamente</p>
-          <p style={{ fontSize: 11, color: '#3b82f6', margin: 0 }}>Cada pieza con foto se sincroniza a tu catálogo de Meta. Vélas en el panel de Marketing.</p>
+          <p style={{ fontSize: 13, fontWeight: 700, color: '#1e40af', margin: '0 0 2px' }}>El agente publica automáticamente en Temuco</p>
+          <p style={{ fontSize: 11, color: '#3b82f6', margin: 0 }}>Activa el canal en cada pieza con el botón azul y el agente la publicará en la próxima corrida.</p>
         </div>
         <a href="/marketing" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 16px', background: '#1877F2', color: '#fff', borderRadius: 9, fontSize: 12, fontWeight: 800, textDecoration: 'none', flexShrink: 0 }}>
           Ver Marketing →
@@ -710,6 +741,7 @@ export default function InventarioClient({
               onToggleSold={handleToggleSold}
               onPublishML={handlePublishML}
               onEdit={setEditingItem}
+              onAddFB={handleAddFB}
             />
           ))}
         </div>
