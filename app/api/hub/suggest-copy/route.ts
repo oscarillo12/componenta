@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
   const prompt = `Eres un experto en marketing de contenidos y ventas en redes sociales. Trabajas para Componenta, un marketplace de piezas y productos usados en Chile.
 
-Tu tarea es crear copy persuasivo para un video corto (TikTok/Reels/YouTube Shorts) sobre el siguiente producto:
+Tu tarea es crear copy persuasivo para: (1) un video corto (TikTok/Reels/YouTube Shorts) y (2) una publicación de Instagram sobre el siguiente producto:
 
 ${productInfo}
 
@@ -37,7 +37,8 @@ Responde ÚNICAMENTE con un JSON válido, sin markdown ni explicaciones:
   "beneficio": "el beneficio principal de comprar este producto ahora (1 oración que crea urgencia)",
   "cta": "llamada a la acción al final del video (max 10 palabras, ejemplo: '¡Escríbenos para apartar el tuyo!')",
   "hashtags": ["repuesto", "chile", "componenta", "oferta", "otroHashtagRelevante"],
-  "script": "guión completo del video de 30 segundos: hook + problema + beneficio + cta, separados por saltos de línea"
+  "script": "guión completo del video de 30 segundos: hook + problema + beneficio + cta, separados por saltos de línea",
+  "instagram_caption": "caption completo y listo para publicar en Instagram: inicia con emoji llamativo + texto persuasivo de 2-3 líneas que describe el producto y crea urgencia + precio si disponible + CTA corto + salto de línea + hashtags relevantes. Máximo 280 caracteres totales."
 }`
 
   try {
